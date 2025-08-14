@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AtlasWeb - Advanced Web Analytics Platform</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: https://unpkg.com https://fonts.googleapis.com https://fonts.gstatic.com;">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body>
+    <!-- Interactive AI Background - designated div behind everything -->
+    <div class="ai-background" id="aiBackground" aria-hidden="true">
+        <!-- Floating elements for Aura-style interactivity -->
+        <div class="floating-element floating-1"></div>
+        <div class="floating-element floating-2"></div>
+        <div class="floating-element floating-3"></div>
+        <div class="floating-element floating-4"></div>
+    </div>
+
+    <!-- Navigation with Aura styling -->
+    <nav class="aura-nav">
+        <div class="nav-container">
+            <!-- Logo on the left -->
+            <div class="nav-logo">
+                <div class="logo-icon">
+                    <svg class="logo-svg" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Atlas globe with web grid -->
+                        <circle cx="16" cy="16" r="14" fill="url(#logoGradient)" stroke="url(#logoStroke)" stroke-width="1"/>
+                        <!-- Web grid lines -->
+                        <path d="M2 16 L30 16 M16 2 L16 30" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/>
+                        <path d="M8 6 Q16 12 24 6 M8 26 Q16 20 24 26" stroke="rgba(255,255,255,0.4)" stroke-width="0.5"/>
+                        <path d="M6 8 Q12 16 6 24 M26 8 Q20 16 26 24" stroke="rgba(255,255,255,0.4)" stroke-width="0.5"/>
+                        <!-- Central Atlas 'A' -->
+                        <text x="16" y="21" text-anchor="middle" fill="white" font-size="12" font-weight="800" font-family="Inter">A</text>
+                        <!-- Gradient definitions -->
+                        <defs>
+                            <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#6366f1"/>
+                                <stop offset="50%" style="stop-color:#8b5cf6"/>
+                                <stop offset="100%" style="stop-color:#06b6d4"/>
+                            </linearGradient>
+                            <linearGradient id="logoStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.3"/>
+                                <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0.1"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <span class="logo-text">AtlasWeb</span>
+            </div>
+
+            <!-- Primary navigation in the middle -->
+            <div class="nav-links">
+                <a href="#features" class="nav-link">Features</a>
+                <a href="#analytics" class="nav-link">Analytics</a>
+                <a href="#pricing" class="nav-link">Pricing</a>
+            </div>
+
+            <!-- CTA buttons on the right -->
+            <div class="nav-actions">
+                <!-- Theme toggle like Aura -->
+                <div class="theme-toggle-group">
+                    <button class="theme-toggle" title="Light mode" data-theme="light">
+                        <i data-lucide="sun"></i>
+                    </button>
+                    <button class="theme-toggle active" title="Dark mode" data-theme="dark">
+                        <i data-lucide="moon"></i>
+                    </button>
+                </div>
+                
+                <button class="btn-secondary">Login</button>
+                <button class="btn-primary">
+                    Join up
+                    <i data-lucide="arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section spanning 100vh -->
+    <section class="hero-section">
+        <div class="hero-container">
+            <!-- Large headline aligned to lower left corner with white space -->
+            <div class="hero-content">
+                <h1 class="hero-headline hero-headline-smaller">
+                    INTELLIGENT<br>
+                    WEB BROWSER,<br>
+                    <span class="headline-accent">REDEFINED.</span>
+                </h1>
+
+                <p class="hero-subtitle">
+                    Experience the future of web browsing with AI-powered search, research, and intelligent agents
+                </p>
+
+                <button class="hero-cta" onclick="window.location.href='registration.html'">
+                    Try it out
+                    <i data-lucide="arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features-section">
+        <div class="section-container">
+            <div class="section-header">
+                <h2 class="section-title">Intelligent Agentic Browser Features</h2>
+                <p class="section-subtitle">
+                    Experience the next generation of web browsing with AI-powered agents that work for you. 
+                    From intelligent search to automated tasks - your personal digital assistant ecosystem.
+                </p>
+            </div>
+            
+            <div class="features-grid">
+                <!-- AI Search Agent -->
+                <div class="feature-card">
+                    <div class="feature-icon feature-icon-blue">
+                        <i data-lucide="search"></i>
+                    </div>
+                    <h3 class="feature-title">AI Search Vanilla</h3>
+                    <p class="feature-description">
+                        Web Search, Summarize, Reference Sites (No Ads) using DuckDuckGo 
+                        and open source models for privacy-first intelligent browsing.
+                    </p>
+                    <button class="feature-cta">
+                        Search
+                        <i data-lucide="arrow-right"></i>
+                    </button>
+                </div>
+
+                <!-- Deep Research Agent -->
+                <div class="feature-card">
+                    <div class="feature-icon feature-icon-purple">
+                        <i data-lucide="brain"></i>
+                    </div>
+                    <h3 class="feature-title">AI Deep Research</h3>
+                    <p class="feature-description">
+                        OpenAI/Google Deep Research capability with advanced analysis, 
+                        comprehensive reports, and multi-source verification (Pro feature).
+                    </p>
+                    <button class="feature-cta">
+                        Research
+                        <i data-lucide="arrow-right"></i>
+                    </button>
+                </div>
+
+                <!-- Code Assistant -->
+                <div class="feature-card">
+                    <div class="feature-icon feature-icon-emerald">
+                        <i data-lucide="code"></i>
+                    </div>
+                    <h3 class="feature-title">Code Assistant (Jules)</h3>
+                    <p class="feature-description">
+                        Advanced development assistant for coding, debugging, and 
+                        project management with intelligent code suggestions and automation.
+                    </p>
+                    <button class="feature-cta">
+                        Develop
+                        <i data-lucide="arrow-right"></i>
+                    </button>
+                </div>
+
+                <!-- Email Agent -->
+                <div class="feature-card">
+                    <div class="feature-icon feature-icon-cyan">
+                        <i data-lucide="mail"></i>
+                    </div>
+                    <h3 class="feature-title">Email Agent</h3>
+                    <p class="feature-description">
+                        Summarize, vectorize, voice-enabled email management with 
+                        mobile-friendly interface, events, calendar, and telephony integration.
+                    </p>
+                    <button class="feature-cta">
+                        Organize
+                        <i data-lucide="arrow-right"></i>
+                    </button>
+                </div>
+
+                <!-- Specialized Search -->
+                <div class="feature-card">
+                    <div class="feature-icon feature-icon-orange">
+                        <i data-lucide="target"></i>
+                    </div>
+                    <h3 class="feature-title">Specialized Search</h3>
+                    <p class="feature-description">
+                        YouTube, Social Media (Facebook, Instagram, LinkedIn, TikTok), 
+                        and jurisdiction-specific search for government clients.
+                    </p>
+                    <button class="feature-cta">
+                        Explore
+                        <i data-lucide="arrow-right"></i>
+                    </button>
+                </div>
+
+                <!-- Personal Assistant -->
+                <div class="feature-card">
+                    <div class="feature-icon feature-icon-pink">
+                        <i data-lucide="smartphone"></i>
+                    </div>
+                    <h3 class="feature-title">Personal Assistant</h3>
+                    <p class="feature-description">
+                        Mobile-based assistant for Apple, Samsung, and international phones. 
+                        ChatGPT browser deployment with cross-platform compatibility.
+                    </p>
+                    <button class="feature-cta">
+                        Assist
+                        <i data-lucide="arrow-right"></i>
+                    </button>
+                </div>
+
+                <!-- Booking Agents -->
+                <div class="feature-card">
+                    <div class="feature-icon feature-icon-blue">
+                        <i data-lucide="calendar"></i>
+                    </div>
+                    <h3 class="feature-title">Booking Agents</h3>
+                    <p class="feature-description">
+                        Automated booking for dining, accommodation (Airbnb, Hotels), 
+                        and flights through existing APIs with intelligent recommendations.
+                    </p>
+                    <button class="feature-cta">
+                        Book
+                        <i data-lucide="arrow-right"></i>
+                    </button>
+                </div>
+
+                <!-- Payment Processing -->
+                <div class="feature-card">
+                    <div class="feature-icon feature-icon-purple">
+                        <i data-lucide="credit-card"></i>
+                    </div>
+                    <h3 class="feature-title">Payment Processing</h3>
+                    <p class="feature-description">
+                        Secure payment integration with Stripe and Plaid for 
+                        seamless transactions and financial management within the browser.
+                    </p>
+                    <button class="feature-cta">
+                        Pay
+                        <i data-lucide="arrow-right"></i>
+                    </button>
+                </div>
+
+                <!-- Productivity Agents -->
+                <div class="feature-card">
+                    <div class="feature-icon feature-icon-emerald">
+                        <i data-lucide="zap"></i>
+                    </div>
+                    <h3 class="feature-title">Productivity Agents</h3>
+                    <p class="feature-description">
+                        Integration with JotForm and other productivity tools for 
+                        streamlined workflows and automated task management.
+                    </p>
+                    <button class="feature-cta">
+                        Optimize
+                        <i data-lucide="arrow-right"></i>
+                    </button>
+                </div>
+
+                <!-- Writer Integration (Pro+) -->
+                <div class="feature-card feature-pro">
+                    <div class="feature-icon feature-icon-cyan">
+                        <i data-lucide="pen-tool"></i>
+                    </div>
+                    <h3 class="feature-title">Writer Integration <span class="tier-badge tier-pro">Pro+</span></h3>
+                    <p class="feature-description">
+                        Advanced content creation, story writing augmentation, and professional 
+                        writing tools for authors, journalists, and content creators.
+                    </p>
+                    <button class="feature-cta">
+                        Write
+                        <i data-lucide="arrow-right"></i>
+                    </button>
+                </div>
+
+                <!-- Design Features (Pro+) -->
+                <div class="feature-card feature-pro">
+                    <div class="feature-icon feature-icon-pink">
+                        <i data-lucide="palette"></i>
+                    </div>
+                    <h3 class="feature-title">Creative Design Suite <span class="tier-badge tier-pro">Pro+</span></h3>
+                    <p class="feature-description">
+                        Image generation, video production, animation tools for studios, 
+                        ad agencies, film production, and creative content creation.
+                    </p>
+                    <button class="feature-cta">
+                        Design
+                        <i data-lucide="arrow-right"></i>
+                    </button>
+                </div>
+
+                <!-- Advanced Research (Max+) -->
+                <div class="feature-card feature-max">
+                    <div class="feature-icon feature-icon-purple">
+                        <i data-lucide="microscope"></i>
+                    </div>
+                    <h3 class="feature-title">Advanced Research <span class="tier-badge tier-max">Max+</span></h3>
+                    <p class="feature-description">
+                        Deep research capabilities with OpenAI/Google integration, 
+                        multi-source verification, and comprehensive analysis reports.
+                    </p>
+                    <button class="feature-cta">
+                        Research
+                        <i data-lucide="arrow-right"></i>
+                    </button>
+                </div>
+
+                <!-- Mobile Personal Assistant (Max+) -->
+                <div class="feature-card feature-max">
+                    <div class="feature-icon feature-icon-emerald">
+                        <i data-lucide="tablet-smartphone"></i>
+                    </div>
+                    <h3 class="feature-title">Mobile Assistant <span class="tier-badge tier-max">Max+</span></h3>
+                    <p class="feature-description">
+                        Native iPad, iPhone, and Android apps with cross-platform 
+                        synchronization and voice-enabled personal assistant capabilities.
+                    </p>
+                    <button class="feature-cta">
+                        Connect
+                        <i data-lucide="arrow-right"></i>
+                    </button>
+                </div>
+
+                <!-- Translation Agent -->
+                <div class="feature-card">
+                    <div class="feature-icon feature-icon-orange">
+                        <i data-lucide="languages"></i>
+                    </div>
+                    <h3 class="feature-title">Translation Agent</h3>
+                    <p class="feature-description">
+                        Mobile translator agent supporting Meta glasses, cross-platform 
+                        translation, and real-time communication assistance.
+                    </p>
+                    <button class="feature-cta">
+                        Translate
+                        <i data-lucide="arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Analytics Demo Section -->
+    <section id="analytics" class="demo-section">
+        <div class="section-container">
+            <div class="demo-content">
+                <div class="demo-text">
+                    <h2 class="demo-title">See Analytics in Action</h2>
+                    <p class="demo-description">
+                        Experience the power of intelligent analytics with our interactive dashboard. 
+                        Real-time insights, predictive modeling, and automated reporting - all in one platform.
+                    </p>
+                    <div class="demo-stats">
+                        <div class="stat-item">
+                            <span class="stat-number">99.9%</span>
+                            <span class="stat-label">Uptime</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">10M+</span>
+                            <span class="stat-label">Data Points</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">< 100ms</span>
+                            <span class="stat-label">Response Time</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="demo-visual">
+                    <div class="demo-dashboard">
+                        <div class="dashboard-header">
+                            <div class="dashboard-title">Analytics Dashboard</div>
+                            <div class="dashboard-status">
+                                <div class="status-indicator"></div>
+                                Live
+                            </div>
+                        </div>
+                        <div class="dashboard-metrics">
+                            <div class="metric-card">
+                                <div class="metric-value">24.8K</div>
+                                <div class="metric-label">Visitors</div>
+                                <div class="metric-trend trend-up">↗ +12%</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-value">3.2%</div>
+                                <div class="metric-label">Conversion</div>
+                                <div class="metric-trend trend-up">↗ +0.8%</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-value">$47.2K</div>
+                                <div class="metric-label">Revenue</div>
+                                <div class="metric-trend trend-up">↗ +23%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer with Aura styling -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-content">
+                <!-- Company Info -->
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <div class="logo-icon">
+                            <svg class="logo-svg" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="16" cy="16" r="14" fill="url(#logoGradientFooter)" stroke="url(#logoStrokeFooter)" stroke-width="1"/>
+                                <path d="M2 16 L30 16 M16 2 L16 30" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/>
+                                <path d="M8 6 Q16 12 24 6 M8 26 Q16 20 24 26" stroke="rgba(255,255,255,0.4)" stroke-width="0.5"/>
+                                <path d="M6 8 Q12 16 6 24 M26 8 Q20 16 26 24" stroke="rgba(255,255,255,0.4)" stroke-width="0.5"/>
+                                <text x="16" y="21" text-anchor="middle" fill="white" font-size="12" font-weight="800" font-family="Inter">A</text>
+                                <defs>
+                                    <linearGradient id="logoGradientFooter" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#6366f1"/>
+                                        <stop offset="50%" style="stop-color:#8b5cf6"/>
+                                        <stop offset="100%" style="stop-color:#06b6d4"/>
+                                    </linearGradient>
+                                    <linearGradient id="logoStrokeFooter" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.3"/>
+                                        <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0.1"/>
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </div>
+                        <span class="logo-text">AtlasWeb</span>
+                    </div>
+                    <p class="footer-description">
+                        Transform your web data into actionable insights instantly. 
+                        Advanced analytics platform for modern businesses and developers.
+                    </p>
+                </div>
+
+                <!-- Product Links -->
+                <div class="footer-section">
+                    <h4 class="footer-heading">PRODUCT</h4>
+                    <ul class="footer-links">
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#pricing">Pricing</a></li>
+                        <li><a href="#docs">Documentation</a></li>
+                        <li><a href="#api">API</a></li>
+                    </ul>
+                </div>
+
+                <!-- Company Links -->
+                <div class="footer-section">
+                    <h4 class="footer-heading">COMPANY</h4>
+                    <ul class="footer-links">
+                        <li><a href="#about">About</a></li>
+                        <li><a href="#blog">Blog</a></li>
+                        <li><a href="#careers">Careers</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                    </ul>
+                </div>
+
+                <!-- Support Links -->
+                <div class="footer-section">
+                    <h4 class="footer-heading">SUPPORT</h4>
+                    <ul class="footer-links">
+                        <li><a href="#help">Help Center</a></li>
+                        <li><a href="#privacy">Privacy</a></li>
+                        <li><a href="#terms">Terms</a></li>
+                        <li><a href="#security">Security</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Bottom Footer -->
+            <div class="footer-bottom">
+                <div class="footer-bottom-content">
+                    <p class="footer-copyright">© 2025 AtlasWeb. All rights reserved.</p>
+                    <div class="footer-social">
+                        <a href="#" class="social-link" title="Twitter">
+                            <i data-lucide="twitter"></i>
+                        </a>
+                        <a href="#" class="social-link" title="GitHub">
+                            <i data-lucide="github"></i>
+                        </a>
+                        <a href="#" class="social-link" title="LinkedIn">
+                            <i data-lucide="linkedin"></i>
+                        </a>
+                        <a href="#" class="social-link" title="Discord">
+                            <i data-lucide="message-circle"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,88 @@
+{
+  "mcpServers": {
+    "n8n-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "n8n-mcp"
+      ],
+      "env": {
+        "MCP_MODE": "stdio",
+        "LOG_LEVEL": "error",
+        "DISABLE_CONSOLE_OUTPUT": "true",
+        "N8N_API_URL": "http://localhost:5678/api/v1",
+        "N8N_API_KEY": "${N8N_API_KEY}"
+      }
+    },
+    "Ref": {
+      "type": "http",
+      "url": "https://api.ref.tools/mcp?apiKey=${REF_API_KEY}"
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest"
+      ],
+      "env": {}
+    },
+    "shadcn-ui": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "@jpisnice/shadcn-ui-mcp-server"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
+      }
+    },
+    "github": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
+      }
+    },
+    "mcp-youtube": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "@anaisbetts/mcp-youtube"
+      ],
+      "env": {}
+    },
+    "filesystem": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "."
+      ],
+      "env": {}
+    },
+    "memory": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "env": {
+        "MEMORY_DIR": "./.claude/mcp-memory",
+        "MAX_MEMORY_SIZE": "10485760"
+      }
+    },
+    "code-index": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "code-index-mcp"
+      ],
+      "env": {}
+    }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "@modelcontextprotocol/server-filesystem",
+        "."
+      ],
+      "env": {}
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest"
+      ],
+      "env": {}
+    },
+    "mcp-youtube": {
+      "command": "npx",
+      "args": [
+        "@anaisbetts/mcp-youtube"
+      ],
+      "env": {}
+    },
+    "memory": {
+      "command": "npx",
+      "args": [
+        "@modelcontextprotocol/server-memory"
+      ],
+      "env": {
+        "MEMORY_DIR": "./.claude/mcp-memory",
+        "MAX_MEMORY_SIZE": "10485760"
+      }
+    },
+    "code-index": {
+      "command": "uvx",
+      "args": [
+        "code-index-mcp"
+      ],
+      "env": {}
+    }
+  }
+}
