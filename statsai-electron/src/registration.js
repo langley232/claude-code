@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Initialize registration flow
 function initializeRegistration() {
     // Set initial step
-    showStep(1);
+    goToStep(1);
     
     // Initialize account form submission
     const accountForm = document.getElementById('accountForm');

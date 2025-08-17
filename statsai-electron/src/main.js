@@ -174,12 +174,33 @@ app.on('web-contents-created', (event, contents) => {
 // Handle app protocol for deep linking (optional)
 app.setAsDefaultProtocolClient('atlasweb');
 
-// Prevent navigation to external websites
+// Control navigation - allow local files, prevent external websites
 app.on('web-contents-created', (event, contents) => {
   contents.on('will-navigate', (event, navigationUrl) => {
-    const parsedUrl = new URL(navigationUrl);
+    console.log('🧭 Navigation attempt:', navigationUrl);
     
-    if (parsedUrl.origin !== 'file://') {
+    try {
+      const parsedUrl = new URL(navigationUrl);
+      console.log('📊 Parsed URL - Protocol:', parsedUrl.protocol, 'Origin:', parsedUrl.origin);
+      
+      // Allow local file navigation (our HTML files)
+      if (parsedUrl.protocol === 'file:') {
+        console.log('✅ Allowing local file navigation');
+        return; // Allow the navigation
+      }
+      
+      // Allow https for external resources (like fonts, CDNs)
+      if (parsedUrl.protocol === 'https:') {
+        console.log('✅ Allowing HTTPS navigation');
+        return; // Allow the navigation
+      }
+      
+      // Block everything else
+      console.log('❌ Blocking navigation to:', navigationUrl);
+      event.preventDefault();
+      
+    } catch (error) {
+      console.log('❌ Error parsing navigation URL:', error);
       event.preventDefault();
     }
   });

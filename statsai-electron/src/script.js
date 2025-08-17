@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeNavigation();
     initializeDropdownNavigation();
     initializeThemeToggle();
+    initializeCTAButtons();
     initializeAnimations();
     initializeMetrics();
     initializeScrollEffects();
@@ -43,6 +44,105 @@ function initializeNavigation() {
                 }, 200);
             }
         });
+    });
+}
+
+// CTA Button functionality
+function initializeCTAButtons() {
+    console.log('🔘 Initializing CTA buttons...');
+    
+    // Hero CTA button
+    const heroCTA = document.querySelector('.hero-cta');
+    if (heroCTA) {
+        console.log('✅ Found hero CTA button');
+        
+        heroCTA.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('🚀 Hero CTA clicked - navigating to pricing page');
+            
+            // Add visual feedback
+            this.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                this.style.transform = '';
+            }, 150);
+            
+            // Navigate to pricing page - use file:// protocol for Electron
+            setTimeout(() => {
+                console.log('🔄 Attempting navigation to pricing.html...');
+                
+                // Get current path and build the target URL
+                const currentPath = window.location.pathname;
+                const currentDir = currentPath.substring(0, currentPath.lastIndexOf('/'));
+                const targetUrl = `file://${currentDir}/pricing.html`;
+                
+                console.log('📍 Current path:', currentPath);
+                console.log('📂 Current dir:', currentDir);
+                console.log('🎯 Target URL:', targetUrl);
+                
+                // Add navigation success detection
+                const startTime = Date.now();
+                const currentUrl = window.location.href;
+                
+                // Method 1: Try window.location.href with full file path
+                try {
+                    console.log('🔄 Before navigation - Current URL:', currentUrl);
+                    window.location.href = targetUrl;
+                    console.log('✅ Navigation attempted with location.href');
+                    
+                    // Check if navigation actually worked after a delay
+                    setTimeout(() => {
+                        const newUrl = window.location.href;
+                        const elapsed = Date.now() - startTime;
+                        console.log(`⏱️ After ${elapsed}ms - Current URL:`, newUrl);
+                        
+                        if (newUrl === currentUrl) {
+                            console.log('❌ Navigation failed - URL unchanged, trying alternative methods...');
+                            
+                            // Try document.location as backup
+                            try {
+                                console.log('🔄 Trying document.location as backup...');
+                                document.location = targetUrl;
+                                console.log('✅ Backup navigation attempted with document.location');
+                            } catch (backupError) {
+                                console.log('❌ Backup navigation failed:', backupError);
+                                
+                                // Final attempt with simple relative path
+                                try {
+                                    console.log('🔄 Final attempt with relative path...');
+                                    window.location = 'pricing.html';
+                                    console.log('✅ Final navigation attempted with relative path');
+                                } catch (finalError) {
+                                    console.log('❌ All navigation methods failed:', finalError);
+                                }
+                            }
+                        } else {
+                            console.log('✅ Navigation successful!');
+                        }
+                    }, 500);
+                    
+                } catch (error) {
+                    console.log('❌ location.href failed immediately:', error);
+                }
+            }, 200);
+        });
+    } else {
+        console.log('❌ Hero CTA button not found');
+    }
+    
+    // Other CTA buttons (Join up, etc.)
+    const ctaButtons = document.querySelectorAll('.btn-primary, .btn-secondary');
+    ctaButtons.forEach(button => {
+        if (!button.classList.contains('hero-cta')) {
+            button.addEventListener('click', function(e) {
+                console.log(`🔘 CTA button clicked: ${this.textContent.trim()}`);
+                
+                // Add visual feedback
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 150);
+            });
+        }
     });
 }
 
@@ -445,7 +545,7 @@ function measureFPS() {
         lastFrameTime = currentTime;
         
         // Log performance in development
-        if (process && process.argv && process.argv.includes('--dev')) {
+        if (typeof process !== 'undefined' && process.argv && process.argv.includes('--dev')) {
             console.log(`🚀 FPS: ${fps}`);
         }
     }
