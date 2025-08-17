@@ -581,11 +581,11 @@ body {
 
 /* Hero Section */
 .hero-section {
-    min-height: 100vh;
+    min-height: 75vh;
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     position: relative;
-    padding: var(--spacing-3xl);
+    padding: var(--spacing-xl) var(--spacing-3xl) var(--spacing-lg);
 }
 
 .hero-container {
@@ -596,16 +596,16 @@ body {
 
 .hero-content {
     max-width: 800px;
-    margin-bottom: var(--spacing-3xl);
+    margin-bottom: var(--spacing-lg);
 }
 
 /* Large headline aligned to lower left with white space */
 .hero-headline {
-    font-size: var(--font-size-9xl);
+    font-size: var(--font-size-8xl);
     font-weight: 900;
     line-height: 0.9;
     letter-spacing: -0.02em;
-    margin-bottom: var(--spacing-2xl);
+    margin-bottom: var(--spacing-lg);
     background: linear-gradient(135deg, var(--text-primary), var(--accent));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -647,7 +647,7 @@ body {
 .hero-subtitle {
     font-size: var(--font-size-xl);
     color: var(--text-secondary);
-    margin-bottom: var(--spacing-2xl);
+    margin-bottom: var(--spacing-xl);
     max-width: 600px;
     line-height: 1.6;
 }
@@ -655,7 +655,7 @@ body {
 
 /* Features Section */
 .features-section {
-    padding: var(--spacing-3xl) var(--spacing-lg);
+    padding: var(--spacing-xl) var(--spacing-lg) var(--spacing-3xl);
     background: linear-gradient(180deg, transparent 0%, rgba(30, 41, 59, 0.3) 100%);
 }
 
@@ -666,7 +666,7 @@ body {
 
 .section-header {
     text-align: center;
-    margin-bottom: var(--spacing-3xl);
+    margin-bottom: var(--spacing-2xl);
 }
 
 .section-title {
@@ -1899,11 +1899,16 @@ body {
     }
     
     .hero-section {
-        padding: var(--spacing-lg);
+        min-height: 60vh;
+        padding: var(--spacing-md) var(--spacing-lg) var(--spacing-sm);
     }
     
     .hero-headline {
         font-size: var(--font-size-6xl);
+    }
+    
+    .hero-content {
+        margin-bottom: var(--spacing-md);
     }
     
     .features-grid {
