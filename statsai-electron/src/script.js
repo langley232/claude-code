@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize all interactive features
     initializeNavigation();
+    initializeDropdownNavigation();
     initializeThemeToggle();
     initializeAnimations();
     initializeMetrics();
@@ -42,6 +43,118 @@ function initializeNavigation() {
                 }, 200);
             }
         });
+    });
+}
+
+// Dropdown navigation functionality
+function initializeDropdownNavigation() {
+    const dropdown = document.querySelector('.nav-dropdown');
+    const dropdownTrigger = document.querySelector('.nav-dropdown-trigger');
+    const dropdownMenu = document.querySelector('.dropdown-menu');
+    const dropdownArrow = document.querySelector('.dropdown-arrow');
+    
+    if (!dropdown || !dropdownTrigger || !dropdownMenu) return;
+    
+    let isOpen = false;
+    let hoverTimeout;
+    
+    // Function to open dropdown
+    function openDropdown() {
+        if (isOpen) return;
+        
+        isOpen = true;
+        dropdown.classList.add('active');
+        dropdownMenu.style.pointerEvents = 'auto';
+        
+        // Stagger animation for dropdown items
+        const dropdownItems = dropdownMenu.querySelectorAll('.dropdown-item');
+        dropdownItems.forEach((item, index) => {
+            setTimeout(() => {
+                item.style.opacity = '1';
+                item.style.transform = 'translateY(0)';
+            }, index * 50);
+        });
+        
+        // Initialize icons in dropdown if not already done
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    }
+    
+    // Function to close dropdown
+    function closeDropdown() {
+        if (!isOpen) return;
+        
+        isOpen = false;
+        dropdown.classList.remove('active');
+        dropdownMenu.style.pointerEvents = 'none';
+        
+        // Reset dropdown items animation
+        const dropdownItems = dropdownMenu.querySelectorAll('.dropdown-item');
+        dropdownItems.forEach(item => {
+            item.style.opacity = '';
+            item.style.transform = '';
+        });
+    }
+    
+    // Mouse enter/leave handlers
+    dropdown.addEventListener('mouseenter', () => {
+        clearTimeout(hoverTimeout);
+        openDropdown();
+    });
+    
+    dropdown.addEventListener('mouseleave', () => {
+        clearTimeout(hoverTimeout);
+        hoverTimeout = setTimeout(closeDropdown, 150); // Small delay for better UX
+    });
+    
+    // Click handler for trigger
+    dropdownTrigger.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (isOpen) {
+            closeDropdown();
+        } else {
+            openDropdown();
+        }
+    });
+    
+    // Handle dropdown item clicks
+    const dropdownItems = dropdownMenu.querySelectorAll('.dropdown-item');
+    dropdownItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            // Add click animation
+            item.style.transform = 'scale(0.98)';
+            setTimeout(() => {
+                item.style.transform = '';
+            }, 150);
+            
+            // Close dropdown after short delay
+            setTimeout(() => {
+                closeDropdown();
+            }, 200);
+        });
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!dropdown.contains(e.target)) {
+            closeDropdown();
+        }
+    });
+    
+    // Close dropdown on escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && isOpen) {
+            closeDropdown();
+        }
+    });
+    
+    // Initialize dropdown items with hidden state
+    const dropdownItemsInit = dropdownMenu.querySelectorAll('.dropdown-item');
+    dropdownItemsInit.forEach(item => {
+        item.style.opacity = '0';
+        item.style.transform = 'translateY(10px)';
+        item.style.transition = 'all 0.3s ease';
     });
 }
 
@@ -390,6 +503,7 @@ window.addEventListener('resize', function() {
 // Export functions for potential external use
 window.StatsAI = {
     initializeNavigation,
+    initializeDropdownNavigation,
     initializeThemeToggle,
     initializeAnimations,
     initializeMetrics,
