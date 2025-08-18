@@ -75,6 +75,51 @@
         "@anaisbetts/mcp-youtube"
       ],
       "env": {}
+    },
+    "supabase": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--read-only",
+        "--project-ref=grsyqstzcyoocsvnmwjz"
+      ],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "${SUPABASE_ACCESS_TOKEN}"
+      }
+    },
+    "stripe": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@stripe/mcp-server@latest"
+      ],
+      "env": {
+        "STRIPE_API_KEY": "${STRIPE_API_KEY}"
+      }
+    },
+    "google-scc": {
+      "type": "stdio",
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/home/rakib232/github/claude-code/mcp-security/server/scc",
+        "run",
+        "scc_mcp.py"
+      ],
+      "env": {
+        "GOOGLE_CLOUD_PROJECT": "${GOOGLE_CLOUD_PROJECT}"
+      }
+    },
+    "ElevenLabs": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["elevenlabs-mcp"],
+      "env": {
+        "ELEVENLABS_API_KEY": "${ELEVENLABS_API_KEY}"
+      }
     }
   }
 }
