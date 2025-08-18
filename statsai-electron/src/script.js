@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeDropdownNavigation();
     initializeThemeToggle();
     initializeCTAButtons();
+    initializeHeadlineAnimation();
     initializeAnimations();
     initializeMetrics();
     initializeScrollEffects();
@@ -372,6 +373,145 @@ function initializeAnimations() {
     });
 }
 
+// GSAP Headline Character Animation
+function initializeHeadlineAnimation() {
+    console.log('🔄 Starting headline animation initialization...');
+    
+    // Wait for GSAP to load
+    if (typeof gsap === 'undefined') {
+        console.warn('❌ GSAP not loaded, skipping headline animation');
+        return;
+    }
+    console.log('✅ GSAP loaded successfully');
+
+    const wordContainers = document.querySelectorAll('.word-container');
+    console.log(`📦 Found ${wordContainers.length} word containers`);
+    
+    let totalChars = 0;
+    wordContainers.forEach((container, index) => {
+        const word = container.getAttribute('data-word');
+        if (!word) {
+            console.warn(`⚠️ No data-word attribute found for container ${index}`);
+            return;
+        }
+        
+        console.log(`📝 Processing word ${index + 1}: "${word}"`);
+        
+        // Split word into individual characters
+        const chars = word.split('').map(char => {
+            const span = document.createElement('span');
+            span.textContent = char === ' ' ? '\u00A0' : char; // Use non-breaking space
+            span.className = 'char';
+            totalChars++;
+            return span;
+        });
+        
+        // Clear container and add character spans
+        container.innerHTML = '';
+        chars.forEach(char => container.appendChild(char));
+    });
+    
+    console.log(`🔤 Created ${totalChars} character elements`);
+    
+    // Set initial state more explicitly
+    console.log('🎭 Setting initial character states (hidden)...');
+    gsap.set('.char', {
+        y: '100%',
+        opacity: 0
+    });
+    
+    // Create timeline for staggered animation with delay
+    console.log('⏰ Creating animation timeline with 0.5s delay...');
+    const tl = gsap.timeline({ 
+        delay: 0.5,
+        onStart: () => {
+            console.log('🚀 Animation starting now!');
+        },
+        onUpdate: () => {
+            // Log every 25% progress
+            const progress = Math.round(tl.progress() * 100);
+            if (progress % 25 === 0 && progress > 0) {
+                console.log(`📈 Animation progress: ${progress}%`);
+            }
+        },
+        onComplete: () => {
+            console.log('🎉 Animation completed! All characters should now be visible.');
+            
+            // Force refresh character styles to ensure visibility
+            const chars = document.querySelectorAll('.char');
+            chars.forEach((char, index) => {
+                // Check if parent has headline-accent class
+                const parentContainer = char.closest('.word-container');
+                if (parentContainer && parentContainer.classList.contains('headline-accent')) {
+                    char.style.color = 'rgb(99, 102, 241)'; // Purple color for accent
+                } else {
+                    char.style.color = 'rgb(248, 250, 252)'; // White color for normal text
+                }
+                char.style.opacity = '1';
+                char.style.transform = 'translateY(0px)';
+                char.style.display = 'inline-block';
+            });
+            
+            console.log(`🔧 Force-applied styles to ${chars.length} characters`);
+            console.log('👀 If you still cannot see the headline, there may be a CSS positioning issue.');
+        }
+    });
+    
+    // Animate all characters with stagger
+    tl.to('.char', {
+        y: 0,
+        opacity: 1,
+        duration: 0.8,
+        ease: 'back.out(1.7)',
+        stagger: {
+            amount: 2, // Total time for all staggers
+            from: 'start'
+        }
+    });
+    
+    console.log('🎬 Headline character animation initialized with detailed logging');
+    
+    // Debug: Check initial element visibility
+    setTimeout(() => {
+        const headline = document.getElementById('heroHeadline');
+        if (headline) {
+            const rect = headline.getBoundingClientRect();
+            const computedStyle = window.getComputedStyle(headline);
+            console.log('🔍 Headline element position:', {
+                top: rect.top,
+                left: rect.left,
+                width: rect.width,
+                height: rect.height,
+                bottom: rect.bottom,
+                right: rect.right,
+                windowHeight: window.innerHeight,
+                windowWidth: window.innerWidth,
+                visible: rect.top >= 0 && rect.left >= 0 && rect.bottom <= window.innerHeight && rect.right <= window.innerWidth,
+                display: computedStyle.display,
+                visibility: computedStyle.visibility,
+                opacity: computedStyle.opacity,
+                transform: computedStyle.transform,
+                zIndex: computedStyle.zIndex
+            });
+            
+            // Check if headline is in viewport
+            if (rect.top > window.innerHeight || rect.bottom < 0) {
+                console.warn('⚠️ HEADLINE IS OUTSIDE VIEWPORT! It may be positioned incorrectly.');
+            }
+            
+            if (rect.left > window.innerWidth || rect.right < 0) {
+                console.warn('⚠️ HEADLINE IS OUTSIDE HORIZONTAL VIEWPORT!');
+            }
+            
+            // Force scroll to headline for testing
+            console.log('📍 Attempting to scroll headline into view...');
+            headline.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+            console.error('❌ Headline element not found!');
+        }
+    }, 100);
+}
+
 // Animated metrics counter
 function initializeMetrics() {
     const metricValues = document.querySelectorAll('.metric-value');
@@ -605,6 +745,8 @@ window.StatsAI = {
     initializeNavigation,
     initializeDropdownNavigation,
     initializeThemeToggle,
+    initializeCTAButtons,
+    initializeHeadlineAnimation,
     initializeAnimations,
     initializeMetrics,
     initializeScrollEffects
