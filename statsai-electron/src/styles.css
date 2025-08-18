@@ -586,6 +586,8 @@ body {
     align-items: center;
     position: relative;
     padding: var(--spacing-xl) var(--spacing-3xl) var(--spacing-lg);
+    margin-top: 80px; /* Ensure it's below the navigation */
+    z-index: 1;
 }
 
 .hero-container {
@@ -606,10 +608,34 @@ body {
     line-height: 0.9;
     letter-spacing: -0.02em;
     margin-bottom: var(--spacing-lg);
+    color: var(--text-primary); /* Fallback solid color */
     background: linear-gradient(135deg, var(--text-primary), var(--accent));
     -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
     background-clip: text;
+    /* Temporarily remove text-fill-color to debug visibility */
+    /* -webkit-text-fill-color: transparent; */
+}
+
+/* Headline line containers */
+.headline-line {
+    display: flex;
+    gap: 0.5em;
+    margin-bottom: 0.1em;
+}
+
+/* Word containers with overflow hidden for animation */
+.word-container {
+    overflow: hidden;
+    display: inline-block;
+    position: relative;
+}
+
+/* Individual character styling */
+.char {
+    display: inline-block;
+    transform: translateY(100%);
+    opacity: 0;
+    position: relative;
 }
 
 /* Smaller headline variant */
@@ -620,7 +646,9 @@ body {
 .headline-accent {
     background: linear-gradient(135deg, var(--primary), var(--purple));
     -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    /* Temporarily remove text-fill-color to ensure visibility */
+    /* -webkit-text-fill-color: transparent; */
+    color: var(--accent); /* Fallback color */
     background-clip: text;
 }
 

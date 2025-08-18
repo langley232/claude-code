@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AtlasWeb - Advanced Web Analytics Platform</title>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: https://unpkg.com https://fonts.googleapis.com https://fonts.gstatic.com;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: https://unpkg.com https://fonts.googleapis.com https://fonts.gstatic.com https://cdnjs.cloudflare.com;">
     <link rel="stylesheet" href="styles.css">
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 </head>
 <body>
     <!-- Interactive AI Background - designated div behind everything -->
@@ -246,10 +247,17 @@
         <div class="hero-container">
             <!-- Large headline aligned to lower left corner with white space -->
             <div class="hero-content">
-                <h1 class="hero-headline hero-headline-smaller">
-                    INTELLIGENT<br>
-                    WEB BROWSER,<br>
-                    <span class="headline-accent">REDEFINED.</span>
+                <h1 class="hero-headline hero-headline-smaller" id="heroHeadline">
+                    <div class="headline-line">
+                        <div class="word-container" data-word="INTELLIGENT"></div>
+                    </div>
+                    <div class="headline-line">
+                        <div class="word-container" data-word="WEB"></div>
+                        <div class="word-container" data-word="BROWSER,"></div>
+                    </div>
+                    <div class="headline-line">
+                        <div class="word-container headline-accent" data-word="REDEFINED."></div>
+                    </div>
                 </h1>
 
                 <p class="hero-subtitle">
