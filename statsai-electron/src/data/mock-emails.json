@@ -1,0 +1,252 @@
+{
+  "emails": [
+    {
+      "id": "email-1",
+      "from": {
+        "name": "Sarah Chen",
+        "email": "sarah.chen@techcorp.com",
+        "avatar": "SC"
+      },
+      "to": "john.doe@company.com",
+      "subject": "Q1 Product Roadmap Review - Action Required",
+      "preview": "Hi John, I've completed the initial analysis of our Q1 roadmap and there are several key items that need your immediate attention...",
+      "body": "Hi John,\n\nI've completed the initial analysis of our Q1 roadmap and there are several key items that need your immediate attention before our stakeholder meeting on Friday.\n\nKey Points:\n1. The AI integration timeline needs adjustment - current estimate is 3 weeks behind\n2. Budget allocation for the mobile app requires executive approval\n3. User research findings suggest we should prioritize accessibility features\n\nI've attached the detailed report with recommendations. Can we schedule a quick call tomorrow to discuss the priority changes?\n\nBest regards,\nSarah\n\nP.S. The team is really excited about the new email assistant feature!",
+      "timestamp": "2024-03-15T09:30:00Z",
+      "unread": true,
+      "important": true,
+      "hasAttachment": true,
+      "badges": ["priority", "ai", "calendar"],
+      "thread": false,
+      "category": "work"
+    },
+    {
+      "id": "email-2",
+      "from": {
+        "name": "Microsoft Teams",
+        "email": "noreply@teams.microsoft.com",
+        "avatar": "MT"
+      },
+      "to": "john.doe@company.com",
+      "subject": "Meeting Invitation: AI Strategy Planning Session",
+      "preview": "You're invited to join the AI Strategy Planning Session scheduled for March 16, 2024 at 2:00 PM PST...",
+      "body": "Meeting Invitation\n\nSubject: AI Strategy Planning Session\nDate: March 16, 2024\nTime: 2:00 PM - 3:30 PM PST\nLocation: Virtual (Teams Link Below)\n\nAgenda:\n- Review current AI implementation status\n- Discuss integration roadmap for Q2\n- Resource allocation and timeline planning\n- Demo of new email assistant prototype\n\nAttendees:\n- John Doe (You)\n- Sarah Chen - Product Manager\n- Mike Johnson - Tech Lead\n- Lisa Wang - UX Director\n\nJoin Microsoft Teams Meeting:\n[Meeting Link]\n\nPlease confirm your attendance by replying to this invitation.\n\nBest regards,\nMicrosoft Teams",
+      "timestamp": "2024-03-15T08:45:00Z",
+      "unread": true,
+      "important": false,
+      "hasAttachment": false,
+      "badges": ["calendar"],
+      "thread": false,
+      "category": "meetings"
+    },
+    {
+      "id": "email-3",
+      "from": {
+        "name": "Alex Rodriguez",
+        "email": "alex.r@designstudio.com",
+        "avatar": "AR"
+      },
+      "to": "john.doe@company.com",
+      "subject": "Re: Email Assistant UI Mockups - Feedback Requested",
+      "preview": "Thanks for the quick feedback on the initial designs! I've incorporated your suggestions about the three-panel layout...",
+      "body": "Hi John,\n\nThanks for the quick feedback on the initial designs! I've incorporated your suggestions about the three-panel layout and the voice interaction UI.\n\nUpdates made:\n✅ Adjusted the panel ratios (25% - 50% - 25%)\n✅ Added voice visualization components\n✅ Improved mobile responsive design\n✅ Enhanced AI chat bubble styling\n✅ Added loading states for AI responses\n\nThe new mockups are ready for review. I've also included some micro-interaction prototypes showing how the voice recording modal would work.\n\nA few questions for you:\n1. Should the AI response time be shown to users?\n2. Do you want conversation threading in the AI chat?\n3. Any preferences for the voice wave animation style?\n\nLet me know when you'd like to schedule a design review session.\n\nBest,\nAlex\n\nP.S. The team loves the idea of having different AI models for desktop vs mobile!",
+      "timestamp": "2024-03-15T07:20:00Z",
+      "unread": true,
+      "important": false,
+      "hasAttachment": true,
+      "badges": ["ai"],
+      "thread": true,
+      "category": "design"
+    },
+    {
+      "id": "email-4",
+      "from": {
+        "name": "DevOps Alerts",
+        "email": "alerts@company.com",
+        "avatar": "DA"
+      },
+      "to": "john.doe@company.com",
+      "subject": "[RESOLVED] Email Assistant API - High Response Times",
+      "preview": "Alert resolved at 06:45 PST. The GPT-OSS 20B model API response times have returned to normal levels...",
+      "body": "[ALERT RESOLVED]\n\nService: Email Assistant API\nIncident: High Response Times\nResolved: March 15, 2024 at 06:45 PST\nDuration: 23 minutes\n\nSummary:\nThe GPT-OSS 20B model API experienced elevated response times between 06:22 and 06:45 PST. Response times peaked at 8.5 seconds before returning to normal (<2s).\n\nRoot Cause:\nTemporary load balancer configuration issue during routine maintenance.\n\nActions Taken:\n- Load balancer configuration corrected\n- Additional monitoring added\n- Fallback to Gemma 3 models worked as expected\n\nNext Steps:\n- Review load balancer maintenance procedures\n- Implement additional failover redundancy\n- Schedule post-mortem meeting for Monday\n\nNo user data was affected. All systems are now operating normally.\n\nDevOps Team",
+      "timestamp": "2024-03-15T06:50:00Z",
+      "unread": false,
+      "important": false,
+      "hasAttachment": false,
+      "badges": ["ai"],
+      "thread": false,
+      "category": "alerts"
+    },
+    {
+      "id": "email-5",
+      "from": {
+        "name": "Jennifer Park",
+        "email": "jennifer.park@company.com",
+        "avatar": "JP"
+      },
+      "to": "john.doe@company.com",
+      "subject": "Customer Feedback: Email Assistant Beta Program",
+      "preview": "Great news! We've received overwhelmingly positive feedback from our beta testers for the email assistant...",
+      "body": "Hi John,\n\nGreat news! We've received overwhelmingly positive feedback from our beta testers for the email assistant feature.\n\nHighlights from this week:\n📊 94% user satisfaction rate\n⚡ 67% reduction in email processing time\n🎯 89% accuracy in AI-generated responses\n💬 Users love the voice interaction feature\n\nTop User Comments:\n\"The desktop AI is incredibly smart - it understands context better than any tool I've used.\"\n\n\"Mobile quick responses are perfect for on-the-go communication.\"\n\n\"Voice commands make email management hands-free and efficient.\"\n\nAreas for Improvement:\n1. Users want more customization in AI response tone\n2. Calendar integration could be more seamless\n3. Some requests for Slack integration enhancements\n\nDetailed analytics report attached. Should we proceed with expanding the beta program to 500 more users?\n\nLooking forward to your thoughts!\n\nJennifer\n\nCustomer Success Manager",
+      "timestamp": "2024-03-14T16:30:00Z",
+      "unread": false,
+      "important": true,
+      "hasAttachment": true,
+      "badges": ["ai"],
+      "thread": false,
+      "category": "feedback"
+    },
+    {
+      "id": "email-6",
+      "from": {
+        "name": "Dr. Emily Watson",
+        "email": "emily.watson@university.edu",
+        "avatar": "EW"
+      },
+      "to": "john.doe@company.com",
+      "subject": "Research Collaboration: AI Email Processing Study",
+      "preview": "I hope this email finds you well. I'm reaching out regarding a potential research collaboration on AI-powered email processing...",
+      "body": "Dear John,\n\nI hope this email finds you well. I'm reaching out regarding a potential research collaboration on AI-powered email processing and user productivity.\n\nOur research team at Stanford's Human-Computer Interaction Lab is conducting a comprehensive study on how AI assistants impact knowledge worker productivity, particularly in email management.\n\nWe'd love to include your email assistant platform in our research, which would involve:\n\n1. User behavior analysis (anonymized)\n2. Productivity metrics comparison\n3. Long-term adoption patterns\n4. Cognitive load assessment\n\nBenefits for your team:\n- Independent validation of productivity claims\n- Academic publication opportunities\n- Access to comparative industry data\n- User experience insights from controlled studies\n\nWe have IRB approval and all data would be handled with strict confidentiality. The study would run for 6 months with quarterly reports.\n\nWould you be interested in discussing this further? I'm available for a call next week to explore the possibilities.\n\nBest regards,\nDr. Emily Watson\nAssociate Professor\nHuman-Computer Interaction Lab\nStanford University",
+      "timestamp": "2024-03-14T11:15:00Z",
+      "unread": false,
+      "important": true,
+      "hasAttachment": false,
+      "badges": ["priority"],
+      "thread": false,
+      "category": "external"
+    },
+    {
+      "id": "email-7",
+      "from": {
+        "name": "Newsletter Bot",
+        "email": "updates@aitools.com",
+        "avatar": "NB"
+      },
+      "to": "john.doe@company.com",
+      "subject": "Weekly AI Tools Digest - New Language Models & APIs",
+      "preview": "This week in AI: GPT-5 rumors, new open-source models, and breakthrough in voice synthesis technology...",
+      "body": "🤖 Weekly AI Tools Digest\n\nThis Week's Highlights:\n\n🚀 New Releases:\n- Anthropic Claude 3.5 Sonnet improvements\n- Meta's Llama 3.1 fine-tuning toolkit\n- OpenAI's new voice synthesis API\n- Google's Gemini Pro vision updates\n\n📊 Industry News:\n- 40% growth in enterprise AI adoption\n- New EU AI regulations announcement\n- Microsoft's $10B AI infrastructure investment\n- Apple's on-device AI processing breakthrough\n\n🔧 Developer Tools:\n- LangChain 0.2.5 with improved memory\n- New Hugging Face Transformers release\n- Pinecone vector database updates\n- ElevenLabs API price reduction\n\n💡 Use Cases Spotlight:\n- Email automation success stories\n- Voice-first customer service\n- Multi-modal AI in healthcare\n- Personalized learning platforms\n\nNext Week Preview:\n- AI conference highlights\n- New model benchmarks\n- Tool comparison guides\n\nHappy building!\nThe AI Tools Team\n\n---\nUnsubscribe | Update Preferences",
+      "timestamp": "2024-03-14T09:00:00Z",
+      "unread": false,
+      "important": false,
+      "hasAttachment": false,
+      "badges": ["ai"],
+      "thread": false,
+      "category": "newsletter"
+    },
+    {
+      "id": "email-8",
+      "from": {
+        "name": "Tom Mitchell",
+        "email": "tom.mitchell@company.com",
+        "avatar": "TM"
+      },
+      "to": "john.doe@company.com",
+      "subject": "Security Review: Email Assistant Data Handling",
+      "preview": "Completed the security assessment for the email assistant platform. Overall security posture is strong with a few recommendations...",
+      "body": "Hi John,\n\nCompleted the security assessment for the email assistant platform. Overall security posture is strong with a few recommendations for enhancement.\n\n✅ PASSED:\n- End-to-end encryption implementation\n- Secure API authentication\n- Data minimization practices\n- GDPR compliance measures\n- SOC 2 Type II readiness\n\n🔍 RECOMMENDATIONS:\n- Implement additional rate limiting for AI model APIs\n- Add multi-factor authentication for admin access\n- Enhance audit logging for data access\n- Consider zero-trust architecture for cloud deployment\n\n🔒 AI Model Security:\n- GPT-OSS 20B: Secure cloud deployment ✅\n- Gemma 3 models: Edge security validated ✅\n- ElevenLabs: API security review complete ✅\n- Vector database: Encryption at rest confirmed ✅\n\nCompliance Status:\n- HIPAA: Ready for healthcare deployment\n- SOX: Financial services compliance met\n- ISO 27001: Certification path defined\n\nDetailed security report and remediation timeline attached.\n\nScheduling follow-up security training for the team next week.\n\nBest,\nTom Mitchell\nCISO",
+      "timestamp": "2024-03-13T15:45:00Z",
+      "unread": false,
+      "important": true,
+      "hasAttachment": true,
+      "badges": ["priority"],
+      "thread": false,
+      "category": "security"
+    },
+    {
+      "id": "email-9",
+      "from": {
+        "name": "Maya Patel",
+        "email": "maya.patel@company.com",
+        "avatar": "MP"
+      },
+      "to": "john.doe@company.com",
+      "subject": "Form Automation Success: 95% Accuracy Rate Achieved",
+      "preview": "Exciting update on the form automation feature! We've achieved a 95% accuracy rate in automated form filling...",
+      "body": "Hi John,\n\nExciting update on the form automation feature! We've achieved a 95% accuracy rate in automated form filling during our latest testing cycle.\n\n📈 Performance Metrics:\n- Form detection accuracy: 98%\n- Field mapping accuracy: 95%\n- Auto-completion success: 94%\n- User satisfaction: 92%\n\n🎯 Most Successful Form Types:\n1. Contact information forms (99% accuracy)\n2. Meeting request forms (97% accuracy)\n3. Survey responses (94% accuracy)\n4. Registration forms (93% accuracy)\n5. Feedback submissions (91% accuracy)\n\n🧠 AI Model Performance:\n- Desktop (GPT-OSS 20B): 97% accuracy, excellent at complex forms\n- Mobile (Gemma 3): 91% accuracy, optimized for common forms\n- Context understanding from email content: 96% accuracy\n\n🔄 Recent Improvements:\n- Better handling of multi-page forms\n- Enhanced context extraction from email threads\n- Improved validation and error checking\n- Support for 15 additional form field types\n\nNext Steps:\n- A/B testing with 200 beta users\n- Integration with popular form platforms\n- Machine learning model fine-tuning\n- Custom form template creation\n\nDemo video and detailed metrics attached!\n\nCheers,\nMaya\nAI Engineering Lead",
+      "timestamp": "2024-03-13T10:20:00Z",
+      "unread": false,
+      "important": false,
+      "hasAttachment": true,
+      "badges": ["ai"],
+      "thread": false,
+      "category": "engineering"
+    },
+    {
+      "id": "email-10",
+      "from": {
+        "name": "Customer Support",
+        "email": "support@company.com",
+        "avatar": "CS"
+      },
+      "to": "john.doe@company.com",
+      "subject": "Voice Feature Feedback: User Experience Insights",
+      "preview": "Summary of user feedback on the voice interaction features from this week's support tickets and user interviews...",
+      "body": "Voice Feature Feedback Summary\n\nHi John,\n\nSummary of user feedback on the voice interaction features from this week's support tickets and user interviews.\n\n🎙️ Voice Command Usage:\n- 78% of users actively use voice commands\n- Average 12 voice interactions per day\n- Most popular: \"Read my emails\" (45% of commands)\n- Second most: \"Compose email to...\" (32% of commands)\n\n💬 ElevenLabs Voice Quality:\n- 96% satisfaction with voice synthesis quality\n- Users appreciate natural-sounding speech\n- Multi-language support highly valued\n- Voice cloning feature generates excitement\n\n🔊 User Quotes:\n\"The voice feature makes email management feel like having a personal assistant.\"\n\n\"I love that I can dictate emails while walking to meetings.\"\n\n\"The AI understands my voice commands even in noisy environments.\"\n\n\"Voice email reading helps during commutes.\"\n\n⚠️ Common Issues:\n1. Occasional mic permission conflicts (3% of users)\n2. Voice recognition in very noisy environments (5% accuracy drop)\n3. Some confusion with complex multi-step commands\n4. Request for more customizable wake words\n\n💡 Feature Requests:\n- Voice email search functionality\n- Hands-free calendar management\n- Voice-based email prioritization\n- Integration with car systems\n\nOverall sentiment: Very positive! Voice features are becoming a key differentiator.\n\nDetailed analytics and user quotes document attached.\n\nBest regards,\nCustomer Support Team",
+      "timestamp": "2024-03-12T14:10:00Z",
+      "unread": false,
+      "important": false,
+      "hasAttachment": true,
+      "badges": ["ai"],
+      "thread": false,
+      "category": "support"
+    }
+  ],
+  "contacts": [
+    {
+      "name": "Sarah Chen",
+      "email": "sarah.chen@techcorp.com",
+      "avatar": "SC",
+      "role": "Product Manager",
+      "company": "TechCorp"
+    },
+    {
+      "name": "Alex Rodriguez",
+      "email": "alex.r@designstudio.com",
+      "avatar": "AR",
+      "role": "UX Designer",
+      "company": "Design Studio"
+    },
+    {
+      "name": "Jennifer Park",
+      "email": "jennifer.park@company.com",
+      "avatar": "JP",
+      "role": "Customer Success Manager",
+      "company": "Our Company"
+    },
+    {
+      "name": "Dr. Emily Watson",
+      "email": "emily.watson@university.edu",
+      "avatar": "EW",
+      "role": "Associate Professor",
+      "company": "Stanford University"
+    },
+    {
+      "name": "Tom Mitchell",
+      "email": "tom.mitchell@company.com",
+      "avatar": "TM",
+      "role": "CISO",
+      "company": "Our Company"
+    },
+    {
+      "name": "Maya Patel",
+      "email": "maya.patel@company.com",
+      "avatar": "MP",
+      "role": "AI Engineering Lead",
+      "company": "Our Company"
+    }
+  ],
+  "aiResponses": [
+    {
+      "trigger": "summarize inbox",
+      "response": "I've analyzed your inbox and found 3 urgent emails requiring immediate attention:\n\n1. **Sarah Chen** - Q1 Product Roadmap Review (High Priority)\n   - Needs response by tomorrow\n   - Key decision points on AI integration timeline\n\n2. **Dr. Emily Watson** - Research Collaboration Opportunity\n   - Stanford University partnership proposal\n   - Could provide valuable validation for our platform\n\n3. **Tom Mitchell** - Security Review Complete\n   - Overall positive assessment\n   - Few minor recommendations to address\n\nShall I help you draft responses to any of these emails?"
+    },
+    {
+      "trigger": "draft meeting invite",
+      "response": "I'll help you create a meeting invitation. Based on your recent emails, I see you might need to schedule:\n\n1. Call with Sarah Chen about Q1 roadmap priorities\n2. Discussion with Dr. Emily Watson about research collaboration\n3. Security review follow-up with Tom Mitchell\n\nWhich meeting would you like me to help you schedule? I can suggest optimal times based on your calendar and the urgency level."
+    },
+    {
+      "trigger": "find urgent emails",
+      "response": "I found 3 urgent emails in your inbox:\n\n🔴 **High Priority:**\n• Sarah Chen - Q1 Product Roadmap Review (Action Required)\n• Jennifer Park - Customer Feedback Report (Decision Needed)\n\n🟡 **Medium Priority:**\n• Tom Mitchell - Security Review Complete (Review Recommendations)\n\nAll of these have been flagged based on keywords like 'urgent', 'action required', and sender importance. Would you like me to help prioritize responses or draft replies?"
+    }
+  ]
+}

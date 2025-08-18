@@ -468,6 +468,11 @@ body {
     color: white;
 }
 
+.tier-beta {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+}
+
 .tier-max {
     background: linear-gradient(135deg, var(--primary), var(--cyan));
     color: white;
@@ -788,6 +793,11 @@ body {
 .tier-pro {
     background: linear-gradient(135deg, var(--purple), var(--pink));
     color: white;
+}
+
+.tier-beta {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
 }
 
 .tier-max {
