@@ -37,7 +37,7 @@ Task(subagent_type="documentation-searcher", description="Find Electron navigati
 
 ## Repository Overview
 
-This is the Claude Code Agent Infrastructure repository - a comprehensive collection of specialized AI agents and MCP server configurations designed to enhance software development workflows. The repository provides 8 specialized agents with focused expertise across different domains.
+This is the Claude Code Agent Infrastructure repository - a comprehensive collection of specialized AI agents and MCP server configurations designed to enhance software development workflows. The repository provides 9 specialized agents with focused expertise across different domains.
 
 ## Quick Setup
 
@@ -72,6 +72,7 @@ claude /mcps
 - **@browser-testing-agent** - Playwright browser automation and E2E testing
 - **@documentation-searcher** - Technical documentation search and reference
 - **@video-content-agent** - YouTube content analysis and educational material processing
+- **@internet-search-agent** - Web scraping, content extraction, and research using Firecrawl
 
 ### Agent Usage Patterns
 ```bash
@@ -86,6 +87,9 @@ claude @workflow-agent "Create a webhook workflow for processing form submission
 
 # GitHub integration tasks
 claude @github-agent "Review this pull request and add detailed inline comments"
+
+# Web scraping and research
+claude @internet-search-agent "Research competitor pricing and extract structured data"
 ```
 
 ## MCP Server Infrastructure
@@ -99,6 +103,7 @@ claude @github-agent "Review this pull request and add detailed inline comments"
 - **shadcn-ui** - Modern UI component library (`@jpisnice/shadcn-ui-mcp-server`)
 - **Ref** - Technical documentation search (HTTP API)
 - **mcp-youtube** - Video content processing (`@anaisbetts/mcp-youtube`)
+- **firecrawl-mcp** - Web scraping and content extraction (`firecrawl-mcp`)
 - **supabase** - Database operations and backend services (`@supabase/mcp-server-supabase`)
 - **clerk** - User authentication and management (custom implementation)
 
@@ -108,6 +113,7 @@ Required environment variables in `.env`:
 GITHUB_PERSONAL_ACCESS_TOKEN=your_token_here
 N8N_API_KEY=your_n8n_key_here  
 REF_API_KEY=your_ref_key_here
+FIRECRAWL_API_KEY=your_firecrawl_api_key_here
 SUPABASE_URL=your_supabase_project_url_here
 SUPABASE_ANON_KEY=your_supabase_anon_key_here
 SUPABASE_ACCESS_TOKEN=your_supabase_access_token_here

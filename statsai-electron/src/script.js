@@ -26,24 +26,28 @@ function initializeNavigation() {
     
     navLinks.forEach(link => {
         link.addEventListener('click', function(e) {
-            e.preventDefault();
+            const href = this.getAttribute('href');
             
-            const targetId = this.getAttribute('href');
-            const targetSection = document.querySelector(targetId);
-            
-            if (targetSection) {
-                // Smooth scroll to section
-                targetSection.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
+            // Only prevent default for hash links (internal sections)
+            if (href.startsWith('#')) {
+                e.preventDefault();
                 
-                // Add active state animation
-                this.style.transform = 'translateY(-2px)';
-                setTimeout(() => {
-                    this.style.transform = '';
-                }, 200);
+                const targetSection = document.querySelector(href);
+                
+                if (targetSection) {
+                    // Smooth scroll to section
+                    targetSection.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
             }
+            
+            // Add active state animation for all links
+            this.style.transform = 'translateY(-2px)';
+            setTimeout(() => {
+                this.style.transform = '';
+            }, 200);
         });
     });
 }

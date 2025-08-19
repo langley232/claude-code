@@ -16,6 +16,7 @@ AGENT_FILES=(
     "video-content-agent.md"
     "code-review-agent.md"
     "debugger-agent.md"
+    "internet-search-agent.md"
 )
 
 # Copy agent files to Claude agents directory
@@ -48,6 +49,7 @@ echo "  • video-content-agent - YouTube content analysis"
 echo "  • documentation-searcher - Technical documentation search"
 echo "  • code-review-agent - Comprehensive code review and security analysis"
 echo "  • debugger-agent - Advanced debugging and troubleshooting"
+echo "  • internet-search-agent - Web scraping and research with Firecrawl"
 echo ""
 echo "Usage:"
 echo "  claude @workflow-agent 'Create a webhook workflow'"
@@ -58,5 +60,6 @@ echo "  claude @video-content-agent 'Analyze this tutorial video'"
 echo "  claude @documentation-searcher 'Find React documentation'"
 echo "  claude @code-review-agent 'Review this codebase for security issues'"
 echo "  claude @debugger-agent 'Debug this error and find the root cause'"
+echo "  claude @internet-search-agent 'Research competitor pricing and extract data'"
 echo ""
 echo "Verify setup: claude /agents"
