@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google One AI Premium - AtlasWeb</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: https://unpkg.com https://fonts.googleapis.com https://fonts.gstatic.com https://cdnjs.cloudflare.com;">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+</head>
+<body>
+    <!-- Interactive AI Background -->
+    <div class="ai-background" id="aiBackground" aria-hidden="true">
+        <div class="floating-element floating-1"></div>
+        <div class="floating-element floating-2"></div>
+        <div class="floating-element floating-3"></div>
+        <div class="floating-element floating-4"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="aura-nav">
+        <div class="nav-container">
+            <!-- Logo on the left -->
+            <div class="nav-logo">
+                <div class="logo-icon">
+                    <svg class="logo-svg" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="16" cy="16" r="14" fill="url(#logoGradient)" stroke="url(#logoStroke)" stroke-width="1"/>
+                        <path d="M2 16 L30 16 M16 2 L16 30" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/>
+                        <path d="M8 6 Q16 12 24 6 M8 26 Q16 20 24 26" stroke="rgba(255,255,255,0.4)" stroke-width="0.5"/>
+                        <path d="M6 8 Q12 16 6 24 M26 8 Q20 16 26 24" stroke="rgba(255,255,255,0.4)" stroke-width="0.5"/>
+                        <text x="16" y="21" text-anchor="middle" fill="white" font-size="12" font-weight="800" font-family="Inter">A</text>
+                        <defs>
+                            <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#6366f1"/>
+                                <stop offset="50%" style="stop-color:#8b5cf6"/>
+                                <stop offset="100%" style="stop-color:#06b6d4"/>
+                            </linearGradient>
+                            <linearGradient id="logoStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.3"/>
+                                <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0.1"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <span class="logo-text">AtlasWeb</span>
+            </div>
+
+            <!-- Navigation Links -->
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="pricing.html" class="nav-link">Pricing</a>
+            </div>
+
+            <!-- CTA buttons on the right -->
+            <div class="nav-actions">
+                <div class="theme-toggle-group">
+                    <button class="theme-toggle" title="Light mode" data-theme="light">
+                        <i data-lucide="sun"></i>
+                    </button>
+                    <button class="theme-toggle active" title="Dark mode" data-theme="dark">
+                        <i data-lucide="moon"></i>
+                    </button>
+                </div>
+                <button class="btn-secondary">Login</button>
+                <button class="btn-primary">
+                    Join up
+                    <i data-lucide="arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="specialized-hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <span class="tier-badge tier-pro">Pro</span>
+                    <span>Google One AI Premium</span>
+                </div>
+                <h1 class="hero-headline">
+                    <div class="headline-line">
+                        <div class="word-container" data-word="GOOGLE"></div>
+                        <div class="word-container" data-word="ONE"></div>
+                    </div>
+                    <div class="headline-line">
+                        <div class="word-container" data-word="AI"></div>
+                        <div class="word-container headline-accent" data-word="PREMIUM"></div>
+                    </div>
+                </h1>
+                <p class="hero-subtitle">
+                    Powered by Google's most capable AI models. Experience premium features including Veo 2 video creation, Deep Research, and advanced document processing.
+                </p>
+                <button class="hero-cta">
+                    Get Pro Access
+                    <i data-lucide="arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pro Features Section -->
+    <section class="pro-features-section">
+        <div class="section-container">
+            <div class="section-header">
+                <h2 class="section-title">Pro Features Included</h2>
+                <p class="section-subtitle">
+                    Experience the next level of intelligent search with premium AI capabilities
+                </p>
+            </div>
+
+            <!-- Main Pro Features -->
+            <div class="features-grid">
+                <div class="feature-card feature-highlight">
+                    <div class="feature-icon feature-icon-purple">
+                        <i data-lucide="zap"></i>
+                    </div>
+                    <div class="feature-check">✓</div>
+                    <h3 class="feature-title">Powered by Google</h3>
+                    <p class="feature-description">
+                        More access to Google's most capable AI models with enhanced reasoning, analysis, and search capabilities.
+                    </p>
+                </div>
+
+                <div class="feature-card feature-highlight">
+                    <div class="feature-icon feature-icon-pink">
+                        <i data-lucide="video"></i>
+                    </div>
+                    <div class="feature-check">✓</div>
+                    <h3 class="feature-title">Create high-quality video clips with Veo 2</h3>
+                    <p class="feature-description">
+                        Professional video creation technology for content creators and businesses.
+                    </p>
+                </div>
+
+                <div class="feature-card feature-highlight">
+                    <div class="feature-icon feature-icon-cyan">
+                        <i data-lucide="search"></i>
+                    </div>
+                    <div class="feature-check">✓</div>
+                    <h3 class="feature-title">Unlock access to premium features, including Deep Research</h3>
+                    <p class="feature-description">
+                        Advanced research capabilities and premium search algorithms across all platforms.
+                    </p>
+                </div>
+
+                <div class="feature-card feature-highlight">
+                    <div class="feature-icon feature-icon-emerald">
+                        <i data-lucide="file-text"></i>
+                    </div>
+                    <div class="feature-check">✓</div>
+                    <h3 class="feature-title">Understand large books and reports with 1,500 pages of file uploads</h3>
+                    <p class="feature-description">
+                        Process massive documents with advanced AI comprehension and analysis.
+                    </p>
+                </div>
+
+                <div class="feature-card feature-highlight">
+                    <div class="feature-icon feature-icon-orange">
+                        <i data-lucide="brain"></i>
+                    </div>
+                    <div class="feature-check">✓</div>
+                    <h3 class="feature-title">Experience our most capable AI models</h3>
+                    <p class="feature-description">
+                        Cutting-edge artificial intelligence technology for superior performance and accuracy.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Google One Subscription Benefits -->
+            <div class="subscription-benefits">
+                <div class="benefits-header">
+                    <h3>Also Included in Google One AI Premium</h3>
+                    <p>Complete AI toolkit with additional premium features</p>
+                </div>
+
+                <div class="benefits-grid">
+                    <div class="benefit-item">
+                        <div class="benefit-icon">
+                            <i data-lucide="film"></i>
+                        </div>
+                        <div class="benefit-check">✓</div>
+                        <div class="benefit-content">
+                            <h4>Flow: our AI filmmaking tool to create cinematic scenes and stories, including limited access to Veo 3</h4>
+                            <p>Professional filmmaking capabilities with cutting-edge video generation</p>
+                        </div>
+                    </div>
+
+                    <div class="benefit-item">
+                        <div class="benefit-icon">
+                            <i data-lucide="image"></i>
+                        </div>
+                        <div class="benefit-check">✓</div>
+                        <div class="benefit-content">
+                            <h4>Whisk: with higher limits to image-to-video creation with Veo 2</h4>
+                            <p>Transform static images into dynamic video content with advanced AI</p>
+                        </div>
+                    </div>
+
+                    <div class="benefit-item">
+                        <div class="benefit-icon">
+                            <i data-lucide="notebook-pen"></i>
+                        </div>
+                        <div class="benefit-check">✓</div>
+                        <div class="benefit-content">
+                            <h4>NotebookLM: our research and writing assistant with 5x higher limits</h4>
+                            <p>Enhanced research capabilities with significantly increased usage allowances</p>
+                        </div>
+                    </div>
+
+                    <div class="benefit-item">
+                        <div class="benefit-icon">
+                            <i data-lucide="mail"></i>
+                        </div>
+                        <div class="benefit-check">✓</div>
+                        <div class="benefit-content">
+                            <h4>Gemini in Gmail, Docs, Vids & more</h4>
+                            <p>AI assistance integrated across all Google Workspace applications</p>
+                        </div>
+                    </div>
+
+                    <div class="benefit-item">
+                        <div class="benefit-icon">
+                            <i data-lucide="hard-drive"></i>
+                        </div>
+                        <div class="benefit-check">✓</div>
+                        <div class="benefit-content">
+                            <h4>2 TB of total storage</h4>
+                            <p>Massive cloud storage for all your projects, files, and AI-generated content</p>
+                        </div>
+                    </div>
+
+                    <div class="benefit-item">
+                        <div class="benefit-icon">
+                            <i data-lucide="star"></i>
+                        </div>
+                        <div class="benefit-check">✓</div>
+                        <div class="benefit-content">
+                            <h4>Other premium benefits</h4>
+                            <p>Access to additional premium features and priority support</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CTA Section -->
+            <div class="pro-cta-section">
+                <div class="cta-content">
+                    <h3>Ready to Unlock Pro Features?</h3>
+                    <p>Join thousands of users already experiencing the future of intelligent search</p>
+                    <div class="cta-buttons">
+                        <button class="btn-primary btn-large">
+                            Start Pro Trial
+                            <i data-lucide="arrow-right"></i>
+                        </button>
+                        <button class="btn-secondary btn-large">
+                            View Pricing
+                            <i data-lucide="eye"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-content">
+                <!-- Company Info -->
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <div class="logo-icon">
+                            <svg class="logo-svg" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="16" cy="16" r="14" fill="url(#logoGradientFooter)" stroke="url(#logoStrokeFooter)" stroke-width="1"/>
+                                <path d="M2 16 L30 16 M16 2 L16 30" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/>
+                                <path d="M8 6 Q16 12 24 6 M8 26 Q16 20 24 26" stroke="rgba(255,255,255,0.4)" stroke-width="0.5"/>
+                                <path d="M6 8 Q12 16 6 24 M26 8 Q20 16 26 24" stroke="rgba(255,255,255,0.4)" stroke-width="0.5"/>
+                                <text x="16" y="21" text-anchor="middle" fill="white" font-size="12" font-weight="800" font-family="Inter">A</text>
+                                <defs>
+                                    <linearGradient id="logoGradientFooter" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#6366f1"/>
+                                        <stop offset="50%" style="stop-color:#8b5cf6"/>
+                                        <stop offset="100%" style="stop-color:#06b6d4"/>
+                                    </linearGradient>
+                                    <linearGradient id="logoStrokeFooter" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.3"/>
+                                        <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0.1"/>
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </div>
+                        <span class="logo-text">AtlasWeb</span>
+                    </div>
+                    <p class="footer-description">
+                        Transform your web data into actionable insights instantly. 
+                        Advanced analytics platform for modern businesses and developers.
+                    </p>
+                </div>
+
+                <!-- Product Links -->
+                <div class="footer-section">
+                    <h4 class="footer-heading">PRODUCT</h4>
+                    <ul class="footer-links">
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="pricing.html">Pricing</a></li>
+                        <li><a href="#docs">Documentation</a></li>
+                        <li><a href="#api">API</a></li>
+                    </ul>
+                </div>
+
+                <!-- Company Links -->
+                <div class="footer-section">
+                    <h4 class="footer-heading">COMPANY</h4>
+                    <ul class="footer-links">
+                        <li><a href="#about">About</a></li>
+                        <li><a href="#blog">Blog</a></li>
+                        <li><a href="#careers">Careers</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                    </ul>
+                </div>
+
+                <!-- Support Links -->
+                <div class="footer-section">
+                    <h4 class="footer-heading">SUPPORT</h4>
+                    <ul class="footer-links">
+                        <li><a href="#help">Help Center</a></li>
+                        <li><a href="#privacy">Privacy</a></li>
+                        <li><a href="#terms">Terms</a></li>
+                        <li><a href="#security">Security</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Bottom Footer -->
+            <div class="footer-bottom">
+                <div class="footer-bottom-content">
+                    <p class="footer-copyright">© 2025 AtlasWeb. All rights reserved.</p>
+                    <div class="footer-social">
+                        <a href="#" class="social-link" title="Twitter">
+                            <i data-lucide="twitter"></i>
+                        </a>
+                        <a href="#" class="social-link" title="GitHub">
+                            <i data-lucide="github"></i>
+                        </a>
+                        <a href="#" class="social-link" title="LinkedIn">
+                            <i data-lucide="linkedin"></i>
+                        </a>
+                        <a href="#" class="social-link" title="Discord">
+                            <i data-lucide="message-circle"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
