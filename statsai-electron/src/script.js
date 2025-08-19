@@ -177,7 +177,7 @@ function initializeDropdownNavigation() {
             setTimeout(() => {
                 item.style.opacity = '1';
                 item.style.transform = 'translateY(0)';
-            }, index * 50);
+            }, index * 20); // Reduced from 50ms to 20ms
         });
         
         // Initialize icons in dropdown if not already done
@@ -259,7 +259,7 @@ function initializeDropdownNavigation() {
     dropdownItemsInit.forEach(item => {
         item.style.opacity = '0';
         item.style.transform = 'translateY(10px)';
-        item.style.transition = 'all 0.3s ease';
+        item.style.transition = 'all 0.2s ease'; // Reduced from 0.3s to 0.2s
     });
 }
 
@@ -350,29 +350,31 @@ function initializeAnimations() {
         });
     });
     
-    // Add stagger animation to feature cards
+    // Make feature cards appear instantly like pricing cards
     const featureCards = document.querySelectorAll('.feature-card');
     
+    // For better performance, use a simple immediate reveal approach
     const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
+        threshold: 0.01, // Trigger earlier
+        rootMargin: '50px 0px -10px 0px' // More generous margins
     };
     
     const cardObserver = new IntersectionObserver((entries) => {
-        entries.forEach((entry, index) => {
+        entries.forEach((entry) => {
             if (entry.isIntersecting) {
-                setTimeout(() => {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
-                }, index * 100);
+                // Immediate animation - no delay
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+                cardObserver.unobserve(entry.target); // Stop observing once animated
             }
         });
     }, observerOptions);
     
     featureCards.forEach(card => {
+        // Set initial state
         card.style.opacity = '0';
-        card.style.transform = 'translateY(30px)';
-        card.style.transition = 'all 0.6s ease';
+        card.style.transform = 'translateY(20px)'; // Reduced from 30px
+        card.style.transition = 'all 0.2s ease'; // Faster transition
         cardObserver.observe(card);
     });
 }
@@ -425,9 +427,9 @@ function initializeHeadlineAnimation() {
     });
     
     // Create timeline for staggered animation with delay
-    console.log('⏰ Creating animation timeline with 0.5s delay...');
+    console.log('⏰ Creating animation timeline with 0.1s delay...');
     const tl = gsap.timeline({ 
-        delay: 0.5,
+        delay: 0.1, // Reduced from 0.5s to 0.1s
         onStart: () => {
             console.log('🚀 Animation starting now!');
         },
@@ -465,10 +467,10 @@ function initializeHeadlineAnimation() {
     tl.to('.char', {
         y: 0,
         opacity: 1,
-        duration: 0.8,
+        duration: 0.5, // Reduced from 0.8s to 0.5s
         ease: 'back.out(1.7)',
         stagger: {
-            amount: 2, // Total time for all staggers
+            amount: 1, // Reduced from 2s to 1s total stagger time
             from: 'start'
         }
     });
