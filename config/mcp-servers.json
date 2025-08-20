@@ -128,6 +128,18 @@
       "env": {
         "FIRECRAWL_API_KEY": "${FIRECRAWL_API_KEY}"
       }
+    },
+    "vercel": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "vercel-mcp"
+      ],
+      "env": {
+        "VERCEL_API_KEY": "${VERCEL_API_KEY}",
+        "VERCEL_TEAM_ID": "${VERCEL_TEAM_ID}"
+      }
     }
   }
 }
