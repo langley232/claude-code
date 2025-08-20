@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Functional Search - Google One AI Premium</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: https://unpkg.com https://fonts.googleapis.com https://fonts.gstatic.com https://cdnjs.cloudflare.com;">
+    
+    <!-- Google Fonts - Google Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Text:wght@400;500&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body class="functional-search-body">
+    <!-- Minimal Header -->
+    <header class="functional-header">
+        <div class="header-container">
+            <div class="header-logo">
+                <svg class="logo-svg-minimal" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="16" cy="16" r="14" fill="url(#logoGradientMinimal)" stroke="url(#logoStrokeMinimal)" stroke-width="1"/>
+                    <text x="16" y="21" text-anchor="middle" fill="white" font-size="12" font-weight="800" font-family="Google Sans">A</text>
+                    <defs>
+                        <linearGradient id="logoGradientMinimal" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#6442d6"/>
+                            <stop offset="100%" style="stop-color:#8b5cf6"/>
+                        </linearGradient>
+                        <linearGradient id="logoStrokeMinimal" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.3"/>
+                            <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0.1"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <span class="logo-text-minimal">AtlasWeb</span>
+            </div>
+            
+            <div class="header-actions">
+                <button class="usage-indicator" id="usageIndicator">
+                    <i data-lucide="activity"></i>
+                    <span class="usage-text">Usage: $0.00</span>
+                </button>
+                <button class="header-settings" id="settingsBtn">
+                    <i data-lucide="settings"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="functional-main">
+        <!-- Hero Search Section -->
+        <section class="search-hero">
+            <div class="search-hero-container">
+                <h1 class="search-hero-title">AI-Powered Search & Creation</h1>
+                <p class="search-hero-subtitle">Access Google's most advanced AI models for search, research, and content creation</p>
+                
+                <!-- Main Search Input -->
+                <div class="search-input-container">
+                    <div class="search-input-wrapper">
+                        <i data-lucide="search" class="search-icon"></i>
+                        <input type="text" class="search-input-main" id="searchInput" placeholder="Ask anything or search across platforms...">
+                        <button class="search-submit" id="searchSubmit">
+                            <i data-lucide="arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Feature Navigation Tabs -->
+                <div class="feature-tabs">
+                    <button class="feature-tab active" data-feature="web">
+                        <i data-lucide="globe"></i>
+                        Web Search
+                    </button>
+                    <button class="feature-tab" data-feature="youtube">
+                        <i data-lucide="play"></i>
+                        YouTube
+                    </button>
+                    <button class="feature-tab" data-feature="social">
+                        <i data-lucide="users"></i>
+                        Social Media
+                    </button>
+                    <button class="feature-tab" data-feature="documents">
+                        <i data-lucide="file-text"></i>
+                        Documents
+                    </button>
+                    <button class="feature-tab" data-feature="video">
+                        <i data-lucide="video"></i>
+                        Video Creation
+                    </button>
+                    <button class="feature-tab" data-feature="image">
+                        <i data-lucide="image"></i>
+                        Image Generation
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Container -->
+        <section class="results-section" id="resultsSection">
+            <div class="results-container">
+                
+                <!-- Loading States -->
+                <div class="loading-container" id="loadingContainer" style="display: none;">
+                    <div class="loading-card">
+                        <div class="loading-spinner"></div>
+                        <p class="loading-text">Processing your request with AI...</p>
+                        <div class="loading-progress">
+                            <div class="progress-bar" id="progressBar"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Error Display -->
+                <div class="error-container" id="errorContainer" style="display: none;">
+                    <div class="error-card">
+                        <i data-lucide="alert-circle" class="error-icon"></i>
+                        <h3 class="error-title">Something went wrong</h3>
+                        <p class="error-message" id="errorMessage">Please try again or contact support if the problem persists.</p>
+                        <button class="error-retry" id="retryBtn">Try Again</button>
+                    </div>
+                </div>
+
+                <!-- Web Search Results -->
+                <div class="results-grid web-results" id="webResults" style="display: none;">
+                    <div class="results-header">
+                        <h2>Web Search Results</h2>
+                        <div class="results-meta">
+                            <span class="results-count" id="resultsCount">0 results</span>
+                            <span class="results-time" id="resultsTime">0.00s</span>
+                        </div>
+                    </div>
+                    <div class="results-list" id="webResultsList"></div>
+                </div>
+
+                <!-- YouTube Results -->
+                <div class="results-grid youtube-results" id="youtubeResults" style="display: none;">
+                    <div class="results-header">
+                        <h2>YouTube Search Results</h2>
+                        <div class="results-actions">
+                            <button class="filter-btn" data-filter="relevance">Relevance</button>
+                            <button class="filter-btn" data-filter="date">Upload Date</button>
+                            <button class="filter-btn" data-filter="views">View Count</button>
+                        </div>
+                    </div>
+                    <div class="youtube-grid" id="youtubeGrid"></div>
+                </div>
+
+                <!-- Social Media Results -->
+                <div class="results-grid social-results" id="socialResults" style="display: none;">
+                    <div class="results-header">
+                        <h2>Social Media Results</h2>
+                        <div class="social-platforms">
+                            <button class="platform-filter active" data-platform="all">All</button>
+                            <button class="platform-filter" data-platform="twitter">Twitter</button>
+                            <button class="platform-filter" data-platform="linkedin">LinkedIn</button>
+                            <button class="platform-filter" data-platform="instagram">Instagram</button>
+                            <button class="platform-filter" data-platform="tiktok">TikTok</button>
+                        </div>
+                    </div>
+                    <div class="social-feed" id="socialFeed"></div>
+                </div>
+
+                <!-- Document Processing -->
+                <div class="document-processor" id="documentProcessor" style="display: none;">
+                    <div class="processor-header">
+                        <h2>Document Analysis & Processing</h2>
+                        <p>Upload documents up to 1,500 pages for AI-powered analysis</p>
+                    </div>
+                    
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-drop-zone" id="dropZone">
+                            <i data-lucide="upload-cloud" class="upload-icon"></i>
+                            <h3>Drag & drop your documents here</h3>
+                            <p>or click to browse files</p>
+                            <input type="file" id="fileInput" multiple accept=".pdf,.doc,.docx,.txt" style="display: none;">
+                            <div class="file-types">
+                                <span>Supported: PDF, DOC, DOCX, TXT</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="document-results" id="documentResults"></div>
+                </div>
+
+                <!-- Video Creation Interface -->
+                <div class="video-creator" id="videoCreator" style="display: none;">
+                    <div class="creator-header">
+                        <h2>Video Creation with Veo 2</h2>
+                        <p>Create high-quality videos using Google's advanced Veo 2 technology</p>
+                    </div>
+
+                    <div class="video-options">
+                        <div class="option-card">
+                            <h3>Text to Video</h3>
+                            <textarea class="video-prompt" placeholder="Describe the video you want to create..."></textarea>
+                            <button class="create-btn">Generate Video</button>
+                        </div>
+
+                        <div class="option-card">
+                            <h3>Image to Video</h3>
+                            <div class="image-upload">
+                                <input type="file" accept="image/*" class="image-input">
+                                <p>Upload an image to animate</p>
+                            </div>
+                            <button class="create-btn">Animate Image</button>
+                        </div>
+                    </div>
+
+                    <div class="video-results" id="videoResults"></div>
+                </div>
+
+                <!-- Image Generation Interface -->
+                <div class="image-generator" id="imageGenerator" style="display: none;">
+                    <div class="generator-header">
+                        <h2>AI Image Generation</h2>
+                        <p>Create and edit images using advanced AI models</p>
+                    </div>
+
+                    <div class="image-options">
+                        <div class="prompt-section">
+                            <label for="imagePrompt">Describe your image:</label>
+                            <textarea id="imagePrompt" class="image-prompt" placeholder="A detailed description of the image you want to generate..."></textarea>
+                        </div>
+
+                        <div class="style-options">
+                            <label>Style:</label>
+                            <div class="style-buttons">
+                                <button class="style-btn active" data-style="realistic">Realistic</button>
+                                <button class="style-btn" data-style="artistic">Artistic</button>
+                                <button class="style-btn" data-style="cartoon">Cartoon</button>
+                                <button class="style-btn" data-style="abstract">Abstract</button>
+                            </div>
+                        </div>
+
+                        <div class="generation-controls">
+                            <button class="generate-btn">Generate Image</button>
+                            <div class="generation-options">
+                                <label>
+                                    <input type="checkbox" id="highRes"> High Resolution
+                                </label>
+                                <label>
+                                    <input type="checkbox" id="multipleVariations"> Generate Variations
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="image-results" id="imageResults"></div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Sidebar for Advanced Options -->
+        <aside class="search-sidebar" id="searchSidebar">
+            <div class="sidebar-header">
+                <h3>Advanced Options</h3>
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i data-lucide="chevron-left"></i>
+                </button>
+            </div>
+
+            <div class="sidebar-content">
+                <!-- AI Model Selection -->
+                <div class="sidebar-section">
+                    <h4>AI Model</h4>
+                    <select class="model-select" id="modelSelect">
+                        <option value="gemini-pro">Gemini Pro</option>
+                        <option value="gemini-ultra">Gemini Ultra</option>
+                        <option value="gemini-flash">Gemini Flash</option>
+                    </select>
+                </div>
+
+                <!-- Search Settings -->
+                <div class="sidebar-section">
+                    <h4>Search Settings</h4>
+                    <label class="setting-item">
+                        <input type="checkbox" id="safeSearch" checked>
+                        <span>Safe Search</span>
+                    </label>
+                    <label class="setting-item">
+                        <input type="checkbox" id="recentResults">
+                        <span>Recent Results Only</span>
+                    </label>
+                </div>
+
+                <!-- Usage Tracking -->
+                <div class="sidebar-section">
+                    <h4>Usage</h4>
+                    <div class="usage-stats">
+                        <div class="stat-item">
+                            <span>Searches Today</span>
+                            <span id="searchesToday">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>Total Cost</span>
+                            <span id="totalCost">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rate Limiting Info -->
+                <div class="sidebar-section">
+                    <h4>Rate Limits</h4>
+                    <div class="rate-limit-info">
+                        <div class="limit-item">
+                            <span>Search API</span>
+                            <div class="limit-bar">
+                                <div class="limit-progress" style="width: 0%"></div>
+                            </div>
+                            <span class="limit-text">0/100 requests</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <!-- API Configuration Modal (Hidden by default) -->
+    <div class="modal-overlay" id="settingsModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>API Configuration</h3>
+                <button class="modal-close" id="modalClose">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="config-section">
+                    <label for="gcpApiKey">GCP API Key:</label>
+                    <input type="password" id="gcpApiKey" class="config-input" placeholder="Enter your GCP API key">
+                </div>
+                <div class="config-section">
+                    <label for="projectId">Project ID:</label>
+                    <input type="text" id="projectId" class="config-input" placeholder="Enter your GCP project ID">
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-secondary" id="cancelConfig">Cancel</button>
+                    <button class="btn-primary" id="saveConfig">Save Configuration</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="functional-search.js"></script>
+</body>
+</html>

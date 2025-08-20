@@ -7,7 +7,13 @@
     "start": "electron .",
     "dev": "electron . --dev",
     "build": "electron-builder",
-    "dist": "npm run build"
+    "dist": "npm run build",
+    "deploy": "node deploy-to-vercel.js",
+    "deploy:prod": "node deploy-to-vercel.js --production",
+    "web:dev": "npx serve src -p 3000",
+    "web:preview": "npx serve src -p 3000",
+    "vercel": "vercel",
+    "vercel:prod": "vercel --prod"
   },
   "keywords": [
     "electron",
