@@ -1,13 +1,5 @@
 {
   "version": 2,
-  "name": "atlasweb",
-  "alias": ["atlasweb.info", "www.atlasweb.info"],
-  "public": true,
-  "github": {
-    "silent": false,
-    "autoAlias": true,
-    "autoJobCancelation": true
-  },
   "builds": [
     {
       "src": "src/**/*",
@@ -24,7 +16,7 @@
       "dest": "/src/functional-search.html"
     },
     {
-      "src": "/specialized-search",
+      "src": "/specialized-search", 
       "dest": "/src/specialized-search.html"
     },
     {
@@ -36,62 +28,65 @@
       "dest": "/src/email-assistant.html"
     },
     {
-      "src": "/src/(.*)",
-      "dest": "/src/$1"
+      "src": "/registration",
+      "dest": "/src/registration.html"
     },
     {
-      "src": "/(.*\\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|otf))",
-      "dest": "/src/$1",
+      "src": "/styles.css",
+      "dest": "/src/styles.css",
       "headers": {
-        "Cache-Control": "public, max-age=31536000, immutable"
+        "Content-Type": "text/css"
       }
-    }
-  ],
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        },
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "Referrer-Policy",
-          "value": "strict-origin-when-cross-origin"
-        },
-        {
-          "key": "Permissions-Policy",
-          "value": "camera=(), microphone=(), geolocation=()"
-        }
-      ]
     },
     {
-      "source": "/src/**/*.(js|css)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
-    }
-  ],
-  "redirects": [
-    {
-      "source": "/index.html",
-      "destination": "/",
-      "permanent": true
+      "src": "/script.js",
+      "dest": "/src/script.js",
+      "headers": {
+        "Content-Type": "application/javascript"
+      }
     },
     {
-      "source": "/src/index.html",
-      "destination": "/",
-      "permanent": true
+      "src": "/functional-search.js",
+      "dest": "/src/functional-search.js",
+      "headers": {
+        "Content-Type": "application/javascript"
+      }
+    },
+    {
+      "src": "/pricing.js",
+      "dest": "/src/pricing.js", 
+      "headers": {
+        "Content-Type": "application/javascript"
+      }
+    },
+    {
+      "src": "/registration.js",
+      "dest": "/src/registration.js",
+      "headers": {
+        "Content-Type": "application/javascript"
+      }
+    },
+    {
+      "src": "/email-assistant.js",
+      "dest": "/src/email-assistant.js",
+      "headers": {
+        "Content-Type": "application/javascript"
+      }
+    },
+    {
+      "src": "/email-assistant.css",
+      "dest": "/src/email-assistant.css",
+      "headers": {
+        "Content-Type": "text/css"
+      }
+    },
+    {
+      "src": "/data/(.*)",
+      "dest": "/src/data/$1"
+    },
+    {
+      "src": "/(.*\\.(png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|otf))",
+      "dest": "/src/$1"
     }
-  ],
-  "cleanUrls": true,
-  "trailingSlash": false,
-  "framework": null
+  ]
 }

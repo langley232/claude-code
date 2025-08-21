@@ -48,9 +48,14 @@
 
             <!-- Navigation Links -->
             <div class="nav-links">
-                <a href="index.html" class="nav-link">Home</a>
-                <a href="functional-search.html" class="nav-link">Functional Search</a>
-                <a href="pricing.html" class="nav-link">Pricing</a>
+                <a href="/" class="nav-link">Home</a>
+                <div class="nav-dropdown">
+                    <a href="#features" class="nav-link nav-dropdown-trigger">
+                        Features
+                        <i data-lucide="chevron-down" class="dropdown-arrow"></i>
+                    </a>
+                </div>
+                <a href="/pricing" class="nav-link">Pricing</a>
             </div>
 
             <!-- CTA buttons on the right -->
@@ -93,7 +98,7 @@
                 <p class="hero-subtitle">
                     Powered by Google's most capable AI models. Experience premium features including Veo 2 video creation, Deep Research, and advanced document processing.
                 </p>
-                <button class="hero-cta">
+                <button class="hero-cta" onclick="location.href='/pricing'">
                     Get Pro Access
                     <i data-lucide="arrow-right"></i>
                 </button>
@@ -113,7 +118,7 @@
                     Try our fully functional search interface with all Google One AI Premium features, 
                     including Veo 2 video creation, document processing, and advanced search capabilities.
                 </p>
-                <button class="btn-primary cta-button" onclick="location.href='functional-search.html'">
+                <button class="btn-primary cta-button" onclick="location.href='/functional-search'">
                     Try Functional Search
                     <i data-lucide="arrow-right"></i>
                 </button>
