@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Social Media Search Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .test-container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        
+        .test-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .test-header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 5px;
+        }
+        
+        .status-available {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-unavailable {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .search-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        .search-btn {
+            padding: 12px 24px;
+            background: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .platform-filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .platform-btn {
+            padding: 8px 16px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .platform-btn.active {
+            background: #6366f1;
+            color: white;
+            border-color: #6366f1;
+        }
+        
+        .results-container {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 200px;
+            background: #f8f9fa;
+        }
+        
+        .result-item {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #6366f1;
+        }
+        
+        .result-platform {
+            font-weight: 600;
+            color: #6366f1;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        
+        .result-title {
+            font-weight: 600;
+            margin: 5px 0;
+        }
+        
+        .result-content {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .usage-stats {
+            background: #f0f2ff;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-header">
+            <h1>🔴 Live Social Media Search Test</h1>
+            <div class="status-indicators">
+                <span class="status-indicator" id="brightDataStatus">BrightData: Checking...</span>
+                <span class="status-indicator" id="firecrawlStatus">Firecrawl: Checking...</span>
+            </div>
+        </div>
+        
+        <div class="search-form">
+            <input type="text" class="search-input" id="searchQuery" placeholder="Enter search query..." value="AI technology">
+            <button class="search-btn" id="searchBtn">🔍 Search Live</button>
+        </div>
+        
+        <div class="platform-filters">
+            <button class="platform-btn active" data-platform="all">All Platforms</button>
+            <button class="platform-btn" data-platform="youtube">YouTube</button>
+            <button class="platform-btn" data-platform="instagram">Instagram</button>
+            <button class="platform-btn" data-platform="tiktok">TikTok</button>
+            <button class="platform-btn" data-platform="linkedin">LinkedIn</button>
+            <button class="platform-btn" data-platform="facebook">Facebook</button>
+        </div>
+        
+        <div class="usage-stats" id="usageStats">
+            <strong>Usage:</strong> <span id="usageText">Loading...</span>
+        </div>
+        
+        <div class="results-container" id="resultsContainer">
+            <div class="loading">Ready to search! Click the search button to test live social media search.</div>
+        </div>
+    </div>
+
+    <!-- Include the MCP tools integration -->
+    <script src="src/mcp-tools-integration.js"></script>
+    <!-- Include direct BrightData API test -->
+    <script src="src/direct-brightdata-test.js"></script>
+    
+    <script>
+        let currentPlatform = 'all';
+        
+        // Check MCP tool availability
+        function checkToolAvailability() {
+            setTimeout(() => {
+                const brightDataStatus = document.getElementById('brightDataStatus');
+                const firecrawlStatus = document.getElementById('firecrawlStatus');
+                
+                if (window.mcpTools) {
+                    brightDataStatus.textContent = `BrightData: ${window.mcpTools.brightDataAvailable ? 'Available' : 'Not Available'}`;
+                    brightDataStatus.className = `status-indicator ${window.mcpTools.brightDataAvailable ? 'status-available' : 'status-unavailable'}`;
+                    
+                    firecrawlStatus.textContent = `Firecrawl: ${window.mcpTools.firecrawlAvailable ? 'Available' : 'Not Available'}`;
+                    firecrawlStatus.className = `status-indicator ${window.mcpTools.firecrawlAvailable ? 'status-available' : 'status-unavailable'}`;
+                    
+                    updateUsageStats();
+                } else {
+                    brightDataStatus.textContent = 'BrightData: MCP Tools Not Loaded';
+                    brightDataStatus.className = 'status-indicator status-unavailable';
+                    firecrawlStatus.textContent = 'Firecrawl: MCP Tools Not Loaded';
+                    firecrawlStatus.className = 'status-indicator status-unavailable';
+                }
+            }, 1000);
+        }
+        
+        function updateUsageStats() {
+            if (window.mcpTools) {
+                const stats = window.mcpTools.getUsageStats();
+                document.getElementById('usageText').textContent = 
+                    `${stats.used}/${stats.total} requests used (${stats.percentage.toFixed(1)}%)`;
+            }
+        }
+        
+        // Platform filter handling
+        document.querySelectorAll('.platform-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.platform-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentPlatform = btn.dataset.platform;
+            });
+        });
+        
+        // Search functionality
+        async function performSearch() {
+            const query = document.getElementById('searchQuery').value.trim();
+            if (!query) {
+                alert('Please enter a search query');
+                return;
+            }
+            
+            const resultsContainer = document.getElementById('resultsContainer');
+            resultsContainer.innerHTML = '<div class="loading">🔍 Searching live social media data...</div>';
+            
+            try {
+                console.log(`Starting live search for: ${query} on ${currentPlatform}`);
+                
+                let results = [];
+                
+                if (window.mcpTools) {
+                    if (currentPlatform === 'all') {
+                        // Search all platforms
+                        const platforms = ['youtube', 'instagram', 'tiktok', 'linkedin', 'facebook'];
+                        const searchPromises = platforms.map(platform => 
+                            window.mcpTools.searchSocialPlatform(platform, query, 3)
+                        );
+                        
+                        const allResults = await Promise.allSettled(searchPromises);
+                        
+                        allResults.forEach(result => {
+                            if (result.status === 'fulfilled' && result.value) {
+                                results.push(...result.value);
+                            }
+                        });
+                    } else {
+                        // Search specific platform
+                        const platformResults = await window.mcpTools.searchSocialPlatform(currentPlatform, query, 8);
+                        if (platformResults) {
+                            results = platformResults;
+                        }
+                    }
+                }
+                
+                updateUsageStats();
+                displayResults(results, query);
+                
+            } catch (error) {
+                console.error('Search error:', error);
+                resultsContainer.innerHTML = `<div class="loading">❌ Search failed: ${error.message}</div>`;
+            }
+        }
+        
+        function displayResults(results, query) {
+            const resultsContainer = document.getElementById('resultsContainer');
+            
+            if (!results || results.length === 0) {
+                resultsContainer.innerHTML = `<div class="loading">No live results found for "${query}". This could mean:<br>
+                • MCP tools are not connected<br>
+                • API limits reached<br>
+                • No matching content found<br>
+                <br>Check console for detailed logs.</div>`;
+                return;
+            }
+            
+            const html = results.map(result => `
+                <div class="result-item">
+                    <div class="result-platform">${result.platform} • ${result.source || 'live'}</div>
+                    <div class="result-title">${result.title || result.content?.substring(0, 100) || 'No title'}</div>
+                    <div class="result-content">${result.description || result.content || result.snippet || 'No description available'}</div>
+                    ${result.url ? `<a href="${result.url}" target="_blank" style="color: #6366f1; font-size: 12px;">View Original →</a>` : ''}
+                </div>
+            `).join('');
+            
+            resultsContainer.innerHTML = html || '<div class="loading">No results to display</div>';
+        }
+        
+        // Event listeners
+        document.getElementById('searchBtn').addEventListener('click', performSearch);
+        document.getElementById('searchQuery').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+        
+        // Initialize
+        checkToolAvailability();
+        
+        // Test with simulated data if MCP tools aren't available
+        setTimeout(() => {
+            if (!window.mcpTools || (!window.mcpTools.brightDataAvailable && !window.mcpTools.firecrawlAvailable)) {
+                console.log('⚠️ MCP tools not available, you can still test the UI');
+                document.getElementById('usageText').textContent = 'MCP tools not connected - UI test mode';
+            }
+        }, 2000);
+    </script>
+</body>
+</html>
