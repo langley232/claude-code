@@ -248,5 +248,32 @@
       "trigger": "find urgent emails",
       "response": "I found 3 urgent emails in your inbox:\n\n🔴 **High Priority:**\n• Sarah Chen - Q1 Product Roadmap Review (Action Required)\n• Jennifer Park - Customer Feedback Report (Decision Needed)\n\n🟡 **Medium Priority:**\n• Tom Mitchell - Security Review Complete (Review Recommendations)\n\nAll of these have been flagged based on keywords like 'urgent', 'action required', and sender importance. Would you like me to help prioritize responses or draft replies?"
     }
-  ]
+  ],
+  "threadScenarios": [
+    {
+      "threadId": "roadmap-discussion",
+      "emailIds": ["email-1", "email-2"],
+      "summary": "Q1 product roadmap discussion involving Sarah Chen and team meeting coordination",
+      "keyPoints": ["AI integration timeline", "Budget allocation", "Team meeting scheduling"],
+      "draftSuggestions": {
+        "reply": "Hi Sarah,\n\nThanks for the comprehensive roadmap analysis. I've reviewed the key points you raised:\n\n1. **AI Integration Timeline**: I agree we should adjust to a more realistic timeline. Let's discuss adding a 3-week buffer.\n\n2. **Budget Allocation**: The mobile app budget increase looks justified given the scope expansion. I'll get executive approval by Wednesday.\n\n3. **Team Meeting**: Let's schedule that call for tomorrow afternoon. I'll send a calendar invite for 2:00 PM.\n\nLooking forward to our discussion.\n\nBest regards,\nJohn"
+      }
+    },
+    {
+      "threadId": "ui-feedback",
+      "emailIds": ["email-3"],
+      "summary": "Design feedback thread for email assistant UI mockups",
+      "keyPoints": ["Three-panel layout", "Voice interaction UI", "Mobile responsive design"],
+      "draftSuggestions": {
+        "reply": "Hi Alex,\n\nExcellent work on incorporating the feedback! The updated mockups look fantastic.\n\n**Approved Changes:**\n✅ Panel ratios (25% - 50% - 25%) - perfect balance\n✅ Voice visualization components - very intuitive\n✅ Mobile responsive design - works great on all devices\n\n**Answers to your questions:**\n1. **AI Response Time**: Yes, show users the response time - transparency builds trust\n2. **Conversation Threading**: Definitely include this in the AI chat\n3. **Voice Animation**: I prefer the wave animation style from option 2\n\nLet's schedule the design review for Thursday at 3:00 PM. I'll send a calendar invite.\n\nFantastic work!\nJohn"
+      }
+    }
+  ],
+  "draftTemplates": {
+    "acknowledgment": "Thank you for your email. I've received your message regarding {subject} and will review it carefully.",
+    "meeting_request": "Thank you for reaching out about {topic}. I'd be happy to discuss this further. I'm available {availability}. Please let me know what time works best for you.",
+    "information_request": "Thank you for your email about {subject}. To provide you with the most accurate information, could you please clarify {clarification_needed}?",
+    "project_update": "Thank you for the update on {project}. I've reviewed the progress and {feedback}. Please let me know if you need any additional resources or support.",
+    "decision_response": "Thank you for bringing {topic} to my attention. After careful consideration, I {decision}. {reasoning}"
+  }
 }

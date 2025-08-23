@@ -249,21 +249,35 @@
                 <div class="email-content-container">
                     <div class="email-content-header">
                         <div class="content-toolbar">
-                            <button class="toolbar-btn" title="Archive">
-                                <i data-lucide="archive"></i>
-                            </button>
-                            <button class="toolbar-btn" title="Delete">
-                                <i data-lucide="trash-2"></i>
-                            </button>
-                            <button class="toolbar-btn" title="Mark as spam">
-                                <i data-lucide="shield"></i>
-                            </button>
-                            <button class="toolbar-btn" title="Reply">
-                                <i data-lucide="reply"></i>
-                            </button>
-                            <button class="toolbar-btn" title="Forward">
-                                <i data-lucide="arrow-right"></i>
-                            </button>
+                            <div class="toolbar-left">
+                                <button class="toolbar-btn" title="Archive">
+                                    <i data-lucide="archive"></i>
+                                </button>
+                                <button class="toolbar-btn" title="Delete">
+                                    <i data-lucide="trash-2"></i>
+                                </button>
+                                <button class="toolbar-btn" title="Mark as spam">
+                                    <i data-lucide="shield"></i>
+                                </button>
+                            </div>
+                            <div class="toolbar-center">
+                                <button class="toolbar-btn ai-btn" id="aiSummarizeBtn" title="AI Summarize Thread">
+                                    <i data-lucide="brain"></i>
+                                    <span>Summarize</span>
+                                </button>
+                                <button class="toolbar-btn ai-btn" id="aiDraftBtn" title="AI Draft Reply">
+                                    <i data-lucide="pen-tool"></i>
+                                    <span>Draft Reply</span>
+                                </button>
+                            </div>
+                            <div class="toolbar-right">
+                                <button class="toolbar-btn" id="replyBtn" title="Reply">
+                                    <i data-lucide="reply"></i>
+                                </button>
+                                <button class="toolbar-btn" title="Forward">
+                                    <i data-lucide="arrow-right"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div class="email-content" id="emailContent">
@@ -439,6 +453,94 @@
                         <div class="processing-info">
                             <span id="processedEmails">0</span> emails processed
                             <button class="btn-secondary" id="reprocessEmails">Reprocess All</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Draft Modal -->
+    <div id="draftModal" class="modal" style="display: none;">
+        <div class="modal-content draft-modal-content">
+            <div class="modal-header">
+                <h2>🤖 AI Email Draft</h2>
+                <button class="modal-close" id="closeDraft">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body draft-modal-body">
+                <!-- Thread Summary Section -->
+                <div class="thread-summary-section" id="threadSummarySection" style="display: none;">
+                    <div class="summary-header">
+                        <h3>📧 Thread Summary</h3>
+                        <button class="collapse-btn" id="toggleThreadSummary">▼</button>
+                    </div>
+                    <div class="summary-content" id="threadSummaryContent">
+                        <!-- Thread summary will be populated here -->
+                    </div>
+                </div>
+                
+                <!-- Draft Generation Section -->
+                <div class="draft-section">
+                    <div class="draft-header">
+                        <h3>📝 Draft Email</h3>
+                        <div class="draft-actions">
+                            <button class="btn-secondary" id="regenerateDraft">
+                                <i data-lucide="refresh-cw"></i>
+                                Regenerate
+                            </button>
+                            <button class="btn-secondary" id="editDraft">
+                                <i data-lucide="edit"></i>
+                                Edit Mode
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="draft-content">
+                        <div class="draft-loading" id="draftLoading" style="display: none;">
+                            <div class="loading-spinner"></div>
+                            <p>Generating AI draft...</p>
+                        </div>
+                        
+                        <div class="draft-form" id="draftForm">
+                            <div class="draft-field">
+                                <label>Subject:</label>
+                                <input type="text" id="draftSubject" readonly>
+                            </div>
+                            
+                            <div class="draft-field">
+                                <label>Message:</label>
+                                <textarea id="draftMessage" rows="12" readonly></textarea>
+                            </div>
+                            
+                            <div class="draft-suggestions" id="draftSuggestions" style="display: none;">
+                                <h4>Suggested Improvements:</h4>
+                                <div class="suggestions-list" id="suggestionsList">
+                                    <!-- Suggestions will be populated here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="draft-footer">
+                        <div class="draft-stats">
+                            <span class="draft-stat" id="wordCount">0 words</span>
+                            <span class="draft-stat" id="toneIndicator">Professional tone</span>
+                        </div>
+                        <div class="draft-buttons">
+                            <button class="btn-secondary" id="saveDraftBtn">
+                                <i data-lucide="save"></i>
+                                Save Draft
+                            </button>
+                            <button class="btn-primary" id="sendDraftBtn">
+                                <i data-lucide="send"></i>
+                                Send Email
+                            </button>
+                            <button class="btn-secondary" id="cancelDraftBtn">
+                                <i data-lucide="x"></i>
+                                Cancel
+                            </button>
                         </div>
                     </div>
                 </div>

@@ -159,6 +159,12 @@ class EmailAssistant {
             });
         }
         
+        // Panel resizer
+        this.initializeResizer();
+        
+        // AI action buttons
+        this.setupAIActionHandlers();
+        
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => this.handleKeyboardShortcuts(e));
     }
@@ -195,6 +201,74 @@ class EmailAssistant {
         });
     }
     
+    setupAIActionHandlers() {
+        // AI Summarize button
+        const aiSummarizeBtn = document.getElementById('aiSummarizeBtn');
+        if (aiSummarizeBtn) {
+            aiSummarizeBtn.addEventListener('click', () => this.performAISummarization());
+        }
+        
+        // AI Draft button
+        const aiDraftBtn = document.getElementById('aiDraftBtn');
+        if (aiDraftBtn) {
+            aiDraftBtn.addEventListener('click', () => this.showDraftModal());
+        }
+        
+        // Draft modal handlers
+        this.setupDraftModalHandlers();
+    }
+    
+    setupDraftModalHandlers() {
+        // Close modal handlers
+        const closeDraftModal = document.getElementById('closeDraftModal');
+        if (closeDraftModal) {
+            closeDraftModal.addEventListener('click', () => this.hideDraftModal());
+        }
+        
+        // Thread summary toggle
+        const threadSummaryToggle = document.getElementById('threadSummaryToggle');
+        if (threadSummaryToggle) {
+            threadSummaryToggle.addEventListener('click', () => this.toggleThreadSummary());
+        }
+        
+        // Draft action handlers
+        const regenerateDraftBtn = document.getElementById('regenerateDraftBtn');
+        if (regenerateDraftBtn) {
+            regenerateDraftBtn.addEventListener('click', () => this.regenerateDraft());
+        }
+        
+        const editDraftBtn = document.getElementById('editDraftBtn');
+        if (editDraftBtn) {
+            editDraftBtn.addEventListener('click', () => this.enableDraftEditing());
+        }
+        
+        const saveDraftBtn = document.getElementById('saveDraftBtn');
+        if (saveDraftBtn) {
+            saveDraftBtn.addEventListener('click', () => this.saveDraft());
+        }
+        
+        const sendDraftBtn = document.getElementById('sendDraftBtn');
+        if (sendDraftBtn) {
+            sendDraftBtn.addEventListener('click', () => this.sendDraft());
+        }
+        
+        // Modal overlay click to close
+        const draftModal = document.getElementById('draftModal');
+        if (draftModal) {
+            draftModal.addEventListener('click', (e) => {
+                if (e.target === draftModal) {
+                    this.hideDraftModal();
+                }
+            });
+        }
+        
+        // Word count updates
+        const draftMessage = document.getElementById('draftMessage');
+        if (draftMessage) {
+            draftMessage.addEventListener('input', () => this.updateWordCount());
+        }
+    }
+    
     setupComposeHandlers() {
         const composeForm = document.getElementById('composeForm');
         const closeCompose = document.getElementById('closeCompose');
@@ -227,6 +301,97 @@ class EmailAssistant {
         if (closeSettings) {
             closeSettings.addEventListener('click', () => this.hideSettings());
         }
+    }
+    
+    initializeResizer() {
+        const resizer = document.getElementById('panelResizer');
+        const emailListContainer = document.querySelector('.email-list-container');
+        const emailContentContainer = document.querySelector('.email-content-container');
+        const centerPanel = document.querySelector('.email-center-panel');
+        
+        if (!resizer || !emailListContainer || !emailContentContainer || !centerPanel) {
+            console.warn('⚠️ Resizer elements not found');
+            return;
+        }
+        
+        let isResizing = false;
+        let startY = 0;
+        let startListHeight = 0;
+        
+        // Load saved layout preferences
+        const savedListHeight = localStorage.getItem('emailListHeight');
+        if (savedListHeight) {
+            const listHeight = parseInt(savedListHeight);
+            const totalHeight = centerPanel.clientHeight;
+            const contentHeight = totalHeight - listHeight;
+            
+            emailListContainer.style.height = listHeight + 'px';
+            emailContentContainer.style.height = contentHeight + 'px';
+        }
+        
+        resizer.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            startY = e.clientY;
+            startListHeight = emailListContainer.clientHeight;
+            
+            // Add visual feedback
+            resizer.style.background = 'var(--color-primary)';
+            document.body.style.cursor = 'ns-resize';
+            
+            // Prevent text selection during resize
+            document.body.style.userSelect = 'none';
+            
+            e.preventDefault();
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+            
+            const deltaY = e.clientY - startY;
+            const newListHeight = startListHeight + deltaY;
+            const totalHeight = centerPanel.clientHeight;
+            const minHeight = totalHeight * 0.3; // 30% minimum
+            const maxHeight = totalHeight * 0.7; // 70% maximum
+            
+            // Apply constraints
+            const constrainedListHeight = Math.max(minHeight, Math.min(maxHeight, newListHeight));
+            const constrainedContentHeight = totalHeight - constrainedListHeight;
+            
+            emailListContainer.style.height = constrainedListHeight + 'px';
+            emailContentContainer.style.height = constrainedContentHeight + 'px';
+        });
+        
+        document.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                
+                // Remove visual feedback
+                resizer.style.background = '';
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+                
+                // Save layout preferences
+                const listHeight = emailListContainer.clientHeight;
+                localStorage.setItem('emailListHeight', listHeight.toString());
+                
+                console.log('📏 Saved layout: list height', listHeight + 'px');
+            }
+        });
+        
+        // Add hover effect
+        resizer.addEventListener('mouseenter', () => {
+            if (!isResizing) {
+                resizer.style.background = 'var(--border-color)';
+            }
+        });
+        
+        resizer.addEventListener('mouseleave', () => {
+            if (!isResizing) {
+                resizer.style.background = '';
+            }
+        });
+        
+        console.log('↔️ Panel resizer initialized');
     }
     
     setupThemeToggle() {
@@ -301,8 +466,8 @@ class EmailAssistant {
         // Simulate loading emails
         await this.delay(1000);
         
-        // Generate mock emails
-        this.state.emails = this.generateMockEmails();
+        // Load mock emails from JSON file
+        this.state.emails = await this.loadMockEmails();
         
         // Update UI
         this.updateUserProfile();
@@ -525,16 +690,92 @@ Please provide a helpful, concise response:`;
     }
     
     findRelatedEmails(targetEmail) {
-        // Find emails with similar subjects or from same sender
-        const related = this.state.emails.filter(email => 
-            email.id !== targetEmail.id && (
-                email.from.email === targetEmail.from.email ||
-                this.calculateSubjectSimilarity(email.subject, targetEmail.subject) > 0.6 ||
-                email.subject.toLowerCase().includes(targetEmail.subject.split(' ')[0].toLowerCase())
-            )
-        );
+        // Enhanced thread detection algorithm
+        const related = this.state.emails.filter(email => {
+            if (email.id === targetEmail.id) return false;
+            
+            // Check for thread indicators
+            const isThread = this.isPartOfThread(email, targetEmail);
+            const isSameSender = email.from.email === targetEmail.from.email;
+            const hasHighSimilarity = this.calculateSubjectSimilarity(email.subject, targetEmail.subject) > 0.7;
+            const isReplyChain = this.isReplyChain(email, targetEmail);
+            
+            return isThread || isSameSender || hasHighSimilarity || isReplyChain;
+        });
         
-        return related.slice(0, 5); // Limit to 5 related emails
+        // Sort by relevance and timestamp
+        return related
+            .sort((a, b) => {
+                const scoreA = this.calculateThreadScore(a, targetEmail);
+                const scoreB = this.calculateThreadScore(b, targetEmail);
+                if (scoreA !== scoreB) return scoreB - scoreA;
+                return new Date(b.timestamp) - new Date(a.timestamp);
+            })
+            .slice(0, 8); // Increased limit for better context
+    }
+    
+    isPartOfThread(email1, email2) {
+        // Check for reply/forward patterns in subject
+        const subject1 = email1.subject.toLowerCase().trim();
+        const subject2 = email2.subject.toLowerCase().trim();
+        
+        // Remove common prefixes
+        const cleanSubject1 = this.cleanSubject(subject1);
+        const cleanSubject2 = this.cleanSubject(subject2);
+        
+        return cleanSubject1 === cleanSubject2;
+    }
+    
+    cleanSubject(subject) {
+        // Remove Re:, Fwd:, etc. and normalize
+        return subject
+            .replace(/^(re:|fwd:|fw:|forward:|reply:)\s*/gi, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+    
+    isReplyChain(email1, email2) {
+        // Check if emails are part of a conversation chain
+        const participants1 = [email1.from.email, email1.to].filter(Boolean);
+        const participants2 = [email2.from.email, email2.to].filter(Boolean);
+        
+        // Check if participants overlap (conversation between same people)
+        const overlap = participants1.some(p1 => participants2.includes(p1));
+        const timeDiff = Math.abs(new Date(email1.timestamp) - new Date(email2.timestamp));
+        const withinTimeframe = timeDiff < (7 * 24 * 60 * 60 * 1000); // Within 7 days
+        
+        return overlap && withinTimeframe;
+    }
+    
+    calculateThreadScore(email, targetEmail) {
+        let score = 0;
+        
+        // Subject similarity (0-3 points)
+        const subjectSim = this.calculateSubjectSimilarity(email.subject, targetEmail.subject);
+        score += subjectSim * 3;
+        
+        // Same participants (2 points)
+        if (email.from.email === targetEmail.from.email || email.to === targetEmail.to) {
+            score += 2;
+        }
+        
+        // Thread indicators (3 points)
+        if (this.isPartOfThread(email, targetEmail)) {
+            score += 3;
+        }
+        
+        // Recent communication (1 point)
+        const timeDiff = Math.abs(new Date(email.timestamp) - new Date(targetEmail.timestamp));
+        if (timeDiff < (24 * 60 * 60 * 1000)) { // Within 24 hours
+            score += 1;
+        }
+        
+        // Same category/tags (0.5 points)
+        if (email.category === targetEmail.category) {
+            score += 0.5;
+        }
+        
+        return score;
     }
     
     calculateSubjectSimilarity(subject1, subject2) {
@@ -546,34 +787,232 @@ Please provide a helpful, concise response:`;
     }
     
     buildEmailContext(email, relatedEmails) {
-        let context = `Primary Email:\nFrom: ${email.from.name} (${email.from.email})\nSubject: ${email.subject}\nContent: ${email.body}\nPriority: ${email.priority}\nTags: ${email.tags?.join(', ') || 'none'}\n\n`;
+        const isThread = relatedEmails.length > 0;
+        const threadEmails = [email, ...relatedEmails].sort((a, b) => 
+            new Date(a.timestamp) - new Date(b.timestamp)
+        );
         
-        if (relatedEmails.length > 0) {
-            context += `Related Emails (${relatedEmails.length}):\n`;
-            relatedEmails.forEach((relEmail, index) => {
-                context += `${index + 1}. From: ${relEmail.from.name}\n   Subject: ${relEmail.subject}\n   Preview: ${relEmail.preview}\n\n`;
+        let context = '';
+        
+        if (isThread) {
+            context += `EMAIL THREAD ANALYSIS\n`;
+            context += `===================\n`;
+            context += `Thread has ${threadEmails.length} emails\n`;
+            context += `Participants: ${[...new Set(threadEmails.map(e => e.from.name))].join(', ')}\n`;
+            context += `Time span: ${this.formatDateRange(threadEmails)}\n\n`;
+            
+            context += `CHRONOLOGICAL THREAD:\n`;
+            threadEmails.forEach((threadEmail, index) => {
+                const isSelected = threadEmail.id === email.id;
+                context += `${index + 1}. ${isSelected ? '>>> SELECTED EMAIL <<<' : ''}\n`;
+                context += `   From: ${threadEmail.from.name} (${threadEmail.from.email})\n`;
+                context += `   Date: ${this.formatFullDate(threadEmail.timestamp)}\n`;
+                context += `   Subject: ${threadEmail.subject}\n`;
+                context += `   Content: ${threadEmail.body.substring(0, 500)}${threadEmail.body.length > 500 ? '...' : ''}\n`;
+                if (threadEmail.badges) {
+                    context += `   Badges: ${threadEmail.badges.join(', ')}\n`;
+                }
+                context += `\n`;
             });
+        } else {
+            context += `INDIVIDUAL EMAIL ANALYSIS\n`;
+            context += `========================\n`;
+            context += `From: ${email.from.name} (${email.from.email})\n`;
+            context += `To: ${email.to}\n`;
+            context += `Date: ${this.formatFullDate(email.timestamp)}\n`;
+            context += `Subject: ${email.subject}\n`;
+            context += `Content: ${email.body}\n`;
+            if (email.badges?.length > 0) {
+                context += `Badges: ${email.badges.join(', ')}\n`;
+            }
+            if (email.hasAttachment) {
+                context += `Has Attachments: Yes\n`;
+            }
+            context += `\n`;
         }
         
         return context;
     }
     
+    formatDateRange(emails) {
+        if (emails.length === 0) return 'Unknown';
+        const firstDate = new Date(emails[0].timestamp);
+        const lastDate = new Date(emails[emails.length - 1].timestamp);
+        const diffDays = Math.ceil((lastDate - firstDate) / (1000 * 60 * 60 * 24));
+        
+        if (diffDays === 0) return 'Same day';
+        if (diffDays === 1) return '1 day';
+        return `${diffDays} days`;
+    }
+    
     async generateAISummary(context) {
-        const prompt = `Please provide a comprehensive summary of this email thread and suggest appropriate actions:
-
-${context}
-
-Please provide:
-1. Main topic and key points
-2. Action items or requests
-3. Priority level and urgency
-4. Suggested next steps
-5. Key people involved
-
-Keep the summary concise but informative.`;
+        const isThread = context.includes('EMAIL THREAD ANALYSIS');
+        
+        const prompt = isThread ? 
+            this.generateThreadSummaryPrompt(context) : 
+            this.generateEmailSummaryPrompt(context);
 
         const response = await this.callGeminiAPI(prompt);
         return response || 'Unable to generate AI summary at this time.';
+    }
+    
+    generateThreadSummaryPrompt(context) {
+        return `You are an AI email assistant analyzing an email thread. Please provide a comprehensive thread analysis:
+
+${context}
+
+PROVIDE A STRUCTURED RESPONSE WITH:
+
+## 📧 THREAD SUMMARY
+**Main Topic**: [What is this conversation about?]
+**Participants**: [Who is involved and their roles?]
+**Timeline**: [How long has this conversation been going?]
+
+## 🔑 KEY POINTS
+**Decisions Made**: [What has been agreed upon?]
+**Pending Issues**: [What still needs to be resolved?]
+**Action Items**: [What needs to be done and by whom?]
+
+## ⏰ URGENCY & DEADLINES
+**Immediate Actions**: [What needs attention now?]
+**Upcoming Deadlines**: [Any time-sensitive items?]
+
+## 💡 SUGGESTED RESPONSE
+**Response Type**: [What kind of reply is appropriate?]
+**Key Points to Address**: [What should be mentioned in response?]
+**Tone**: [Professional, casual, formal, etc.]
+**Next Steps**: [What should happen after responding?]
+
+Keep each section concise but informative. Focus on actionable insights.`;
+    }
+    
+    generateEmailSummaryPrompt(context) {
+        return `You are an AI email assistant analyzing a single email. Please provide a focused analysis:
+
+${context}
+
+PROVIDE A STRUCTURED RESPONSE WITH:
+
+## 📧 EMAIL SUMMARY
+**Purpose**: [Why was this email sent?]
+**Sender Intent**: [What does the sender want?]
+**Key Information**: [Important details or data points]
+
+## 🎯 REQUIRED ACTIONS
+**What You Need to Do**: [Specific actions required]
+**Priority Level**: [High/Medium/Low and why]
+**Deadline**: [Any time constraints mentioned]
+
+## 💡 SUGGESTED RESPONSE
+**Response Needed**: [Yes/No and type of response]
+**Key Points to Address**: [What to mention in reply]
+**Tone**: [Appropriate communication style]
+**Template**: [Brief draft suggestion if response needed]
+
+Be specific and actionable. If no response is needed, explain why.`;
+    }
+    
+    // AI Draft Generation Methods
+    async generateEmailDraft(email, draftType = 'reply') {
+        const relatedEmails = this.findRelatedEmails(email);
+        const context = this.buildEmailContext(email, relatedEmails);
+        const isThread = relatedEmails.length > 0;
+        
+        const prompt = this.generateDraftPrompt(context, draftType, isThread, email);
+        
+        try {
+            const response = await this.callGeminiAPI(prompt);
+            return {
+                success: true,
+                draft: response,
+                threadSummary: isThread ? await this.generateAISummary(context) : null,
+                context: {
+                    isThread,
+                    email,
+                    relatedEmails,
+                    draftType
+                }
+            };
+        } catch (error) {
+            console.error('❌ Draft generation failed:', error);
+            return {
+                success: false,
+                error: 'Failed to generate draft. Please try again.',
+                fallbackDraft: this.generateFallbackDraft(email, draftType)
+            };
+        }
+    }
+    
+    generateDraftPrompt(context, draftType, isThread, email) {
+        const basePrompt = `You are an AI email assistant helping to compose a professional email ${draftType}.
+
+${context}
+
+CONTEXT ANALYSIS:
+- Draft Type: ${draftType.toUpperCase()}
+- Thread: ${isThread ? 'Yes (multi-email conversation)' : 'No (single email)'}
+- Sender Relationship: ${this.analyzeSenderRelationship(email)}
+- Urgency: ${email.important ? 'High' : 'Normal'}
+- Tone Required: ${this.suggestTone(email)}
+
+GENERATE A COMPLETE EMAIL DRAFT WITH:
+
+**Subject Line**: ${draftType === 'reply' ? `Re: ${email.subject}` : '[Appropriate subject]'}
+
+**Email Body**:
+- Appropriate greeting
+- Reference to the original email/thread
+- Address key points mentioned
+- Clear action items or responses
+- Professional closing
+- Signature placeholder
+
+REQUIREMENTS:
+- Match the professional tone of the original sender
+- Be specific and reference actual content from the thread
+- Include clear next steps or calls to action
+- Keep concise but comprehensive
+- Use proper business email formatting
+
+Provide ONLY the email draft, no additional commentary.`;
+
+        return basePrompt;
+    }
+    
+    analyzeSenderRelationship(email) {
+        // Analyze sender to determine appropriate relationship level
+        const domain = email.from.email.split('@')[1];
+        const isInternal = domain === 'company.com'; // Adjust based on user's domain
+        const isExecutive = ['ceo', 'cto', 'vp', 'director'].some(title => 
+            email.from.name.toLowerCase().includes(title)
+        );
+        const isExternal = ['university.edu', 'gmail.com', 'outlook.com'].includes(domain);
+        
+        if (isExecutive) return 'Executive Level';
+        if (isInternal) return 'Internal Team Member';
+        if (isExternal) return 'External Professional';
+        return 'Professional Contact';
+    }
+    
+    suggestTone(email) {
+        const subject = email.subject.toLowerCase();
+        const hasUrgentWords = ['urgent', 'asap', 'immediate', 'priority'].some(word => 
+            subject.includes(word)
+        );
+        
+        if (hasUrgentWords || email.important) return 'Direct and Professional';
+        if (email.from.email.includes('university.edu')) return 'Formal Academic';
+        if (email.category === 'team') return 'Collaborative and Friendly';
+        return 'Professional and Courteous';
+    }
+    
+    generateFallbackDraft(email, draftType) {
+        const greeting = `Hi ${email.from.name},`;
+        const reference = `Thank you for your email regarding "${email.subject}".`;
+        const placeholder = `[Your response here - please customize based on the specific content of the original email]`;
+        const closing = `Best regards,\n[Your Name]`;
+        
+        return `${greeting}\n\n${reference}\n\n${placeholder}\n\n${closing}`;
     }
     
     summarizeInboxOverview() {
@@ -619,7 +1058,29 @@ Would you like me to help with any specific emails or tasks?`;
     }
     
     // Email Management Methods
-    generateMockEmails() {
+    async loadMockEmails() {
+        try {
+            const response = await fetch('./data/mock-emails.json');
+            const data = await response.json();
+            console.log('📧 Loaded', data.emails.length, 'mock emails');
+            return data.emails.map(email => ({
+                ...email,
+                folder: 'inbox', // Default folder
+                isRead: !email.unread, // Convert unread to isRead
+                isStarred: email.important,
+                priority: email.important ? 'high' : 'normal',
+                tags: email.badges || [],
+                hasAttachments: email.hasAttachment,
+                needsResponse: email.important,
+                timestamp: new Date(email.timestamp)
+            }));
+        } catch (error) {
+            console.error('❌ Failed to load mock emails:', error);
+            return this.generateFallbackMockEmails();
+        }
+    }
+    
+    generateFallbackMockEmails() {
         const mockEmails = [
             {
                 id: 'email-1',
@@ -942,22 +1403,28 @@ Conference Organizing Committee`,
     
     createEmailListItem(email) {
         const timeAgo = this.formatTimeAgo(email.timestamp);
-        const unreadClass = !email.isRead ? 'unread' : '';
-        const selectedClass = this.state.selectedEmail?.id === email.id ? 'selected' : '';
-        const priorityClass = email.priority === 'high' ? 'priority-high' : '';
+        const unreadClass = email.unread ? 'unread' : '';
+        const selectedClass = this.state.selectedEmail === email.id ? 'selected' : '';
+        const priorityClass = email.important ? 'priority-high' : '';
         
-        const tagElements = email.tags && email.tags.length > 0 
+        // Create badges from email.badges array
+        const badgeElements = email.badges && email.badges.length > 0 
             ? `<div class="email-tags">
-                ${email.tags.map(tag => `<span class="email-tag ${tag === 'urgent' ? 'priority-high' : ''}">${tag}</span>`).join('')}
+                ${email.badges.map(badge => `<span class="email-tag ${badge}">${badge}</span>`).join('')}
                </div>` 
             : '';
             
-        const attachmentIcon = email.hasAttachments ? '<i data-lucide="paperclip" class="attachment-icon"></i>' : '';
+        const attachmentIcon = email.hasAttachment ? '<i data-lucide="paperclip" class="attachment-icon"></i>' : '';
         
         return `
-            <div class="email-item ${unreadClass} ${selectedClass} ${priorityClass}" data-email-id="${email.id}">
-                <input type="checkbox" class="email-checkbox" />
-                <div class="email-avatar">${email.from.avatar}</div>
+            <div class="email-item ${unreadClass} ${selectedClass} ${priorityClass}" 
+                 data-email-id="${email.id}"
+                 role="button"
+                 tabindex="0"
+                 aria-label="Email from ${email.from.name}: ${email.subject}"
+                 aria-selected="${selectedClass ? 'true' : 'false'}">
+                <input type="checkbox" class="email-checkbox" aria-label="Select email" />
+                <div class="email-avatar" aria-hidden="true">${email.from.avatar}</div>
                 <div class="email-details">
                     <div class="email-header">
                         <div class="email-sender">${email.from.name}</div>
@@ -967,21 +1434,22 @@ Conference Organizing Committee`,
                         ${email.subject} ${attachmentIcon}
                     </div>
                     <div class="email-preview">${email.preview}</div>
-                    ${tagElements}
+                    ${badgeElements}
                 </div>
             </div>
         `;
+    
     }
     
     selectEmail(emailId) {
         const email = this.state.emails.find(e => e.id === emailId);
         if (!email) return;
         
-        this.state.selectedEmail = email;
+        this.state.selectedEmail = emailId;
         
         // Mark as read
-        if (!email.isRead) {
-            email.isRead = true;
+        if (email.unread) {
+            email.unread = false;
             this.updateEmailCounts();
         }
         
@@ -997,7 +1465,9 @@ Conference Organizing Committee`,
         }
         
         // Render email content
-        this.renderEmailContent(email);
+        this.displayEmailContent(email);
+        
+        console.log('📧 Selected email:', email.subject);
         
         // Show suggested responses if email needs response
         if (email.needsResponse && email.suggestedResponses && email.suggestedResponses.length > 0) {
@@ -1118,41 +1588,57 @@ Conference Organizing Committee`,
     }
     
     displayEmailContent(email) {
-        const emailViewer = document.getElementById('emailViewer');
-        const emailList = document.getElementById('emailList');
+        const emailContent = document.getElementById('emailContent');
         
-        if (!emailViewer) return;
+        if (!emailContent) return;
         
-        emailViewer.innerHTML = `
+        // Create badges HTML
+        const badgeElements = email.badges && email.badges.length > 0 
+            ? `<div class="email-badges">
+                ${email.badges.map(badge => `<span class="email-badge ${badge}">${badge}</span>`).join('')}
+               </div>` 
+            : '';
+        
+        emailContent.innerHTML = `
             <div class="email-header-full">
-                <h2 class="email-subject-full">${email.subject}</h2>
+                <div class="email-subject-line">
+                    <h2 class="email-subject-full">${email.subject}</h2>
+                    ${badgeElements}
+                </div>
                 <div class="email-meta">
                     <div class="email-from">
-                        <div class="email-avatar-large">
-                            <span>${email.from.avatar}</span>
-                        </div>
+                        <div class="email-avatar-large">${email.from.avatar}</div>
                         <div class="email-from-info">
                             <div class="email-from-name">${email.from.name}</div>
-                            <div class="email-from-email">${email.from.email}</div>
+                            <div class="email-from-email">&lt;${email.from.email}&gt;</div>
                         </div>
                     </div>
                     <div class="email-timestamp">${this.formatFullDate(email.timestamp)}</div>
                 </div>
+                <div class="email-recipients">
+                    <span class="recipient-label">To:</span>
+                    <span class="recipient-email">${email.to}</span>
+                </div>
             </div>
             <div class="email-body">
-                ${email.body.replace(/\n/g, '<br>')}
+                ${email.body.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}
             </div>
-            ${email.attachments.length > 0 ? `
-                <div class="email-attachments-full">
-                    <h4>Attachments</h4>
-                    ${email.attachments.map(att => `<div class="attachment-item">${att}</div>`).join('')}
+            ${email.hasAttachment ? `
+                <div class="email-attachments">
+                    <div class="attachment-indicator">
+                        <i data-lucide="paperclip"></i>
+                        <span>This email has attachments</span>
+                    </div>
                 </div>
             ` : ''}
         `;
         
-        // Show email viewer, hide email list
-        emailViewer.style.display = 'block';
-        emailList.style.display = 'none';
+        // Initialize Lucide icons for the new content
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+        
+        console.log('📝 Displayed email content:', email.subject);
     }
     
     // UI Helper Methods
@@ -1412,13 +1898,316 @@ Conference Organizing Committee`,
         }
     }
     
+    // AI Draft Modal Methods
+    async performAISummarization() {
+        if (!this.state.selectedEmail) {
+            this.showError('Please select an email to summarize');
+            return;
+        }
+        
+        const email = this.state.selectedEmail;
+        const summary = await this.performIntelligentSummarization(email);
+        
+        // Update AI chat with summary
+        this.addAIMessage(summary);
+    }
+    
+    async showDraftModal() {
+        if (!this.state.selectedEmail) {
+            this.showError('Please select an email to draft a response');
+            return;
+        }
+        
+        const draftModal = document.getElementById('draftModal');
+        if (!draftModal) return;
+        
+        // Show modal with loading state
+        draftModal.style.display = 'flex';
+        this.showDraftLoading();
+        
+        try {
+            // Generate thread summary and draft
+            await this.generateDraftContent();
+        } catch (error) {
+            console.error('Error generating draft:', error);
+            this.showError('Failed to generate draft. Please try again.');
+            this.hideDraftModal();
+        }
+    }
+    
+    hideDraftModal() {
+        const draftModal = document.getElementById('draftModal');
+        if (draftModal) {
+            draftModal.style.display = 'none';
+        }
+    }
+    
+    showDraftLoading() {
+        const loadingIndicator = document.getElementById('draftLoadingIndicator');
+        const draftContent = document.getElementById('draftContent');
+        
+        if (loadingIndicator && draftContent) {
+            loadingIndicator.style.display = 'block';
+            draftContent.style.display = 'none';
+        }
+    }
+    
+    hideDraftLoading() {
+        const loadingIndicator = document.getElementById('draftLoadingIndicator');
+        const draftContent = document.getElementById('draftContent');
+        
+        if (loadingIndicator && draftContent) {
+            loadingIndicator.style.display = 'none';
+            draftContent.style.display = 'block';
+        }
+    }
+    
+    async generateDraftContent() {
+        const email = this.state.selectedEmail;
+        const relatedEmails = this.findRelatedEmails(email);
+        
+        // Update thread summary
+        this.updateThreadSummary(email, relatedEmails);
+        
+        // Generate draft
+        const draft = await this.generateEmailDraft(email, 'reply');
+        this.updateDraftFields(draft, email);
+        
+        this.hideDraftLoading();
+    }
+    
+    updateThreadSummary(email, relatedEmails) {
+        const threadSummaryContent = document.getElementById('threadSummaryContent');
+        if (!threadSummaryContent) return;
+        
+        if (relatedEmails.length > 0) {
+            const timelineHtml = this.generateThreadTimeline(email, relatedEmails);
+            const keyPointsHtml = this.generateKeyPoints(email, relatedEmails);
+            
+            threadSummaryContent.innerHTML = `
+                <div class="conversation-timeline">
+                    <h4>📅 Conversation Timeline</h4>
+                    ${timelineHtml}
+                </div>
+                <div class="key-points">
+                    <h4>🎯 Key Points & Action Items</h4>
+                    ${keyPointsHtml}
+                </div>
+            `;
+        } else {
+            threadSummaryContent.innerHTML = `
+                <div class="single-email-summary">
+                    <h4>📧 Email Summary</h4>
+                    <p><strong>From:</strong> ${email.from.name} (${email.from.email})</p>
+                    <p><strong>Subject:</strong> ${email.subject}</p>
+                    <p><strong>Received:</strong> ${this.formatFullDate(email.timestamp)}</p>
+                    <p><strong>Priority:</strong> ${email.priority.charAt(0).toUpperCase() + email.priority.slice(1)}</p>
+                </div>
+            `;
+        }
+    }
+    
+    generateThreadTimeline(currentEmail, relatedEmails) {
+        const allEmails = [currentEmail, ...relatedEmails]
+            .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        
+        return allEmails.map(email => `
+            <div class="timeline-item ${email.id === currentEmail.id ? 'current' : ''}">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content">
+                    <strong>${email.from.name}</strong>
+                    <span class="timeline-time">${this.formatTimeAgo(email.timestamp)}</span>
+                    <p class="timeline-subject">${email.subject}</p>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    generateKeyPoints(currentEmail, relatedEmails) {
+        // Simplified key points extraction
+        const allEmails = [currentEmail, ...relatedEmails];
+        const urgentEmails = allEmails.filter(e => e.priority === 'high');
+        const needsResponse = allEmails.filter(e => e.needsResponse);
+        
+        let keyPoints = '<ul>';
+        
+        if (urgentEmails.length > 0) {
+            keyPoints += `<li><strong>High Priority:</strong> ${urgentEmails.length} urgent email(s) in thread</li>`;
+        }
+        
+        if (needsResponse.length > 0) {
+            keyPoints += `<li><strong>Action Required:</strong> ${needsResponse.length} email(s) need responses</li>`;
+        }
+        
+        keyPoints += `<li><strong>Thread Length:</strong> ${allEmails.length} email(s) in conversation</li>`;
+        keyPoints += `<li><strong>Latest:</strong> ${currentEmail.from.name} sent "${currentEmail.subject}"</li>`;
+        keyPoints += '</ul>';
+        
+        return keyPoints;
+    }
+    
+    updateDraftFields(draft, email) {
+        const draftSubject = document.getElementById('draftSubject');
+        const draftMessage = document.getElementById('draftMessage');
+        const wordCount = document.getElementById('wordCount');
+        
+        if (draftSubject) {
+            draftSubject.value = `Re: ${email.subject}`;
+        }
+        
+        if (draftMessage) {
+            draftMessage.value = draft || this.generateFallbackDraft(email, 'reply');
+        }
+        
+        if (wordCount) {
+            const words = (draftMessage?.value || '').split(/\s+/).filter(w => w.length > 0);
+            wordCount.textContent = `${words.length} words`;
+        }
+    }
+    
+    toggleThreadSummary() {
+        const threadSummaryContent = document.getElementById('threadSummaryContent');
+        const threadSummaryToggle = document.getElementById('threadSummaryToggle');
+        
+        if (threadSummaryContent && threadSummaryToggle) {
+            const isCollapsed = threadSummaryContent.style.display === 'none';
+            threadSummaryContent.style.display = isCollapsed ? 'block' : 'none';
+            threadSummaryToggle.textContent = isCollapsed ? '▼' : '▶';
+        }
+    }
+    
+    async regenerateDraft() {
+        this.showDraftLoading();
+        
+        try {
+            const email = this.state.selectedEmail;
+            const newDraft = await this.generateEmailDraft(email, 'reply');
+            this.updateDraftFields(newDraft, email);
+            this.hideDraftLoading();
+        } catch (error) {
+            console.error('Error regenerating draft:', error);
+            this.showError('Failed to regenerate draft. Please try again.');
+            this.hideDraftLoading();
+        }
+    }
+    
+    enableDraftEditing() {
+        const draftMessage = document.getElementById('draftMessage');
+        if (draftMessage) {
+            draftMessage.readOnly = false;
+            draftMessage.focus();
+        }
+    }
+    
+    saveDraft() {
+        const draftSubject = document.getElementById('draftSubject');
+        const draftMessage = document.getElementById('draftMessage');
+        
+        if (draftSubject && draftMessage) {
+            // For now, just show success message
+            alert('Draft saved successfully!');
+            // In real implementation, this would save to drafts folder
+        }
+    }
+    
+    sendDraft() {
+        const draftSubject = document.getElementById('draftSubject');
+        const draftMessage = document.getElementById('draftMessage');
+        
+        if (draftSubject && draftMessage) {
+            // For now, just show success message
+            alert('Email sent successfully!');
+            this.hideDraftModal();
+            // In real implementation, this would send the email
+        }
+    }
+    
+    updateWordCount() {
+        const draftMessage = document.getElementById('draftMessage');
+        const wordCount = document.getElementById('wordCount');
+        
+        if (draftMessage && wordCount) {
+            const words = draftMessage.value.split(/\s+/).filter(w => w.length > 0);
+            wordCount.textContent = `${words.length} words`;
+        }
+    }
+    
     handleKeyboardShortcuts(e) {
+        // Skip if typing in input fields
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+            return;
+        }
+        
         // Cmd/Ctrl + K for search
         if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
             e.preventDefault();
             const searchInput = document.getElementById('globalSearch');
             if (searchInput) {
                 searchInput.focus();
+            }
+            return;
+        }
+        
+        // Email navigation with arrow keys
+        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+            e.preventDefault();
+            this.navigateEmails(e.key === 'ArrowUp' ? -1 : 1);
+            return;
+        }
+        
+        // Enter to open selected email  
+        if (e.key === 'Enter' && this.state.selectedEmail) {
+            const selectedEmail = this.state.emails.find(email => email.id === this.state.selectedEmail);
+            if (selectedEmail) {
+                this.displayEmailContent(selectedEmail);
+            }
+            return;
+        }
+        
+        // R for reply (future feature)
+        if (e.key === 'r' || e.key === 'R') {
+            console.log('📨 Reply functionality (coming soon)');
+            return;
+        }
+        
+        // Delete key to delete email (future feature)
+        if (e.key === 'Delete' || e.key === 'Backspace') {
+            console.log('🗑️ Delete functionality (coming soon)');
+            return;
+        }
+    }
+    
+    navigateEmails(direction) {
+        if (!this.state.emails || this.state.emails.length === 0) return;
+        
+        const currentIndex = this.state.selectedEmail 
+            ? this.state.emails.findIndex(email => email.id === this.state.selectedEmail)
+            : -1;
+            
+        let newIndex;
+        if (currentIndex === -1) {
+            // No selection, select first email
+            newIndex = 0;
+        } else {
+            // Move up or down
+            newIndex = currentIndex + direction;
+            
+            // Wrap around
+            if (newIndex < 0) {
+                newIndex = this.state.emails.length - 1;
+            } else if (newIndex >= this.state.emails.length) {
+                newIndex = 0;
+            }
+        }
+        
+        const newEmail = this.state.emails[newIndex];
+        if (newEmail) {
+            this.selectEmail(newEmail.id);
+            
+            // Scroll the selected email into view
+            const emailItem = document.querySelector(`[data-email-id="${newEmail.id}"]`);
+            if (emailItem) {
+                emailItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
         }
     }
