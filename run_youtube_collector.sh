@@ -1,0 +1,2 @@
+export BRIGHTDATA_API_KEY=c988af6189e31c5122500a1eda86c84fbd45082f9c6ddc555689ae1328fed2c8
+node /home/rakib232/github/claude-code/youtube-collector.js
