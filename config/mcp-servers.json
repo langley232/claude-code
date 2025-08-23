@@ -100,19 +100,6 @@
         "STRIPE_API_KEY": "${STRIPE_API_KEY}"
       }
     },
-    "google-scc": {
-      "type": "stdio",
-      "command": "uv",
-      "args": [
-        "--directory",
-        "/home/rakib232/github/claude-code/mcp-security/server/scc",
-        "run",
-        "scc_mcp.py"
-      ],
-      "env": {
-        "GOOGLE_CLOUD_PROJECT": "${GOOGLE_CLOUD_PROJECT}"
-      }
-    },
     "ElevenLabs": {
       "type": "stdio",
       "command": "uvx",
@@ -128,6 +115,10 @@
       "env": {
         "FIRECRAWL_API_KEY": "${FIRECRAWL_API_KEY}"
       }
+    },
+     "code-index": {
+      "command": "uvx",
+      "args": ["code-index-mcp"]
     },
     "vercel": {
       "type": "stdio",
