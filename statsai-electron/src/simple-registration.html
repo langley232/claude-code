@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AtlasWeb - Join Us</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' data: https://unpkg.com https://fonts.googleapis.com https://fonts.gstatic.com;">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body>
+    <!-- Interactive AI Background -->
+    <div class="ai-background" id="aiBackground" aria-hidden="true">
+        <div class="floating-element floating-1"></div>
+        <div class="floating-element floating-2"></div>
+        <div class="floating-element floating-3"></div>
+        <div class="floating-element floating-4"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="aura-nav">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <div class="logo-icon">
+                    <svg class="logo-svg" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="16" cy="16" r="14" fill="url(#logoGradient)" stroke="url(#logoStroke)" stroke-width="1"/>
+                        <path d="M2 16 L30 16 M16 2 L16 30" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/>
+                        <path d="M8 6 Q16 12 24 6 M8 26 Q16 20 24 26" stroke="rgba(255,255,255,0.4)" stroke-width="0.5"/>
+                        <path d="M6 8 Q12 16 6 24 M26 8 Q20 16 26 24" stroke="rgba(255,255,255,0.4)" stroke-width="0.5"/>
+                        <text x="16" y="21" text-anchor="middle" fill="white" font-size="12" font-weight="800" font-family="Inter">A</text>
+                        <defs>
+                            <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#6366f1"/>
+                                <stop offset="50%" style="stop-color:#8b5cf6"/>
+                                <stop offset="100%" style="stop-color:#06b6d4"/>
+                            </linearGradient>
+                            <linearGradient id="logoStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.3"/>
+                                <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0.1"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <span class="logo-text">AtlasWeb</span>
+            </div>
+
+            <div class="nav-links">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/#features" class="nav-link">Features</a>
+                <a href="/pricing" class="nav-link">Pricing</a>
+            </div>
+
+            <div class="nav-actions">
+                <div class="theme-toggle-group">
+                    <button class="theme-toggle" title="Light mode" data-theme="light">
+                        <i data-lucide="sun"></i>
+                    </button>
+                    <button class="theme-toggle active" title="Dark mode" data-theme="dark">
+                        <i data-lucide="moon"></i>
+                    </button>
+                </div>
+                
+                <button class="btn-secondary">Login</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Simple Registration Section -->
+    <section class="legal-document-section">
+        <div class="section-container">
+            <div class="legal-document" style="max-width: 600px;">
+                <div class="legal-header">
+                    <h1 class="legal-title">Join AtlasWeb</h1>
+                    <p class="legal-subtitle">Create your account and start your intelligent browsing journey</p>
+                </div>
+
+                <form id="registrationForm" class="registration-form">
+                    <div class="form-group">
+                        <label for="firstName" class="form-label">First Name *</label>
+                        <input type="text" id="firstName" name="firstName" required class="form-input">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="lastName" class="form-label">Last Name *</label>
+                        <input type="text" id="lastName" name="lastName" required class="form-input">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email Address *</label>
+                        <input type="email" id="email" name="email" required class="form-input">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="company" class="form-label">Company (Optional)</label>
+                        <input type="text" id="company" name="company" class="form-input">
+                    </div>
+
+                    <!-- Plan Selection -->
+                    <div class="plan-selection-section">
+                        <h3 style="color: var(--primary); margin-bottom: var(--spacing-md);">Choose Your Plan</h3>
+                        
+                        <div class="plan-options">
+                            <label class="plan-option">
+                                <input type="radio" name="plan" value="basic" class="plan-radio">
+                                <div class="plan-card">
+                                    <div class="plan-header">
+                                        <span class="plan-name">Basic</span>
+                                        <span class="plan-price">$20<small>/month</small></span>
+                                    </div>
+                                    <div class="plan-description">Perfect for individual users</div>
+                                    <div class="plan-features">
+                                        <small>✓ AI Search • ✓ Code Assistant • ✓ Email Agent</small>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="plan-option">
+                                <input type="radio" name="plan" value="pro" class="plan-radio" checked>
+                                <div class="plan-card popular">
+                                    <div class="popular-badge">Popular</div>
+                                    <div class="plan-header">
+                                        <span class="plan-name">Pro</span>
+                                        <span class="plan-price">$200<small>/month</small></span>
+                                    </div>
+                                    <div class="plan-description">For creative professionals</div>
+                                    <div class="plan-features">
+                                        <small>✓ Everything in Basic • ✓ Writer Tools • ✓ Design Suite</small>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="plan-option">
+                                <input type="radio" name="plan" value="max" class="plan-radio">
+                                <div class="plan-card">
+                                    <div class="plan-header">
+                                        <span class="plan-name">Max</span>
+                                        <span class="plan-price">$300<small>/month</small></span>
+                                    </div>
+                                    <div class="plan-description">Advanced professionals</div>
+                                    <div class="plan-features">
+                                        <small>✓ Everything in Pro • ✓ Advanced Research • ✓ Mobile Apps</small>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Feature Add-ons -->
+                    <div class="feature-addons" id="featureAddons">
+                        <h3 style="color: var(--primary); margin-bottom: var(--spacing-md);">Add Extra Features <span style="font-size: var(--font-size-sm); color: var(--text-muted);">(Optional)</span></h3>
+                        <div id="availableAddons"></div>
+                        
+                        <div class="pricing-summary">
+                            <div class="price-breakdown">
+                                <div class="price-item">
+                                    <span>Base Plan:</span>
+                                    <span id="basePlanCost">$200/month</span>
+                                </div>
+                                <div class="price-item" id="addonCostRow" style="display: none;">
+                                    <span>Add-ons:</span>
+                                    <span id="addonCost">$0/month</span>
+                                </div>
+                                <div class="price-item total">
+                                    <strong>
+                                        <span>Total:</span>
+                                        <span id="totalCost">$200/month</span>
+                                    </strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Legal Agreement Checkboxes -->
+                    <div class="legal-agreements">
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="privacyCheck" name="privacyAgreement" required class="legal-checkbox">
+                                <span class="checkbox-custom"></span>
+                                <span class="checkbox-text">
+                                    I agree to the <a href="privacy-policy.html" target="_blank" class="legal-link">Privacy Policy</a>
+                                    <span class="required-indicator">*</span>
+                                </span>
+                            </label>
+                        </div>
+                        
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="termsCheck" name="termsAgreement" required class="legal-checkbox">
+                                <span class="checkbox-custom"></span>
+                                <span class="checkbox-text">
+                                    I agree to the <a href="terms-of-service.html" target="_blank" class="legal-link">Terms of Service</a>
+                                    <span class="required-indicator">*</span>
+                                </span>
+                            </label>
+                        </div>
+                        
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="marketingCheck" name="marketingConsent" class="legal-checkbox">
+                                <span class="checkbox-custom"></span>
+                                <span class="checkbox-text">
+                                    I consent to receive marketing communications and product updates
+                                    <span class="optional-indicator">(Optional)</span>
+                                </span>
+                            </label>
+                        </div>
+                        
+                        <!-- Error message for legal agreements -->
+                        <div class="legal-error-message" id="legalError" style="display: none;">
+                            <i data-lucide="alert-circle" class="error-icon"></i>
+                            <span>You must agree to both the Privacy Policy and Terms of Service to continue.</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="register-btn btn-primary" id="registerBtn" disabled>
+                        <span>Continue to Payment - <span id="buttonTotal">$200/month</span></span>
+                        <i data-lucide="arrow-right"></i>
+                    </button>
+
+                    <p class="register-login" style="text-align: center; margin-top: 1rem; color: var(--text-secondary);">
+                        Already have an account? <a href="#login" class="legal-link">Sign in</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Add some basic form styling -->
+    <style>
+        .form-group {
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: var(--spacing-sm);
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: var(--spacing-md);
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: var(--font-size-base);
+            transition: all 0.2s ease;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+        
+        .register-btn {
+            width: 100%;
+            margin-top: var(--spacing-lg);
+        }
+
+        /* Plan Selection Styling */
+        .plan-selection-section {
+            margin-bottom: var(--spacing-lg);
+            padding: var(--spacing-lg);
+            background: rgba(15, 23, 42, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+        }
+
+        .plan-options {
+            display: grid;
+            gap: var(--spacing-md);
+        }
+
+        .plan-option {
+            cursor: pointer;
+        }
+
+        .plan-radio {
+            display: none;
+        }
+
+        .plan-card {
+            padding: var(--spacing-md);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+            background: rgba(15, 23, 42, 0.5);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .plan-card.popular::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: var(--radius-md);
+            padding: 2px;
+            background: linear-gradient(135deg, var(--primary), var(--purple));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: exclude;
+            mask-composite: exclude;
+        }
+
+        .popular-badge {
+            position: absolute;
+            top: -8px;
+            right: var(--spacing-md);
+            background: linear-gradient(135deg, var(--primary), var(--purple));
+            color: white;
+            padding: 4px var(--spacing-sm);
+            border-radius: 4px;
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+        }
+
+        .plan-radio:checked + .plan-card {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .plan-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .plan-name {
+            font-weight: 600;
+            font-size: var(--font-size-lg);
+            color: var(--text-primary);
+        }
+
+        .plan-price {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: var(--font-size-xl);
+        }
+
+        .plan-price small {
+            font-weight: 400;
+            color: var(--text-muted);
+            font-size: var(--font-size-sm);
+        }
+
+        .plan-description {
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .plan-features {
+            color: var(--text-muted);
+        }
+
+        /* Feature Add-ons */
+        .feature-addons {
+            margin-bottom: var(--spacing-lg);
+            padding: var(--spacing-lg);
+            background: rgba(15, 23, 42, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+        }
+
+        .addon-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-sm);
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-sm);
+        }
+
+        .addon-checkbox {
+            margin-right: var(--spacing-sm);
+        }
+
+        .pricing-summary {
+            margin-top: var(--spacing-lg);
+            padding-top: var(--spacing-lg);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .price-breakdown {
+            background: rgba(99, 102, 241, 0.1);
+            padding: var(--spacing-md);
+            border-radius: var(--radius-md);
+        }
+
+        .price-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .price-item.total {
+            padding-top: var(--spacing-sm);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: var(--font-size-lg);
+        }
+
+        @media (min-width: 768px) {
+            .plan-options {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+
+    <script>
+        // Simple registration form handling with legal validation
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('registrationForm');
+            const registerBtn = document.getElementById('registerBtn');
+            const privacyCheck = document.getElementById('privacyCheck');
+            const termsCheck = document.getElementById('termsCheck');
+            const legalError = document.getElementById('legalError');
+            
+            // Initialize plan selection and pricing
+            initializePlanSelection();
+            
+            // Initialize Lucide icons
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+            
+            // Update button state based on legal agreements
+            function updateButtonState() {
+                const privacyChecked = privacyCheck.checked;
+                const termsChecked = termsCheck.checked;
+                const requiredAgreed = privacyChecked && termsChecked;
+                
+                registerBtn.disabled = !requiredAgreed;
+                
+                // Hide error if both are checked
+                if (requiredAgreed && legalError.style.display !== 'none') {
+                    legalError.style.display = 'none';
+                }
+            }
+            
+            // Add event listeners to checkboxes
+            privacyCheck.addEventListener('change', updateButtonState);
+            termsCheck.addEventListener('change', updateButtonState);
+            
+            // Initial button state
+            updateButtonState();
+            
+            // Form submission handler
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    // Validate legal agreements first
+                    if (!privacyCheck.checked || !termsCheck.checked) {
+                        legalError.style.display = 'flex';
+                        // Initialize Lucide icons
+                        if (typeof lucide !== 'undefined') {
+                            lucide.createIcons();
+                        }
+                        
+                        // Scroll to error message
+                        legalError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        return;
+                    }
+                    
+                    // Get form data
+                    const formData = {
+                        firstName: document.getElementById('firstName').value,
+                        lastName: document.getElementById('lastName').value,
+                        email: document.getElementById('email').value,
+                        company: document.getElementById('company').value,
+                        plan: getSelectedPlan(),
+                        additionalFeatures: getSelectedAddons(),
+                        // Legal agreements
+                        privacyAgreement: privacyCheck.checked,
+                        termsAgreement: termsCheck.checked,
+                        marketingConsent: document.getElementById('marketingCheck').checked,
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    // Basic validation
+                    if (!formData.firstName || !formData.lastName || !formData.email) {
+                        showError('Please fill in all required fields.');
+                        return;
+                    }
+                    
+                    // Email validation
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(formData.email)) {
+                        showError('Please enter a valid email address.');
+                        return;
+                    }
+                    
+                    // Store registration data and redirect to payment
+                    localStorage.setItem('atlaswebRegistration', JSON.stringify(formData));
+                    
+                    showSuccess('✅ Registration completed! Redirecting to secure payment...');
+                    
+                    // Log the complete registration data
+                    console.log('🎯 Complete Registration Data:', formData);
+                    
+                    // Redirect to payment page
+                    setTimeout(() => {
+                        window.location.href = 'payment.html';
+                    }, 1500);
+                });
+            }
+            
+            function showError(message) {
+                alert('❌ ' + message);
+            }
+            
+            function showSuccess(message) {
+                alert(message);
+            }
+            
+            function getSelectedPlan() {
+                const planRadios = document.querySelectorAll('input[name="plan"]');
+                for (const radio of planRadios) {
+                    if (radio.checked) {
+                        return radio.value;
+                    }
+                }
+                return 'pro'; // default
+            }
+            
+            function getSelectedAddons() {
+                const addonCheckboxes = document.querySelectorAll('.addon-checkbox:checked');
+                return Array.from(addonCheckboxes).map(cb => cb.value);
+            }
+            
+            function initializePlanSelection() {
+                // Update pricing when plan changes
+                const planRadios = document.querySelectorAll('input[name="plan"]');
+                planRadios.forEach(radio => {
+                    radio.addEventListener('change', updatePricing);
+                });
+                
+                // Initialize pricing display
+                updatePricing();
+                updateAvailableAddons();
+            }
+            
+            function updatePricing() {
+                const selectedPlan = getSelectedPlan();
+                const selectedAddons = getSelectedAddons();
+                
+                if (window.PRICING_CONFIG) {
+                    const pricing = window.PRICING_CONFIG.calculateCustomPrice(selectedPlan, selectedAddons);
+                    
+                    if (pricing.price === 'custom') {
+                        document.getElementById('basePlanCost').textContent = 'Contact Sales';
+                        document.getElementById('totalCost').textContent = 'Contact Sales';
+                        document.getElementById('buttonTotal').textContent = 'Contact Sales';
+                        document.getElementById('registerBtn').innerHTML = '<span>Contact Sales</span><i data-lucide="phone"></i>';
+                    } else {
+                        document.getElementById('basePlanCost').textContent = `$${pricing.basePrice}/month`;
+                        
+                        if (selectedAddons.length > 0) {
+                            const addonTotal = pricing.totalPrice - pricing.basePrice;
+                            document.getElementById('addonCostRow').style.display = 'flex';
+                            document.getElementById('addonCost').textContent = `$${addonTotal}/month`;
+                        } else {
+                            document.getElementById('addonCostRow').style.display = 'none';
+                        }
+                        
+                        document.getElementById('totalCost').textContent = `$${pricing.totalPrice}/month`;
+                        document.getElementById('buttonTotal').textContent = `$${pricing.totalPrice}/month`;
+                        document.getElementById('registerBtn').innerHTML = '<span>Continue to Payment - <span id="buttonTotal">$' + pricing.totalPrice + '/month</span></span><i data-lucide="arrow-right"></i>';
+                    }
+                }
+                
+                updateAvailableAddons();
+            }
+            
+            function updateAvailableAddons() {
+                const selectedPlan = getSelectedPlan();
+                const availableAddons = document.getElementById('availableAddons');
+                
+                if (window.PRICING_CONFIG) {
+                    const addOns = window.PRICING_CONFIG.getAvailableAddOns(selectedPlan);
+                    
+                    if (addOns.length === 0) {
+                        availableAddons.innerHTML = '<p style="color: var(--text-muted); font-style: italic;">All features included in your selected plan!</p>';
+                        return;
+                    }
+                    
+                    availableAddons.innerHTML = addOns.map(addon => `
+                        <label class="addon-item">
+                            <div style="display: flex; align-items: center;">
+                                <input type="checkbox" class="addon-checkbox" value="${addon.name.toLowerCase().replace(/\s+/g, '_')}" onchange="updatePricing()">
+                                <div style="margin-left: var(--spacing-sm);">
+                                    <div style="font-weight: 500; color: var(--text-primary);">${addon.name}</div>
+                                    <div style="font-size: var(--font-size-sm); color: var(--text-muted);">${addon.description}</div>
+                                </div>
+                            </div>
+                            <div style="color: var(--primary); font-weight: 600;">+$${addon.addOnPrice}/month</div>
+                        </label>
+                    `).join('');
+                }
+            }
+        });
+    </script>
+
+    <script src="script.js"></script>
+</body>
+</html>

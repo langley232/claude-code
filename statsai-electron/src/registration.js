@@ -535,7 +535,48 @@ function togglePassword(inputId) {
     }
 }
 
+// Navigation to external payment page
+function proceedToExternalPayment() {
+    // Validate payment form first (billing info in the embedded step)
+    const paymentForm = document.getElementById('paymentForm');
+    if (paymentForm) {
+        const formInputs = paymentForm.querySelectorAll('.form-input[required]');
+        let isValid = true;
+        
+        formInputs.forEach(input => {
+            if (!validateField({ target: input })) {
+                isValid = false;
+            }
+        });
+        
+        if (!isValid) {
+            console.log('❌ Payment form validation failed');
+            return;
+        }
+    }
+    
+    // Store all registration data including payment step
+    const registrationData = {
+        ...window.registrationData,
+        selectedPlan: selectedPlan,
+        // Store any filled payment info
+        billingName: document.getElementById('billingName')?.value || '',
+        billingAddress: document.getElementById('billingAddress')?.value || '',
+        billingCity: document.getElementById('billingCity')?.value || '',
+        billingZip: document.getElementById('billingZip')?.value || ''
+    };
+    
+    // Save to localStorage for the payment page
+    localStorage.setItem('atlaswebRegistration', JSON.stringify(registrationData));
+    
+    console.log('💳 Proceeding to external payment page with data:', registrationData);
+    
+    // Navigate to payment page
+    window.location.href = 'payment.html';
+}
+
 // Export functions for global use
 window.goToStep = goToStep;
 window.togglePassword = togglePassword;
 window.redirectToApp = redirectToApp;
+window.proceedToExternalPayment = proceedToExternalPayment;
