@@ -121,6 +121,16 @@
       "command": "uvx",
       "args": ["code-index-mcp"]
     },
+    "plaid": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "mcp-server-plaid",
+        "--client-id", "${PLAID_CLIENT_ID}",
+        "--secret", "${PLAID_SECRET}"
+      ],
+      "env": {}
+    },
     "vercel": {
       "type": "stdio",
       "command": "npx",
