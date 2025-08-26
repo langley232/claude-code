@@ -391,7 +391,11 @@ app.post('/create-payment-intent', async (req, res) => {
   try {
     await initializePlaid();
     
-    const { userId, subscriptionTier, accountId, publicToken } = req.body;
+    const { userId, subscriptionTier, publicToken } = req.body;
+
+    if (!publicToken) {
+      return res.status(400).json({ error: 'Public token is required' });
+    }
 
     // Define pricing
     const pricing = {
@@ -413,6 +417,27 @@ app.post('/create-payment-intent', async (req, res) => {
 
     const userData = userDoc.data();
 
+    // Exchange public token for access token
+    const tokenResponse = await plaidClient.itemPublicTokenExchange({
+      public_token: publicToken
+    });
+    
+    const accessToken = tokenResponse.data.access_token;
+    const itemId = tokenResponse.data.item_id;
+
+    // Get account information
+    const accountsResponse = await plaidClient.accountsGet({
+      access_token: accessToken
+    });
+
+    const accounts = accountsResponse.data.accounts;
+    if (accounts.length === 0) {
+      return res.status(400).json({ error: 'No accounts found' });
+    }
+
+    // Use the first account (user's primary checking account)
+    const accountId = accounts[0].account_id;
+
     // Create transfer intent
     const intentRequest = {
       mode: 'PAYMENT',
@@ -429,23 +454,19 @@ app.post('/create-payment-intent', async (req, res) => {
     const intentResponse = await plaidClient.transferIntentCreate(intentRequest);
     const intentId = intentResponse.data.transfer_intent.id;
 
-    // Create link token for Transfer UI
-    const linkTokenRequest = {
-      user: { client_user_id: userId },
-      client_name: 'AtlasWeb AI',
-      products: [],
-      transfer: {
-        intent_id: intentId,
-      },
-      country_codes: ['US'],
-    };
-
-    const linkResponse = await plaidClient.linkTokenCreate(linkTokenRequest);
+    // Store the access token and account ID for later use
+    await firestore.collection('users').doc(userId).update({
+      plaidAccessToken: accessToken,
+      plaidItemId: itemId,
+      plaidAccountId: accountId,
+      lastUpdated: new Date()
+    });
 
     res.json({
       success: true,
       intentId,
-      linkToken: linkResponse.data.link_token
+      accountId: accountId,
+      amount: amount
     });
 
   } catch (error) {
@@ -468,7 +489,53 @@ app.post('/complete-payment', async (req, res) => {
 
     const intent = intentResponse.data.transfer_intent;
 
-    if (intent.authorization_decision === 'APPROVED') {
+    if (intent.status === 'PENDING' || intent.status === 'SUCCEEDED') {
+      // Get user's Plaid data
+      const userDoc = await firestore.collection('users').doc(userId).get();
+      if (!userDoc.exists) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      
+      const userData = userDoc.data();
+      
+      if (!userData.plaidAccessToken || !userData.plaidAccountId) {
+        return res.status(400).json({ error: 'Plaid account information not found' });
+      }
+
+      // Create the actual transfer
+      const transferRequest = {
+        access_token: userData.plaidAccessToken,
+        account_id: userData.plaidAccountId,
+        type: 'debit',
+        network: 'ach',
+        amount: intent.amount,
+        description: intent.description,
+        ach_class: 'WEB',
+        user: intent.user
+      };
+
+      const transferResponse = await plaidClient.transferCreate(transferRequest);
+      const transfer = transferResponse.data.transfer;
+
+      console.log('Transfer created:', transfer.id, 'Status:', transfer.status);
+
+      // Update user with transfer information
+      await firestore.collection('users').doc(userId).update({
+        subscriptionTier,
+        paymentStatus: 'processing',
+        transferId: transfer.id,
+        transferIntentId: intentId,
+        lastUpdated: new Date()
+      });
+
+      res.json({
+        success: true,
+        message: 'Payment initiated successfully',
+        transferId: transfer.id,
+        status: transfer.status
+      });
+
+    } else if (intent.authorization_decision === 'APPROVED') {
       // Update user subscription
       await firestore.collection('users').doc(userId).update({
         subscriptionTier,
@@ -594,15 +661,103 @@ app.post('/webhook/plaid', express.json(), async (req, res) => {
       console.log('Transfer webhook received:', webhookData.webhook_code);
       
       // Handle transfer completion for account activation
-      if (webhookData.webhook_code === 'TRANSFER_EVENTS_UPDATE' && 
-          webhookData.transfer_event === 'settled') {
-        console.log('Transfer settled - activating account');
-        // TODO: Activate user account based on transfer metadata
-      }
-      
-      if (webhookData.webhook_code === 'TRANSFER_EVENTS_UPDATE' && 
-          webhookData.transfer_event === 'failed') {
-        console.log('Transfer failed:', webhookData);
+      if (webhookData.webhook_code === 'TRANSFER_EVENTS_UPDATE') {
+        const transferId = webhookData.transfer_id;
+        const transferEvent = webhookData.new_transfer_status || webhookData.transfer_event;
+        
+        console.log(`Transfer ${transferId} event: ${transferEvent}`);
+        
+        if (transferEvent === 'settled' || transferEvent === 'posted') {
+          console.log('Transfer completed successfully - activating account');
+          
+          // Find user by transfer ID and activate account
+          const usersQuery = await firestore
+            .collection('users')
+            .where('transferId', '==', transferId)
+            .get();
+          
+          if (!usersQuery.empty) {
+            const userDoc = usersQuery.docs[0];
+            const userData = userDoc.data();
+            const userId = userDoc.id;
+            
+            // Activate the user account
+            await firestore.collection('users').doc(userId).update({
+              paymentStatus: 'active',
+              accountActivated: true,
+              transferStatus: 'settled',
+              lastUpdated: new Date()
+            });
+            
+            console.log(`Account activated for user: ${userData.email}`);
+            
+            // Send activation email
+            try {
+              const activationEmailHtml = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                  <style>
+                    .email-container { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; }
+                    .header { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 30px 20px; text-align: center; }
+                    .content { padding: 40px 30px; }
+                    .button { background: #6366f1; color: white; padding: 16px 32px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: 600; }
+                    .feature-list { background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0; }
+                  </style>
+                </head>
+                <body>
+                  <div class="email-container">
+                    <div class="header">
+                      <h1>🎉 Welcome to AtlasWeb AI!</h1>
+                    </div>
+                    <div class="content">
+                      <h2>Hi ${userData.firstName},</h2>
+                      <p>Congratulations! Your payment has been processed and your <strong>${userData.subscriptionTier}</strong> account is now active.</p>
+                      <p>You now have full access to all AtlasWeb AI features. Get started by logging into your dashboard.</p>
+                      <div style="text-align: center; margin: 30px 0;">
+                        <a href="https://atlasweb.info/login" class="button">Access Your Dashboard</a>
+                      </div>
+                    </div>
+                  </div>
+                </body>
+                </html>
+              `;
+              
+              await sendEmail(
+                userData.email, 
+                '🎉 Your AtlasWeb AI Account is Now Active!', 
+                activationEmailHtml
+              );
+              
+              console.log('Activation email sent to:', userData.email);
+            } catch (emailError) {
+              console.error('Failed to send activation email:', emailError.message);
+            }
+          } else {
+            console.warn('No user found with transfer ID:', transferId);
+          }
+        } else if (transferEvent === 'failed' || transferEvent === 'cancelled') {
+          console.log('Transfer failed or cancelled:', transferEvent);
+          
+          // Find user and update payment status
+          const usersQuery = await firestore
+            .collection('users')
+            .where('transferId', '==', transferId)
+            .get();
+          
+          if (!usersQuery.empty) {
+            const userDoc = usersQuery.docs[0];
+            const userId = userDoc.id;
+            
+            await firestore.collection('users').doc(userId).update({
+              paymentStatus: 'failed',
+              transferStatus: transferEvent,
+              lastUpdated: new Date()
+            });
+            
+            console.log('Payment status updated to failed for transfer:', transferId);
+          }
+        }
       }
     }
 

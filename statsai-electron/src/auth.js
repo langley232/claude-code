@@ -251,7 +251,6 @@ class AtlasWebAuth {
                         body: JSON.stringify({
                             userId,
                             subscriptionTier: this.selectedPlan,
-                            accountId: metadata.account_id,
                             publicToken: public_token
                         })
                     });
