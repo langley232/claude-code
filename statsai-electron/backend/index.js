@@ -585,15 +585,25 @@ app.post('/test-verify-user', async (req, res) => {
 });
 
 // Plaid webhook
-app.post('/webhook/plaid', express.raw({ type: 'application/json' }), async (req, res) => {
+app.post('/webhook/plaid', express.json(), async (req, res) => {
   try {
-    const webhookData = JSON.parse(req.body.toString());
-    console.log('Plaid webhook received:', webhookData);
+    const webhookData = req.body;
+    console.log('Plaid webhook received:', JSON.stringify(webhookData, null, 2));
 
-    if (webhookData.webhook_type === 'TRANSFER' && 
-        webhookData.webhook_code === 'TRANSFER_EVENTS_UPDATE') {
-      // Handle transfer status updates
-      console.log('Transfer event update received');
+    if (webhookData.webhook_type === 'TRANSFER') {
+      console.log('Transfer webhook received:', webhookData.webhook_code);
+      
+      // Handle transfer completion for account activation
+      if (webhookData.webhook_code === 'TRANSFER_EVENTS_UPDATE' && 
+          webhookData.transfer_event === 'settled') {
+        console.log('Transfer settled - activating account');
+        // TODO: Activate user account based on transfer metadata
+      }
+      
+      if (webhookData.webhook_code === 'TRANSFER_EVENTS_UPDATE' && 
+          webhookData.transfer_event === 'failed') {
+        console.log('Transfer failed:', webhookData);
+      }
     }
 
     res.status(200).json({ acknowledged: true });
