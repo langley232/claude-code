@@ -117,6 +117,7 @@
       }
     },
      "code-index": {
+      "type": "stdio",
       "command": "uvx",
       "args": ["code-index-mcp"]
     },
@@ -130,6 +131,17 @@
       "env": {
         "VERCEL_API_KEY": "${VERCEL_API_KEY}",
         "VERCEL_TEAM_ID": "${VERCEL_TEAM_ID}"
+      }
+    },
+    "skysql": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@skysqlinc/skysql-mcp"
+      ],
+      "env": {
+        "SKYSQL_API_KEY": "${SKYSQL_API_KEY}"
       }
     }
   }

@@ -1,0 +1,26 @@
+{
+  "name": "atlasweb-auth-backend",
+  "version": "1.0.0",
+  "description": "AtlasWeb Authentication Backend with Plaid Integration",
+  "main": "index.js",
+  "scripts": {
+    "start": "functions-framework --target=authHandler",
+    "deploy": "gcloud functions deploy authHandler --runtime=nodejs20 --trigger-http --allow-unauthenticated"
+  },
+  "dependencies": {
+    "@google-cloud/functions-framework": "^3.0.0",
+    "@google-cloud/firestore": "^7.1.0",
+    "@google-cloud/secret-manager": "^5.0.0",
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^6.9.0",
+    "form-data": "^4.0.0",
+    "node-fetch": "^2.6.7",
+    "axios": "^1.6.0",
+    "plaid": "^11.0.0",
+    "crypto": "^1.0.1",
+    "uuid": "^9.0.1"
+  }
+}
