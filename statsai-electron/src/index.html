@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AtlasWeb - Advanced Web Analytics Platform</title>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: https://unpkg.com https://fonts.googleapis.com https://fonts.gstatic.com https://cdnjs.cloudflare.com;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: https://unpkg.com https://fonts.googleapis.com https://fonts.gstatic.com https://cdn.plaid.com https://us-central1-solid-topic-466217-t9.cloudfunctions.net https://cdnjs.cloudflare.com; connect-src 'self' https://us-central1-solid-topic-466217-t9.cloudfunctions.net https://cdn.plaid.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.plaid.com https://cdnjs.cloudflare.com;">
     <link rel="stylesheet" href="styles.css">
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
@@ -243,7 +243,7 @@
                 </div>
                 
                 <button class="btn-secondary">Login</button>
-                <button class="btn-primary">
+                <button class="btn-primary" onclick="window.location.href='registration.html'">
                     Join up
                     <i data-lucide="arrow-right"></i>
                 </button>
@@ -273,7 +273,7 @@
                     Experience the future of web browsing with AI-powered search, research, and intelligent agents
                 </p>
 
-                <button class="hero-cta">
+                <button class="hero-cta" onclick="window.location.href='registration.html'">
                     Try it out
                     <i data-lucide="arrow-right"></i>
                 </button>
@@ -669,6 +669,7 @@
         </div>
     </footer>
 
+    <script src="auth.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

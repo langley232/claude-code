@@ -1,0 +1,9 @@
+{
+  "timestamp": "2025-08-25T14:19:59.056Z",
+  "from": "\"AtlasWeb AI\" <test@atlasweb.info>",
+  "to": "test@example.com",
+  "subject": "Test Email",
+  "text": "TEST EMAIL\n\nThis is a test email to verify SMTP is working!\n\nEmail: test@example.com\n\nTime: 2025-08-25T14:19:58.656Z",
+  "html": "\n        <h1>Test Email</h1>\n        <p>This is a test email to verify SMTP is working!</p>\n        <p>Email: test@example.com</p>\n        <p>Time: 2025-08-25T14:19:58.656Z</p>\n      \n",
+  "raw": "From: AtlasWeb AI <test@atlasweb.info>\r\nTo: test@example.com\r\nSubject: Test Email\r\nMessage-ID: <09978f75-754c-f42e-ec7b-0ed0b9947d3f@atlasweb.info>\r\nContent-Transfer-Encoding: 7bit\r\nDate: Mon, 25 Aug 2025 14:19:58 +0000\r\nMIME-Version: 1.0\r\nContent-Type: text/html; charset=utf-8\r\n\r\n\r\n        <h1>Test Email</h1>\r\n        <p>This is a test email to verify SMTP is working!</p>\r\n        <p>Email: test@example.com</p>\r\n        <p>Time: 2025-08-25T14:19:58.656Z</p>\r\n      \r\n"
+}

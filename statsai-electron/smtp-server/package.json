@@ -1,0 +1,13 @@
+{
+  "name": "local-smtp-server",
+  "version": "1.0.0",
+  "description": "Simple SMTP server for testing",
+  "main": "smtp-server.js",
+  "scripts": {
+    "start": "node smtp-server.js"
+  },
+  "dependencies": {
+    "smtp-server": "^3.13.0",
+    "mailparser": "^3.6.5"
+  }
+}
