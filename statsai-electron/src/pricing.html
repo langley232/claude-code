@@ -8,15 +8,211 @@
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 </head>
 <body>
-    <h1>Pricing Page</h1>
-    <p><a href="index.html">← Back to Home</a></p>
-    <p><a href="registration.html">Go to Registration →</a></p>
+    <!-- Pricing Content -->
+    <section class="pricing-section">
+        <div class="section-container">
+            <div class="section-header">
+                <h1 class="section-title">Choose Your Plan</h1>
+                <p class="section-subtitle">
+                    Transform your web experience with AI-powered intelligence. 
+                    All plans include core features with advanced capabilities as you scale.
+                </p>
+            </div>
+            
+            <div class="pricing-toggle">
+                <span class="toggle-label">Monthly</span>
+                <button class="toggle-switch">
+                    <div class="toggle-slider"></div>
+                </button>
+                <span class="toggle-label">Annual <span class="savings-badge">Save 20%</span></span>
+            </div>
+            
+            <div class="pricing-grid">
+                <!-- Basic Plan -->
+                <div class="pricing-card">
+                    <div class="plan-header">
+                        <h3 class="plan-name">Basic</h3>
+                        <div class="plan-price">
+                            <span class="price-amount">$50</span>
+                            <span class="price-period">/month</span>
+                        </div>
+                        <p class="plan-description">Perfect for individuals getting started with AI-powered browsing</p>
+                    </div>
+                    
+                    <div class="plan-features">
+                        <div class="feature-item">
+                            <i data-lucide="check"></i>
+                            <span>AI Search Vanilla (DuckDuckGo + Open Source)</span>
+                        </div>
+                        <div class="feature-item">
+                            <i data-lucide="check"></i>
+                            <span>Code Assistant (Jules)</span>
+                        </div>
+                        <div class="feature-item">
+                            <i data-lucide="check"></i>
+                            <span>Email Agent (Basic)</span>
+                        </div>
+                        <div class="feature-item">
+                            <i data-lucide="check"></i>
+                            <span>Personal Assistant</span>
+                        </div>
+                        <div class="feature-item">
+                            <i data-lucide="check"></i>
+                            <span>Translation Agent</span>
+                        </div>
+                        <div class="feature-item">
+                            <i data-lucide="check"></i>
+                            <span>Basic Support</span>
+                        </div>
+                    </div>
+                    
+                    <button class="plan-button btn-secondary" onclick="selectPlan('basic')">
+                        Start with Basic
+                    </button>
+                </div>
+                
+                <!-- Pro Plan -->
+                <div class="pricing-card featured">
+                    <div class="plan-badge">Most Popular</div>
+                    <div class="plan-header">
+                        <h3 class="plan-name">Pro</h3>
+                        <div class="plan-price">
+                            <span class="price-amount">$70</span>
+                            <span class="price-period">/month</span>
+                        </div>
+                        <p class="plan-description">Advanced features for professionals and small teams</p>
+                    </div>
+                    
+                    <div class="plan-features">
+                        <div class="feature-item">
+                            <i data-lucide="check"></i>
+                            <span>Everything in Basic</span>
+                        </div>
+                        <div class="feature-item">
+                            <i data-lucide="check"></i>
+                            <span>AI Deep Research (OpenAI/Google)</span>
+                        </div>
+                        <div class="feature-item">
+                            <i data-lucide="check"></i>
+                            <span>Specialized Search (YouTube, Social Media)</span>
+                        </div>
+                        <div class="feature-item">
+                            <i data-lucide="check"></i>
+                            <span>Writer Integration</span>
+                        </div>
+                        <div class="feature-item">
+                            <i data-lucide="check"></i>
+                            <span>Creative Design Suite</span>
+                        </div>
+                        <div class="feature-item">
+                            <i data-lucide="check"></i>
+                            <span>Team Collaboration (5 members)</span>
+                        </div>
+                        <div class="feature-item">
+                            <i data-lucide="check"></i>
+                            <span>Priority Support</span>
+                        </div>
+                    </div>
+                    
+                    <button class="plan-button btn-primary" onclick="selectPlan('pro')">
+                        Get Pro Now
+                    </button>
+                </div>
+                
+                <!-- Max Plan -->
+                <div class="pricing-card premium">
+                    <div class="plan-badge premium">Enterprise</div>
+                    <div class="plan-header">
+                        <h3 class="plan-name">Max</h3>
+                        <div class="plan-price">
+                            <span class="price-amount">$120</span>
+                            <span class="price-period">/month</span>
+                        </div>
+                        <p class="plan-description">Complete solution for enterprises and power users</p>
+                    </div>
+                    
+                    <div class="plan-features">
+                        <div class="feature-item">
+                            <i data-lucide="check"></i>
+                            <span>Everything in Pro</span>
+                        </div>
+                        <div class="feature-item">
+                            <i data-lucide="check"></i>
+                            <span>Website Builder Studio</span>
+                        </div>
+                        <div class="feature-item">
+                            <i data-lucide="check"></i>
+                            <span>Web Automation Studio</span>
+                        </div>
+                        <div class="feature-item">
+                            <i data-lucide="check"></i>
+                            <span>Advanced Research Capabilities</span>
+                        </div>
+                        <div class="feature-item">
+                            <i data-lucide="check"></i>
+                            <span>Mobile Assistant (Native Apps)</span>
+                        </div>
+                        <div class="feature-item">
+                            <i data-lucide="check"></i>
+                            <span>Team Collaboration (15 members)</span>
+                        </div>
+                        <div class="feature-item">
+                            <i data-lucide="check"></i>
+                            <span>API Access</span>
+                        </div>
+                        <div class="feature-item">
+                            <i data-lucide="check"></i>
+                            <span>24/7 Priority Support</span>
+                        </div>
+                    </div>
+                    
+                    <button class="plan-button btn-premium" onclick="selectPlan('max')">
+                        Go Max
+                    </button>
+                </div>
+            </div>
+            
+            <div class="pricing-note">
+                <p><strong>Note:</strong> Pricing varies by region. All plans include a 14-day free trial.</p>
+                <p>Need custom solutions? <a href="#contact">Contact our sales team</a></p>
+            </div>
+        </div>
+    </section>
     
     <script src="auth.js"></script>
     <script>
         if (window.lucide) {
             window.lucide.createIcons();
         }
+        
+        function selectPlan(planName) {
+            // Store selected plan in localStorage
+            localStorage.setItem('selected_plan', planName);
+            
+            // Redirect to registration with plan parameter
+            window.location.href = `registration.html?plan=${planName}`;
+        }
+        
+        // Pricing toggle functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleSwitch = document.querySelector('.toggle-switch');
+            const priceAmounts = document.querySelectorAll('.price-amount');
+            
+            if (toggleSwitch) {
+                toggleSwitch.addEventListener('click', function() {
+                    toggleSwitch.classList.toggle('annual');
+                    
+                    // Update prices for annual billing (20% discount)
+                    priceAmounts.forEach(amount => {
+                        const currentPrice = parseInt(amount.textContent.replace('$', ''));
+                        const newPrice = toggleSwitch.classList.contains('annual') 
+                            ? Math.round(currentPrice * 0.8) 
+                            : currentPrice / 0.8;
+                        amount.textContent = '$' + Math.round(newPrice);
+                    });
+                });
+            }
+        });
     </script>
 </body>
 </html>

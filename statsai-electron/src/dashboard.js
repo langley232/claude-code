@@ -15,14 +15,20 @@ class AtlasWebDashboard {
         // Check authentication
         this.checkAuth();
         
+        // Initialize router
+        this.router = new DashboardRouter();
+        this.router.init(this.userData?.subscriptionTier || 'basic');
+        
         // Initialize UI
         this.initializeUI();
         
         // Setup event listeners
         this.setupEventListeners();
         
-        // Initialize current feature
-        this.switchFeature('search');
+        // Initialize current feature from URL hash or default to search
+        const hash = window.location.hash.substring(1);
+        const initialFeature = hash && this.router.routes[hash] ? hash : 'search';
+        this.router.navigateToFeature(initialFeature);
         
         // Initialize Lucide icons
         if (window.lucide) {
@@ -67,13 +73,8 @@ class AtlasWebDashboard {
     }
 
     setupEventListeners() {
-        // Feature buttons
-        document.querySelectorAll('.feature-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const feature = e.currentTarget.dataset.feature;
-                this.switchFeature(feature);
-            });
-        });
+        // Feature buttons (handled by router now)
+        // Router handles feature button clicks
 
         // User account dropdown
         const userAccount = document.querySelector('.user-account');

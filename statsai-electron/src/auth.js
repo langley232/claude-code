@@ -173,9 +173,9 @@ class AtlasWebAuth {
 
     updateOrderSummary() {
         const planPrices = {
-            basic: '$20',
-            pro: '$200',
-            max: '$300'
+            basic: '$50',
+            pro: '$70',
+            max: '$120'
         };
 
         const planNames = {
