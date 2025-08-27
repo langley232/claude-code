@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AtlasWeb AI Dashboard</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: https://unpkg.com https://fonts.googleapis.com https://fonts.gstatic.com https://cdn.plaid.com https://us-central1-solid-topic-466217-t9.cloudfunctions.net https://cdnjs.cloudflare.com; connect-src 'self' https://us-central1-solid-topic-466217-t9.cloudfunctions.net https://cdn.plaid.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.plaid.com https://cdnjs.cloudflare.com;">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+</head>
+<body class="dashboard-body">
+    <!-- Dashboard Container -->
+    <div class="dashboard-container">
+        <!-- Top Navigation Bar -->
+        <header class="dashboard-header">
+            <div class="header-left">
+                <!-- Logo -->
+                <div class="dashboard-logo">
+                    <div class="logo-icon">
+                        <svg class="logo-svg" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="16" cy="16" r="14" fill="url(#logoGradient)" stroke="url(#logoStroke)" stroke-width="1"/>
+                            <path d="M2 16 L30 16 M16 2 L16 30" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/>
+                            <path d="M8 6 Q16 12 24 6 M8 26 Q16 20 24 26" stroke="rgba(255,255,255,0.4)" stroke-width="0.5"/>
+                            <path d="M6 8 Q12 16 6 24 M26 8 Q20 16 26 24" stroke="rgba(255,255,255,0.4)" stroke-width="0.5"/>
+                            <text x="16" y="21" text-anchor="middle" fill="white" font-size="12" font-weight="800" font-family="Inter">A</text>
+                            <defs>
+                                <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#6366f1"/>
+                                    <stop offset="50%" style="stop-color:#8b5cf6"/>
+                                    <stop offset="100%" style="stop-color:#06b6d4"/>
+                                </linearGradient>
+                                <linearGradient id="logoStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.3"/>
+                                    <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0.1"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <span class="logo-text">AtlasWeb AI</span>
+                </div>
+                
+                <!-- Global Search -->
+                <div class="global-search">
+                    <div class="search-input-container">
+                        <i data-lucide="search" class="search-icon"></i>
+                        <input type="text" placeholder="Search or ask anything..." class="global-search-input">
+                        <div class="search-shortcut">⌘K</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="header-center">
+                <!-- Feature Quick Buttons -->
+                <div class="feature-buttons">
+                    <button class="feature-btn active" data-feature="search" title="AI Search">
+                        <i data-lucide="search"></i>
+                        <span>Search</span>
+                    </button>
+                    <button class="feature-btn" data-feature="bookmarks" title="Bookmarks">
+                        <i data-lucide="bookmark"></i>
+                        <span>Bookmarks</span>
+                    </button>
+                    <button class="feature-btn" data-feature="email" title="Email Assistant">
+                        <i data-lucide="mail"></i>
+                        <span>Email</span>
+                    </button>
+                    <button class="feature-btn" data-feature="automation" title="Web Automation">
+                        <i data-lucide="zap"></i>
+                        <span>Automation</span>
+                    </button>
+                    <button class="feature-btn tier-max" data-feature="website-builder" title="Website Builder (Max Tier)">
+                        <i data-lucide="layout"></i>
+                        <span>Builder</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <!-- Notifications -->
+                <button class="header-btn notification-btn">
+                    <i data-lucide="bell"></i>
+                    <span class="notification-badge">3</span>
+                </button>
+
+                <!-- Help -->
+                <button class="header-btn help-btn">
+                    <i data-lucide="help-circle"></i>
+                </button>
+
+                <!-- User Account -->
+                <div class="user-account">
+                    <div class="user-avatar">
+                        <span id="userInitials">U</span>
+                    </div>
+                    <div class="user-info">
+                        <span class="user-name" id="userName">User</span>
+                        <span class="user-tier" id="userTier">Basic Plan</span>
+                    </div>
+                    <i data-lucide="chevron-down" class="dropdown-arrow"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Content -->
+        <main class="dashboard-main">
+            <!-- Left Panel: Daily Alerts & Popular Agents (20%) -->
+            <aside class="left-panel">
+                <div class="panel-content">
+                    <!-- Daily Alerts Section -->
+                    <div class="alerts-section">
+                        <div class="section-header">
+                            <h3 class="section-title">
+                                <i data-lucide="bell" class="section-icon"></i>
+                                Daily Alerts
+                            </h3>
+                            <button class="section-action">
+                                <i data-lucide="settings"></i>
+                            </button>
+                        </div>
+                        <div class="alerts-list">
+                            <div class="alert-item security">
+                                <div class="alert-icon">
+                                    <i data-lucide="shield-check"></i>
+                                </div>
+                                <div class="alert-content">
+                                    <h4 class="alert-title">Security Update Available</h4>
+                                    <p class="alert-desc">New privacy features released</p>
+                                </div>
+                                <div class="alert-time">2h ago</div>
+                            </div>
+
+                            <div class="alert-item trend">
+                                <div class="alert-icon">
+                                    <i data-lucide="trending-up"></i>
+                                </div>
+                                <div class="alert-content">
+                                    <h4 class="alert-title">AI Research Trending</h4>
+                                    <p class="alert-desc">New breakthroughs in LLM capabilities</p>
+                                </div>
+                                <div class="alert-time">5h ago</div>
+                            </div>
+
+                            <div class="alert-item usage">
+                                <div class="alert-icon">
+                                    <i data-lucide="activity"></i>
+                                </div>
+                                <div class="alert-content">
+                                    <h4 class="alert-title">Usage Milestone</h4>
+                                    <p class="alert-desc">You've made 100 searches this week</p>
+                                </div>
+                                <div class="alert-time">1d ago</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Popular Agents Section -->
+                    <div class="agents-section">
+                        <div class="section-header">
+                            <h3 class="section-title">
+                                <i data-lucide="cpu" class="section-icon"></i>
+                                Popular Agents
+                            </h3>
+                            <button class="section-action">
+                                <i data-lucide="plus"></i>
+                            </button>
+                        </div>
+                        <div class="agents-grid">
+                            <div class="agent-card">
+                                <div class="agent-icon research">
+                                    <i data-lucide="microscope"></i>
+                                </div>
+                                <div class="agent-info">
+                                    <h4 class="agent-name">Research Pro</h4>
+                                    <p class="agent-desc">Deep research & analysis</p>
+                                    <div class="agent-stats">
+                                        <span class="rating">4.9</span>
+                                        <span class="downloads">12k+</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="agent-card">
+                                <div class="agent-icon writing">
+                                    <i data-lucide="pen-tool"></i>
+                                </div>
+                                <div class="agent-info">
+                                    <h4 class="agent-name">Content Writer</h4>
+                                    <p class="agent-desc">AI content generation</p>
+                                    <div class="agent-stats">
+                                        <span class="rating">4.8</span>
+                                        <span class="downloads">8.5k+</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="agent-card">
+                                <div class="agent-icon code">
+                                    <i data-lucide="code"></i>
+                                </div>
+                                <div class="agent-info">
+                                    <h4 class="agent-name">Code Assistant</h4>
+                                    <p class="agent-desc">Development helper</p>
+                                    <div class="agent-stats">
+                                        <span class="rating">4.7</span>
+                                        <span class="downloads">15k+</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="quick-actions-section">
+                        <div class="section-header">
+                            <h3 class="section-title">
+                                <i data-lucide="zap" class="section-icon"></i>
+                                Quick Actions
+                            </h3>
+                        </div>
+                        <div class="quick-actions">
+                            <button class="action-btn">
+                                <i data-lucide="bookmark-plus"></i>
+                                <span>Save Page</span>
+                            </button>
+                            <button class="action-btn">
+                                <i data-lucide="share"></i>
+                                <span>Share</span>
+                            </button>
+                            <button class="action-btn">
+                                <i data-lucide="download"></i>
+                                <span>Export</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Middle Panel: AI Search Engine (40%) -->
+            <section class="middle-panel">
+                <div class="search-container">
+                    <div class="search-header">
+                        <h2 class="search-title">Ensemble AI Search</h2>
+                        <div class="model-selector">
+                            <select class="model-select">
+                                <option value="ensemble">🤖 Ensemble (Auto)</option>
+                                <option value="xai">⚡ xAI Grok</option>
+                                <option value="gemini">🧠 Google Gemini</option>
+                                <option value="openai">🎯 OpenAI GPT-4</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="search-interface">
+                        <div class="search-box">
+                            <div class="search-input-wrapper">
+                                <i data-lucide="search" class="search-input-icon"></i>
+                                <textarea 
+                                    class="main-search-input" 
+                                    placeholder="Ask anything... AI will search across multiple models for the best answer"
+                                    rows="1"
+                                ></textarea>
+                                <div class="search-actions">
+                                    <button class="search-submit">
+                                        <i data-lucide="arrow-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="search-suggestions">
+                                <div class="suggestion-category">
+                                    <span class="category-label">Trending:</span>
+                                    <button class="suggestion-tag">AI Safety Research</button>
+                                    <button class="suggestion-tag">Climate Tech Updates</button>
+                                    <button class="suggestion-tag">Web3 Developments</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Search Results Area -->
+                        <div class="search-results" id="searchResults">
+                            <!-- Welcome state -->
+                            <div class="welcome-state">
+                                <div class="welcome-icon">
+                                    <i data-lucide="brain"></i>
+                                </div>
+                                <h3 class="welcome-title">Welcome to Ensemble AI Search</h3>
+                                <p class="welcome-description">
+                                    Search across multiple AI models simultaneously. Get verified, comprehensive answers 
+                                    with source citations from xAI Grok, Google Gemini, and OpenAI GPT-4.
+                                </p>
+                                <div class="search-features">
+                                    <div class="feature-item">
+                                        <i data-lucide="check-circle"></i>
+                                        <span>Real-time information</span>
+                                    </div>
+                                    <div class="feature-item">
+                                        <i data-lucide="shield-check"></i>
+                                        <span>Source verification</span>
+                                    </div>
+                                    <div class="feature-item">
+                                        <i data-lucide="zap"></i>
+                                        <span>Multi-model synthesis</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Search History -->
+                        <div class="search-history">
+                            <div class="history-header">
+                                <h4 class="history-title">Recent Searches</h4>
+                                <button class="history-clear">Clear</button>
+                            </div>
+                            <div class="history-list">
+                                <div class="history-item">
+                                    <i data-lucide="clock"></i>
+                                    <span>Latest AI breakthroughs 2025</span>
+                                    <div class="history-models">
+                                        <span class="model-badge xai">xAI</span>
+                                        <span class="model-badge gemini">Gemini</span>
+                                    </div>
+                                </div>
+                                <div class="history-item">
+                                    <i data-lucide="clock"></i>
+                                    <span>Climate change solutions technology</span>
+                                    <div class="history-models">
+                                        <span class="model-badge ensemble">Ensemble</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Panel: AI Chatbot (40%) -->
+            <section class="right-panel">
+                <div class="chat-container">
+                    <div class="chat-header">
+                        <div class="chat-title">
+                            <i data-lucide="message-square" class="chat-icon"></i>
+                            <h3>AI Assistant</h3>
+                            <span class="chat-status online">Online</span>
+                        </div>
+                        <div class="chat-actions">
+                            <button class="chat-action-btn" title="Voice input">
+                                <i data-lucide="mic"></i>
+                            </button>
+                            <button class="chat-action-btn" title="Clear chat">
+                                <i data-lucide="trash-2"></i>
+                            </button>
+                            <button class="chat-action-btn" title="Settings">
+                                <i data-lucide="settings"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="chat-messages" id="chatMessages">
+                        <!-- Welcome message -->
+                        <div class="message assistant-message">
+                            <div class="message-avatar">
+                                <i data-lucide="bot"></i>
+                            </div>
+                            <div class="message-content">
+                                <div class="message-text">
+                                    👋 Hi! I'm your AI assistant powered by OpenAI. I can help you with questions, 
+                                    research, writing, coding, and more. I have access to your search context 
+                                    and can provide personalized assistance.
+                                </div>
+                                <div class="message-actions">
+                                    <button class="message-action">
+                                        <i data-lucide="copy"></i>
+                                    </button>
+                                    <button class="message-action">
+                                        <i data-lucide="thumbs-up"></i>
+                                    </button>
+                                    <button class="message-action">
+                                        <i data-lucide="thumbs-down"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chat-suggestions">
+                        <div class="suggestion-chips">
+                            <button class="suggestion-chip">
+                                <i data-lucide="lightbulb"></i>
+                                Explain a concept
+                            </button>
+                            <button class="suggestion-chip">
+                                <i data-lucide="code"></i>
+                                Debug my code
+                            </button>
+                            <button class="suggestion-chip">
+                                <i data-lucide="pen-tool"></i>
+                                Help me write
+                            </button>
+                            <button class="suggestion-chip">
+                                <i data-lucide="calculator"></i>
+                                Solve a problem
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="chat-input">
+                        <div class="input-container">
+                            <button class="input-action" id="voiceBtn" title="Voice input">
+                                <i data-lucide="mic"></i>
+                            </button>
+                            <textarea 
+                                class="chat-textarea" 
+                                placeholder="Ask me anything..."
+                                rows="1"
+                            ></textarea>
+                            <button class="input-action" id="sendBtn" title="Send message">
+                                <i data-lucide="send"></i>
+                            </button>
+                        </div>
+                        <div class="input-footer">
+                            <div class="context-info">
+                                <i data-lucide="link"></i>
+                                <span>Context-aware responses</span>
+                            </div>
+                            <div class="model-info">
+                                <span>Powered by OpenAI GPT-4</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Loading overlay -->
+    <div class="loading-overlay" style="display: none;">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-message">Loading...</div>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="router.js"></script>
+    <script src="dashboard.js"></script>
+</body>
+</html>

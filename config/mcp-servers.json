@@ -153,6 +153,17 @@
       "env": {
         "SKYSQL_API_KEY": "${SKYSQL_API_KEY}"
       }
+    },
+    "mailgun": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "/home/rakib232/github/claude-code/mailgun-mcp-server/src/mailgun-mcp.js"
+      ],
+      "env": {
+        "MAILGUN_API_KEY": "${MAILGUN_API_KEY}",
+        "MAILGUN_DOMAIN": "${MAILGUN_DOMAIN}"
+      }
     }
   }
 }

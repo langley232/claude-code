@@ -121,7 +121,7 @@ function validateField(event) {
     
     // Email validation
     if (field.type === 'email' && value) {
-        const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(value)) {
             isValid = false;
             errorMessage = 'Please enter a valid email address';
@@ -274,8 +274,8 @@ function initializePaymentForm() {
 }
 
 function formatCardNumber(event) {
-    let value = event.target.value.replace(/\\s+/g, '').replace(/[^0-9]/gi, '');
-    const matches = value.match(/\\d{4,16}/g);
+    let value = event.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+    const matches = value.match(/\d{4,16}/g);
     const match = matches && matches[0] || '';
     const parts = [];
     
@@ -291,7 +291,7 @@ function formatCardNumber(event) {
 }
 
 function formatExpiryDate(event) {
-    let value = event.target.value.replace(/\\D/g, '');
+    let value = event.target.value.replace(/\D/g, '');
     if (value.length >= 2) {
         value = value.substring(0, 2) + '/' + value.substring(2, 4);
     }
@@ -299,7 +299,7 @@ function formatExpiryDate(event) {
 }
 
 function formatCVV(event) {
-    event.target.value = event.target.value.replace(/\\D/g, '').substring(0, 4);
+    event.target.value = event.target.value.replace(/\D/g, '').substring(0, 4);
 }
 
 // Form submission handlers

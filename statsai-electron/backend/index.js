@@ -88,7 +88,7 @@ async function sendEmail(to, subject, html) {
     const mailgunDomain = (await getSecret('mailgun-domain')).trim();
     
     const formData = new FormData();
-    formData.append('from', 'AtlasWeb AI <postmaster@sandbox8c7e772e4393430f8ba13b764b0f40f6.mailgun.org>');
+    formData.append('from', `AtlasWeb AI <noreply@${mailgunDomain}>`);
     formData.append('to', to);
     formData.append('subject', subject);
     formData.append('html', html);
