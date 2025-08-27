@@ -545,7 +545,7 @@ Total Failed: 3 emails
 ```bash
 # Get latest email events
 curl -s --user "api:$MAILGUN_API_KEY" \
-  "https://api.mailgun.net/v3/atlasweb.info/events?limit=5"
+  "https://api.mailgun.net/v3/$MAILGUN_DOMAIN/events?limit=5"
 
 # Filter by event type
 curl -s --user "api:$MAILGUN_API_KEY" \
