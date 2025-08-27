@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **ALWAYS use specialized agents for domain-specific tasks to preserve context and maintain quality:**
 
 ### Mandatory Agent Usage
-- **@github-agent** - All GitHub operations (commits, pushes, PRs, repository management, collaboration)
+- **@github-agent** - ALL GIT AND GITHUB OPERATIONS (commits, pushes, pulls, merges, branches, PRs, repository management, collaboration) - NEVER use direct git commands, ALWAYS delegate to github-agent
 - **@browser-testing-agent** - All Playwright browser automation, E2E testing, UI validation
 - **@documentation-searcher** - Technical documentation lookup, framework references, API docs
 - **@code-review-agent** - Security analysis, performance reviews, code quality assessment
@@ -15,6 +15,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **@workflow-agent** - n8n automation, business process integration, API orchestration
 - **@frontend-ui-agent** - ONLY when explicitly requested for shadcn/ui components
 - **@video-content-agent** - YouTube analysis, educational content processing
+
+### ⚠️ CRITICAL GIT OPERATIONS REMINDER
+**ALL git commands must be delegated to @github-agent including but not limited to:**
+- `git merge`, `git checkout`, `git pull`, `git push`
+- `git commit`, `git add`, `git status`, `git log`
+- Branch operations, repository management, collaboration tasks
+- **NO EXCEPTIONS** - Always use Task tool with subagent_type="github-agent"
 
 ### Implementation Requirements
 1. **Task Recognition**: Immediately identify if a task matches an agent's domain
