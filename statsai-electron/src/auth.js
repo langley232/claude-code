@@ -433,6 +433,24 @@ class AtlasWebAuth {
 
     async handleLogin(event) {
         event.preventDefault();
+
+        // Test bypass for localized testing
+        console.log("Bypassing login for local testing.");
+        
+        // Set up test authentication data
+        localStorage.setItem('atlasweb_token', 'test_token_' + Date.now());
+        localStorage.setItem('atlasweb_user', JSON.stringify({
+            firstName: 'John',
+            lastName: 'Doe',
+            email: 'testuser@localhost.com',
+            subscriptionTier: 'Pro',
+            id: 'test_user_' + Date.now(),
+            isVerified: true
+        }));
+        
+        window.location.href = '/src/dashboard.html';
+        return; 
+        // The original login logic below is preserved.
         
         const formData = new FormData(event.target);
         const loginData = {

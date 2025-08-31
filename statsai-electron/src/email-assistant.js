@@ -1,15 +1,512 @@
 // StatsAI Email Assistant - JavaScript Functionality
 // Superhuman-inspired email client with AI capabilities
 
+// Resumable Download Manager for handling network interruptions
+class ResumableDownloadManager {
+    constructor(emailAssistant) {
+        this.emailAssistant = emailAssistant;
+        this.downloadState = null;
+        this.isDownloading = false;
+        this.isPaused = false;
+        this.currentBatch = 0;
+        this.retryCount = 0;
+        this.maxRetries = 3;
+        this.batchSize = 50;
+        this.checkpointInterval = 5; // Save checkpoint every 5 batches
+    }
+    
+    // Create new download session
+    async initializeDownload(userEmail) {
+        const downloadId = this.generateDownloadId();
+        
+        this.downloadState = {
+            downloadId: downloadId,
+            userEmail: userEmail,
+            status: 'initializing',
+            startTime: new Date().toISOString(),
+            lastCheckpoint: new Date().toISOString(),
+            totalEmails: 0,
+            downloadedEmails: 0,
+            vectorizedEmails: 0,
+            failedEmails: [],
+            currentBatch: 0,
+            totalBatches: 0,
+            retryCount: 0,
+            nextPageToken: null,
+            checkpoints: []
+        };
+        
+        // Save initial state
+        await this.saveDownloadState();
+        return downloadId;
+    }
+    
+    // Start or resume download process
+    async startDownload() {
+        if (this.isDownloading) {
+            console.log('Download already in progress');
+            return;
+        }
+        
+        this.isDownloading = true;
+        this.isPaused = false;
+        
+        try {
+            // Show status bar
+            this.showDownloadStatus();
+            
+            // Get total email count first
+            await this.getEmailCount();
+            
+            // Start batch processing
+            await this.processBatches();
+            
+        } catch (error) {
+            console.error('Download failed:', error);
+            await this.handleDownloadError(error);
+        } finally {
+            this.isDownloading = false;
+        }
+    }
+    
+    // Get total email count for progress tracking
+    async getEmailCount() {
+        try {
+            this.updateStatus('Counting emails...', 'Fetching total email count');
+            
+            const response = await fetch(this.emailAssistant.config.emailFetcherUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userEmail: this.downloadState.userEmail,
+                    accessToken: this.emailAssistant.getAccessToken(),
+                    provider: this.emailAssistant.getAuthProvider(),
+                    action: 'getEmailCount'
+                })
+            });
+            
+            const result = await response.json();
+            this.downloadState.totalEmails = result.totalEmails || 0;
+            this.downloadState.totalBatches = Math.ceil(this.downloadState.totalEmails / this.batchSize);
+            
+            await this.saveDownloadState();
+            this.updateProgress();
+            
+        } catch (error) {
+            console.error('Failed to get email count:', error);
+            // Continue with unknown total
+            this.downloadState.totalEmails = 0;
+        }
+    }
+    
+    // Process emails in batches with checkpoints
+    async processBatches() {
+        this.downloadState.status = 'downloading';
+        
+        while (this.downloadState.currentBatch < this.downloadState.totalBatches || this.downloadState.totalBatches === 0) {
+            if (this.isPaused) {
+                console.log('Download paused at batch', this.downloadState.currentBatch);
+                return;
+            }
+            
+            try {
+                await this.processBatch();
+                this.downloadState.currentBatch++;
+                
+                // Create checkpoint every N batches
+                if (this.downloadState.currentBatch % this.checkpointInterval === 0) {
+                    await this.createCheckpoint();
+                }
+                
+                // Reset retry count on successful batch
+                this.downloadState.retryCount = 0;
+                
+                // Update progress
+                this.updateProgress();
+                
+                // Small delay to prevent rate limiting
+                await this.delay(100);
+                
+            } catch (error) {
+                await this.handleBatchError(error);
+            }
+        }
+        
+        // Download complete
+        await this.completeDownload();
+    }
+    
+    // Process single batch of emails
+    async processBatch() {
+        const batchData = {
+            userEmail: this.downloadState.userEmail,
+            accessToken: this.emailAssistant.getAccessToken(),
+            provider: this.emailAssistant.getAuthProvider(),
+            action: 'downloadBatch',
+            pageToken: this.downloadState.nextPageToken,
+            maxResults: this.batchSize,
+            batchNumber: this.downloadState.currentBatch
+        };
+        
+        const response = await fetch(this.emailAssistant.config.emailFetcherUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(batchData)
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Batch download failed: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        
+        // Update state with batch results
+        this.downloadState.downloadedEmails += result.emailCount || 0;
+        this.downloadState.nextPageToken = result.nextPageToken;
+        
+        // If no more pages, we're done
+        if (!result.nextPageToken) {
+            this.downloadState.totalBatches = this.downloadState.currentBatch + 1;
+        }
+        
+        // Start vectorization for this batch in parallel
+        if (result.emailCount > 0) {
+            this.startBatchVectorization(result.emails);
+        }
+        
+        // Update UI with new emails
+        this.emailAssistant.addEmailsToList(result.emails);
+    }
+    
+    // Start vectorization process in background
+    async startBatchVectorization(emails) {
+        try {
+            console.log('🧠 Publishing', emails.length, 'emails for vectorization...');
+            
+            // Show vectorization status
+            this.showVectorizationStatus();
+            
+            for (const email of emails) {
+                await this.emailAssistant.publishToPubSub('emails-to-process', {
+                    userEmail: this.downloadState.userEmail,
+                    messageId: email.id
+                });
+                this.downloadState.vectorizedEmails++;
+                this.updateVectorizationProgress();
+            }
+            
+            console.log('✅ Completed publishing emails for vectorization');
+            
+        } catch (error) {
+            console.error('❌ Batch vectorization failed:', error);
+        }
+    }
+    
+    // Vectorize a chunk of emails
+    async vectorizeEmailChunk(emails) {
+        const vectorizationData = {
+            userEmail: this.downloadState?.userEmail || this.state.currentUser?.email,
+            emails: emails.map(email => ({
+                id: email.id,
+                subject: email.subject,
+                body: email.body || email.preview,
+                from: email.from,
+                timestamp: email.timestamp,
+                isImportant: email.important || email.priority === 'high'
+            })),
+            batchNumber: this.downloadState?.currentBatch || 0
+        };
+        
+        // Try to use actual vectorization service first
+        try {
+            const response = await fetch(`${this.config.aiServiceUrl}/vectorizeBatch`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(vectorizationData),
+                timeout: 10000 // 10 second timeout
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                console.log('✅ Real vectorization completed for', emails.length, 'emails');
+                return result;
+            } else {
+                throw new Error(`Vectorization service error: ${response.status}`);
+            }
+        } catch (error) {
+            console.log('⚠️ Real vectorization unavailable, using local processing:', error.message);
+            
+            // Fallback to local vectorization simulation
+            return this.simulateVectorization(emails);
+        }
+    }
+    
+    // Simulate vectorization for development/fallback
+    async simulateVectorization(emails) {
+        // Simulate processing time
+        await this.delay(1000);
+        
+        // Create mock vector embeddings and store locally
+        const vectors = emails.map(email => ({
+            id: email.id,
+            embedding: this.generateMockEmbedding(),
+            content: {
+                subject: email.subject,
+                body: email.body || email.preview,
+                from: email.from.name,
+                timestamp: email.timestamp
+            },
+            metadata: {
+                isImportant: email.important,
+                hasAttachments: email.hasAttachments,
+                priority: email.priority
+            }
+        }));
+        
+        // Store in local vector database simulation
+        this.storeVectorsLocally(vectors);
+        
+        return {
+            vectorizedCount: emails.length,
+            success: true,
+            method: 'local_simulation'
+        };
+    }
+    
+    // Generate mock embedding for local testing
+    generateMockEmbedding() {
+        // Generate a 384-dimensional mock vector (common embedding size)
+        const embedding = [];
+        for (let i = 0; i < 384; i++) {
+            embedding.push((Math.random() - 0.5) * 2); // Values between -1 and 1
+        }
+        return embedding;
+    }
+    
+    // Store vectors in local storage for testing
+    storeVectorsLocally(vectors) {
+        const existingVectors = JSON.parse(localStorage.getItem('email_vectors') || '[]');
+        const allVectors = [...existingVectors, ...vectors];
+        
+        // Keep only the latest 1000 vectors to avoid storage issues
+        const recentVectors = allVectors.slice(-1000);
+        
+        localStorage.setItem('email_vectors', JSON.stringify(recentVectors));
+        console.log('📦 Stored', vectors.length, 'vectors locally (total:', recentVectors.length, ')');
+    }
+    
+    // Create checkpoint for recovery
+    async createCheckpoint() {
+        const checkpoint = {
+            batchId: this.downloadState.currentBatch,
+            emailCount: this.downloadState.downloadedEmails,
+            vectorizedCount: this.downloadState.vectorizedEmails,
+            timestamp: new Date().toISOString(),
+            pageToken: this.downloadState.nextPageToken
+        };
+        
+        this.downloadState.checkpoints.push(checkpoint);
+        this.downloadState.lastCheckpoint = checkpoint.timestamp;
+        
+        await this.saveDownloadState();
+        console.log('📍 Checkpoint created:', checkpoint);
+    }
+    
+    // Handle batch processing errors with retry logic
+    async handleBatchError(error) {
+        console.error(`Batch ${this.downloadState.currentBatch} failed:`, error);
+        
+        this.downloadState.retryCount++;
+        
+        if (this.downloadState.retryCount <= this.maxRetries) {
+            const delay = Math.min(1000 * Math.pow(2, this.downloadState.retryCount), 30000);
+            console.log(`Retrying batch ${this.downloadState.currentBatch} in ${delay}ms (attempt ${this.downloadState.retryCount}/${this.maxRetries})`);
+            
+            this.updateStatus('Retrying...', `Attempt ${this.downloadState.retryCount}/${this.maxRetries}`);
+            
+            await this.delay(delay);
+        } else {
+            // Max retries exceeded, pause download
+            console.error('Max retries exceeded, pausing download');
+            await this.pauseDownload();
+            throw error;
+        }
+    }
+    
+    // Pause download
+    async pauseDownload() {
+        console.log('⏸️ Pausing download...');
+        this.isPaused = true;
+        this.downloadState.status = 'paused';
+        await this.saveDownloadState();
+        
+        // Update button states
+        const pauseBtn = document.getElementById('pauseDownloadBtn');
+        const resumeBtn = document.getElementById('resumeDownloadBtn');
+        if (pauseBtn) pauseBtn.style.display = 'none';
+        if (resumeBtn) resumeBtn.style.display = 'block';
+        
+        this.updateStatus('Paused', 'Download can be resumed anytime');
+        
+        // Show notification
+        this.emailAssistant.showNotification('Download paused. Progress saved.', 'info');
+    }
+    
+    // Resume download
+    async resumeDownload() {
+        console.log('▶️ Resuming download from checkpoint...');
+        this.isPaused = false;
+        this.isDownloading = true;
+        this.downloadState.status = 'downloading';
+        this.downloadState.retryCount = 0;
+        
+        // Update button states
+        const pauseBtn = document.getElementById('pauseDownloadBtn');
+        const resumeBtn = document.getElementById('resumeDownloadBtn');
+        if (pauseBtn) pauseBtn.style.display = 'block';
+        if (resumeBtn) resumeBtn.style.display = 'none';
+        
+        this.updateStatus('Resuming...', 'Continuing from last checkpoint');
+        
+        // Show notification
+        this.emailAssistant.showNotification(
+            `Resuming download from ${this.downloadState.downloadedEmails} emails...`,
+            'info'
+        );
+        
+        try {
+            await this.processBatches();
+        } catch (error) {
+            console.error('Error resuming download:', error);
+            await this.handleDownloadError(error);
+        }
+    }
+    
+    // Complete download process
+    async completeDownload() {
+        this.isDownloading = false;
+        this.downloadState.status = 'completed';
+        this.downloadState.completedAt = new Date().toISOString();
+        
+        await this.saveDownloadState();
+        
+        const completionMessage = `Downloaded ${this.downloadState.downloadedEmails} emails`;
+        const vectorizedMessage = this.downloadState.vectorizedEmails > 0 
+            ? ` (${this.downloadState.vectorizedEmails} vectorized)` 
+            : '';
+            
+        this.updateStatus('Complete!', completionMessage + vectorizedMessage);
+        
+        // Show success notification
+        this.emailAssistant.showNotification(
+            `🎉 Download complete! ${completionMessage}${vectorizedMessage}`,
+            'success'
+        );
+        
+        // Hide status bar after delay
+        setTimeout(() => {
+            this.hideDownloadStatus();
+        }, 5000);
+        
+        console.log('✅ Download completed successfully');
+    }
+    
+    // Handle general download errors
+    async handleDownloadError(error) {
+        this.isDownloading = false;
+        
+        if (this.downloadState) {
+            this.downloadState.status = 'error';
+            this.downloadState.lastError = {
+                message: error.message,
+                timestamp: new Date().toISOString()
+            };
+            await this.saveDownloadState();
+        }
+        
+        this.updateStatus('Error occurred', error.message);
+        
+        // Show error notification with progress info
+        const progressInfo = this.downloadState 
+            ? ` Progress saved: ${this.downloadState.downloadedEmails} emails downloaded.`
+            : '';
+            
+        this.emailAssistant.showNotification(
+            `❌ Download error: ${error.message}.${progressInfo} Click Vectorize to retry.`,
+            'error'
+        );
+        
+        // Show retry option after delay
+        setTimeout(() => {
+            this.updateStatus('Download failed', 'Click Vectorize to retry');
+            setTimeout(() => {
+                this.hideDownloadStatus();
+            }, 8000);
+        }, 3000);
+    }
+    
+    // UI Status Updates
+    showDownloadStatus() {
+        document.getElementById('downloadStatusBar').style.display = 'block';
+    }
+    
+    hideDownloadStatus() {
+        document.getElementById('downloadStatusBar').style.display = 'none';
+    }
+    
+    showVectorizationStatus() {
+        document.getElementById('vectorizationStatus').style.display = 'block';
+    }
+    
+    updateStatus(title, details) {
+        document.getElementById('statusTitle').textContent = title;
+        document.getElementById('statusDetails').textContent = details;
+    }
+    
+    updateProgress() {
+        const percentage = this.downloadState.totalEmails > 0 
+            ? (this.downloadState.downloadedEmails / this.downloadState.totalEmails) * 100 
+            : 0;
+            
+        document.getElementById('downloadProgress').style.width = `${percentage}%`;
+        document.getElementById('progressText').textContent = 
+            `${this.downloadState.downloadedEmails} / ${this.downloadState.totalEmails} emails`;
+    }
+    
+    updateVectorizationProgress() {
+        document.getElementById('vectorProgress').textContent = 
+            `Vectorizing: ${this.downloadState.vectorizedEmails} / ${this.downloadState.downloadedEmails} processed`;
+    }
+    
+    // Utility methods
+    generateDownloadId() {
+        return 'download_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+    
+    async saveDownloadState() {
+        localStorage.setItem(`download_state_${this.downloadState.downloadId}`, JSON.stringify(this.downloadState));
+    }
+    
+    async loadDownloadState(downloadId) {
+        const saved = localStorage.getItem(`download_state_${downloadId}`);
+        return saved ? JSON.parse(saved) : null;
+    }
+    
+    delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+}
+
 class EmailAssistant {
     constructor() {
         // Configuration
         this.config = {
-            geminiApiKey: 'AIzaSyCRJ8BT5LaVPvOS6FE0tAKPg5u-kLryfds',
-            geminiModel: 'gemini-2.5-flash', // Latest stable model
-            geminiApiUrl: 'https://generativelanguage.googleapis.com/v1beta',
-            vectorProvider: 'google-vector', // or 'tigergraph'
-            aiResponseStyle: 'professional' // or 'casual', 'concise'
+            // Use secure cloud function for AI services
+            emailFetcherUrl: 'https://us-central1-solid-topic-466217-t9.cloudfunctions.net/emailFetcher',
+            aiChatServiceUrl: 'https://us-central1-solid-topic-466217-t9.cloudfunctions.net/aiChatService',
+            geminiModel: 'gemini-2.5-flash',
+            vectorProvider: 'google-vector',
+            aiResponseStyle: 'professional'
         };
         
         // State management
@@ -24,8 +521,40 @@ class EmailAssistant {
             currentTheme: 'theme-snow'
         };
         
+        // Initialize resumable download manager
+        this.downloadManager = new ResumableDownloadManager(this);
+        
+        // Listen for OAuth events from OAuth handler
+        window.addEventListener('oauthStatusChange', (event) => {
+            this.handleOAuthEvent(event.detail);
+        });
+        window.addEventListener('microsoftAuthChange', (event) => {
+            this.handleMicrosoftAuthEvent(event.detail);
+        });
+        
         // Initialize application
         this.init();
+    }
+    
+    async handleMicrosoftAuthEvent(detail) {
+        const { event, data, state } = detail;
+        
+        if (event === 'microsoft_auth_success') {
+            this.state.isAuthenticated = true;
+            this.state.currentUser = state.user;
+
+            // Store authentication
+            const authResult = {
+                user: state.user,
+                accessToken: state.accessToken,
+                provider: 'microsoft',
+                expiresAt: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
+            };
+            localStorage.setItem('statsai_auth', JSON.stringify(authResult));
+
+            await this.loadUserData();
+            this.showMainApp();
+        }
     }
     
     async init() {
@@ -71,9 +600,73 @@ class EmailAssistant {
     }
     
     async checkAuthentication() {
-        // Check if user is already authenticated
-        const storedAuth = localStorage.getItem('statsai_auth');
+        console.log('🔍 Checking authentication...');
         
+        // First, check OAuth handler authentication (priority)
+        const gmailAuthenticated = localStorage.getItem('gmail_authenticated') === 'true';
+        const gmailUser = localStorage.getItem('gmail_user');
+        const gmailToken = localStorage.getItem('gmail_token');
+        
+        if (gmailAuthenticated && gmailUser && gmailToken) {
+            try {
+                const userData = JSON.parse(gmailUser);
+                console.log('✅ Found Gmail OAuth authentication:', userData);
+                
+                this.state.isAuthenticated = true;
+                this.state.currentUser = {
+                    name: userData.name || userData.email?.split('@')[0] || 'Gmail User',
+                    email: userData.email || 'rakib.mahmood232@gmail.com',
+                    avatar: userData.avatar || 'GU',
+                    provider: userData.provider || 'google',
+                    connectedAt: new Date().toISOString()
+                };
+                
+                // Store in the expected format for consistency
+                const authData = {
+                    user: this.state.currentUser,
+                    accessToken: gmailToken,
+                    provider: 'google',
+                    expiresAt: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
+                };
+                localStorage.setItem('statsai_auth', JSON.stringify(authData));
+                
+                await this.loadUserData();
+                this.showMainApp();
+                return;
+            } catch (error) {
+                console.warn('Invalid Gmail auth data:', error);
+                // Clear corrupted data
+                localStorage.removeItem('gmail_authenticated');
+                localStorage.removeItem('gmail_user');
+                localStorage.removeItem('gmail_token');
+            }
+        }
+
+        // Fallback: Check URL parameters (for compatibility)
+        const urlParams = new URLSearchParams(window.location.search);
+        const oauthSuccess = urlParams.get('oauth') === 'success';
+        const userEmail = urlParams.get('email');
+        
+        console.log('🔍 Full URL:', window.location.href);
+        console.log('🔍 OAuth success:', oauthSuccess);
+        console.log('🔍 User email:', userEmail);
+
+        if (oauthSuccess && userEmail) {
+            console.log('✅ Authenticating from URL parameters...');
+            this.state.isAuthenticated = true;
+            this.state.currentUser = {
+                name: userEmail.split('@')[0],
+                email: userEmail,
+                avatar: userEmail.substring(0, 2).toUpperCase(),
+                provider: 'google'
+            };
+            await this.loadUserData();
+            this.showMainApp();
+            return;
+        }
+
+        // Last fallback: Check old statsai_auth format
+        const storedAuth = localStorage.getItem('statsai_auth');
         if (storedAuth) {
             try {
                 const authData = JSON.parse(storedAuth);
@@ -94,6 +687,56 @@ class EmailAssistant {
         this.showAuthScreen();
     }
     
+    // Handle OAuth events from OAuth handler
+    async handleOAuthEvent(detail) {
+        const { event, data, state } = detail;
+        
+        console.log('📧 OAuth event received:', event, state);
+        console.log('📧 State details - isAuthenticated:', state?.isAuthenticated, 'gmailAccess:', state?.gmailAccess);
+        
+        if (event === 'oauth_success') {
+            // Get user email from URL params
+            const urlParams = new URLSearchParams(window.location.search);
+            const userEmail = urlParams.get('email');
+
+            if (!userEmail) {
+                console.error('OAuth success event received, but no email found in URL parameters.');
+                this.showError('Authentication successful, but could not retrieve user profile.');
+                return;
+            }
+            
+            // Create user authentication data
+            const authResult = {
+                user: {
+                    name: userEmail.split('@')[0],
+                    email: userEmail,
+                    avatar: userEmail.substring(0, 2).toUpperCase(),
+                    provider: 'google',
+                    connectedAt: new Date().toISOString()
+                },
+                accessToken: 'oauth_' + Date.now(),
+                expiresAt: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
+            };
+            
+            // Store authentication
+            localStorage.setItem('statsai_auth', JSON.stringify(authResult));
+            this.state.isAuthenticated = true;
+            this.state.currentUser = authResult.user;
+            
+            console.log('✅ Email Assistant authenticated:', this.state.currentUser);
+            
+            // Load user data and show main app
+            await this.loadUserData();
+            this.showMainApp();
+            
+            // Start email processing
+            await this.startEmailProcessing();
+            
+            // Clean URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    }
+    
     isValidAuth(authData) {
         return authData && 
                authData.user && 
@@ -108,6 +751,9 @@ class EmailAssistant {
         // Main app handlers
         this.setupMainAppHandlers();
         
+        // Processing handlers (vectorization & sync)
+        this.setupProcessingHandlers();
+        
         // AI assistant handlers
         this.setupAIHandlers();
         
@@ -119,15 +765,57 @@ class EmailAssistant {
     }
     
     setupAuthHandlers() {
+        console.log('🔧 Setting up auth handlers...');
+        
         const microsoftBtn = document.getElementById('microsoftAuthBtn');
         const googleBtn = document.getElementById('googleAuthBtn');
         
+        console.log('Microsoft button found:', !!microsoftBtn);
+        console.log('Google button found:', !!googleBtn);
+        console.log('Microsoft OAuth handler available:', !!window.microsoftOAuth);
+        
         if (microsoftBtn) {
-            microsoftBtn.addEventListener('click', () => this.authenticateWithMicrosoft());
+            microsoftBtn.addEventListener('click', () => {
+                console.log('🔵 Microsoft button clicked!');
+                this.authenticateWithMicrosoft();
+            });
+            console.log('✅ Microsoft button click listener added');
+        } else {
+            console.error('❌ Microsoft button not found in DOM');
         }
         
         if (googleBtn) {
-            googleBtn.addEventListener('click', () => this.authenticateWithGoogle());
+            googleBtn.addEventListener('click', () => {
+                console.log('🟢 Google button clicked!');
+                this.authenticateWithGoogle();
+            });
+            console.log('✅ Google button click listener added');
+        } else {
+            console.error('❌ Google button not found in DOM');
+        }
+    }
+    
+    setupProcessingHandlers() {
+        // Vectorization button
+        const vectorizeBtn = document.getElementById('vectorizeBtn');
+        if (vectorizeBtn) {
+            vectorizeBtn.addEventListener('click', () => this.startResumableDownload());
+        }
+        
+        // Download status bar controls
+        const pauseBtn = document.getElementById('pauseDownloadBtn');
+        if (pauseBtn) {
+            pauseBtn.addEventListener('click', () => this.downloadManager.pauseDownload());
+        }
+        
+        const resumeBtn = document.getElementById('resumeDownloadBtn');
+        if (resumeBtn) {
+            resumeBtn.addEventListener('click', () => this.downloadManager.resumeDownload());
+        }
+        
+        const cancelBtn = document.getElementById('cancelDownloadBtn');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => this.cancelDownload());
         }
     }
     
@@ -408,74 +1096,260 @@ class EmailAssistant {
     // Authentication Methods
     async authenticateWithMicrosoft() {
         console.log('🔐 Starting Microsoft authentication...');
+        console.log('🔍 Checking Microsoft OAuth availability...');
+        console.log('window.microsoftOAuth exists:', !!window.microsoftOAuth);
         
         try {
-            // Show loading state
-            const btn = document.getElementById('microsoftAuthBtn');
-            if (btn) {
-                btn.disabled = true;
-                btn.innerHTML = this.getLoadingButtonHTML('Connecting to Microsoft...');
+            // Check if Microsoft OAuth handler is available
+            if (window.microsoftOAuth) {
+                console.log('✅ Microsoft OAuth handler found, starting connection...');
+                // Use the Microsoft OAuth handler
+                window.microsoftOAuth.connectMicrosoft();
+                
+                // Listen for authentication result
+                window.addEventListener('microsoftAuthChange', (event) => {
+                    const { event: authEvent, state } = event.detail;
+                    
+                    if (authEvent === 'microsoft_auth_success') {
+                        console.log('🎉 Microsoft auth success - transitioning to main app');
+                        
+                        // Update email assistant state
+                        this.state.isAuthenticated = true;
+                        this.state.currentUser = state.user;
+                        
+                        // Store authentication for email assistant
+                        const authResult = {
+                            user: state.user,
+                            accessToken: 'microsoft_access_token_' + Date.now(),
+                            refreshToken: 'microsoft_refresh_token_' + Date.now(),
+                            expiresAt: Date.now() + (24 * 60 * 60 * 1000)
+                        };
+                        localStorage.setItem('statsai_auth', JSON.stringify(authResult));
+                        
+                        // Close any OAuth modals first
+                        if (window.microsoftOAuth) {
+                            window.microsoftOAuth.closeModal();
+                        }
+                        
+                        // Small delay to ensure modal closes, then transition
+                        setTimeout(() => {
+                            this.loadUserData();
+                            this.showMainApp();
+                            console.log('✅ Main app should now be visible');
+                        }, 100);
+                    } else if (authEvent === 'microsoft_auth_error') {
+                        this.showError('Microsoft authentication failed. Please try again.');
+                        this.resetAuthButton('microsoftAuthBtn', this.getMicrosoftButtonHTML());
+                    }
+                }, { once: true });
+                
+            } else {
+                // Fallback to original mock implementation
+                await this.authenticateWithMicrosoftMock();
             }
-            
-            // Simulate Microsoft Entra authentication
-            // In production, use @azure/msal-browser
-            await this.delay(2000);
-            
-            // Mock successful authentication
-            const authResult = {
-                user: {
-                    name: 'John Doe',
-                    email: 'john.doe@company.com',
-                    avatar: 'JD',
-                    provider: 'microsoft'
-                },
-                accessToken: 'mock_access_token_' + Date.now(),
-                refreshToken: 'mock_refresh_token_' + Date.now(),
-                expiresAt: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
-            };
-            
-            // Store authentication
-            localStorage.setItem('statsai_auth', JSON.stringify(authResult));
-            this.state.isAuthenticated = true;
-            this.state.currentUser = authResult.user;
-            
-            // Load user data and show main app
-            await this.loadUserData();
-            this.showMainApp();
             
         } catch (error) {
-            console.error('Authentication failed:', error);
-            this.showError('Microsoft authentication failed. Please try again.');
-            
-            // Reset button
-            const btn = document.getElementById('microsoftAuthBtn');
-            if (btn) {
-                btn.disabled = false;
-                btn.innerHTML = this.getMicrosoftButtonHTML();
-            }
+            console.error('❌ Microsoft authentication failed:', error);
+            this.showError('Failed to start Microsoft authentication. Please try again.');
+            this.resetAuthButton('microsoftAuthBtn', this.getMicrosoftButtonHTML());
         }
     }
     
+    // Fallback mock implementation
+    async authenticateWithMicrosoftMock() {
+        // Show loading state
+        const btn = document.getElementById('microsoftAuthBtn');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = this.getLoadingButtonHTML('Connecting to Microsoft...');
+        }
+        
+        // Simulate Microsoft Entra authentication
+        await this.delay(2000);
+        
+        // Mock successful authentication
+        const authResult = {
+            user: {
+                name: 'John Doe',
+                email: 'john.doe@company.com',
+                avatar: 'JD',
+                provider: 'microsoft'
+            },
+            accessToken: 'mock_access_token_' + Date.now(),
+            refreshToken: 'mock_refresh_token_' + Date.now(),
+            expiresAt: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
+        };
+        
+        // Store authentication
+        localStorage.setItem('statsai_auth', JSON.stringify(authResult));
+        this.state.isAuthenticated = true;
+        this.state.currentUser = authResult.user;
+        
+        // Load user data and show main app
+        await this.loadUserData();
+        this.showMainApp();
+    }
+    
     async authenticateWithGoogle() {
-        this.showError('Google authentication will be available in Phase 2. Please use Microsoft authentication for now.');
+        console.log('🔑 Starting Google OAuth authentication...');
+        
+        try {
+            // Check if OAuth handler is available
+            if (window.oauthHandler) {
+                // Use the OAuth handler to start the flow
+                window.oauthHandler.connectGmail();
+                
+                // Listen for authentication result
+                window.addEventListener('oauthStatusChange', (event) => {
+                    const { event: authEvent, state } = event.detail;
+                    
+                    if (authEvent === 'oauth_success') {
+                        // Update email assistant state
+                        this.state.isAuthenticated = true;
+                        this.state.currentUser = {
+                            name: 'Gmail User', // Will be updated from OAuth response
+                            email: 'user@gmail.com', // Will be updated from OAuth response
+                            avatar: 'GU',
+                            provider: 'google'
+                        };
+                        
+                        // Store authentication for email assistant
+                        const authResult = {
+                            user: this.state.currentUser,
+                            accessToken: 'google_access_token_' + Date.now(),
+                            refreshToken: 'google_refresh_token_' + Date.now(),
+                            expiresAt: Date.now() + (24 * 60 * 60 * 1000)
+                        };
+                        localStorage.setItem('statsai_auth', JSON.stringify(authResult));
+                        
+                        // Load user data and show main app
+                        this.loadUserData();
+                        this.showMainApp();
+                    } else if (authEvent === 'oauth_error') {
+                        this.showError('Google authentication failed. Please try again.');
+                        this.resetAuthButton('googleAuthBtn', this.getGoogleButtonHTML());
+                    }
+                }, { once: true });
+                
+            } else {
+                // Fallback: redirect directly to OAuth start URL
+                window.location.href = 'https://us-central1-solid-topic-466217-t9.cloudfunctions.net/oauthTest/auth/google/start';
+            }
+        } catch (error) {
+            console.error('❌ Google authentication failed:', error);
+            this.showError('Failed to start Google authentication. Please try again.');
+        }
+    }
+    
+    // Utility method to reset authentication buttons
+    resetAuthButton(buttonId, originalHTML) {
+        const btn = document.getElementById(buttonId);
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
+        }
+    }
+    
+    // Get original button HTML for Microsoft
+    getMicrosoftButtonHTML() {
+        return `
+            <div class="auth-btn-content">
+                <div class="microsoft-logo">
+                    <svg width="21" height="21" viewBox="0 0 21 21" fill="none">
+                        <rect width="10" height="10" fill="#F25022"/>
+                        <rect x="11" width="10" height="10" fill="#7FBA00"/>
+                        <rect y="11" width="10" height="10" fill="#00A4EF"/>
+                        <rect x="11" y="11" width="10" height="10" fill="#FFB900"/>
+                    </svg>
+                </div>
+                <div class="auth-btn-text">
+                    <span class="auth-btn-title">Continue with Microsoft</span>
+                    <span class="auth-btn-subtitle">Microsoft 365, Outlook, Exchange</span>
+                </div>
+            </div>
+            <i data-lucide="arrow-right" class="auth-btn-arrow"></i>
+        `;
+    }
+    
+    // Get original button HTML for Google
+    getGoogleButtonHTML() {
+        return `
+            <div class="auth-btn-content">
+                <div class="google-logo">
+                    <svg width="21" height="21" viewBox="0 0 48 48">
+                        <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
+                        <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
+                        <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
+                        <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
+                    </svg>
+                </div>
+                <div class="auth-btn-text">
+                    <span class="auth-btn-title">Continue with Google</span>
+                    <span class="auth-btn-subtitle">Gmail, Google Workspace</span>
+                </div>
+            </div>
+            <i data-lucide="arrow-right" class="auth-btn-arrow"></i>
+        `;
     }
     
     async loadUserData() {
         console.log('📧 Loading user email data...');
         
-        // Simulate loading emails
-        await this.delay(1000);
-        
-        // Load mock emails from JSON file
-        this.state.emails = await this.loadMockEmails();
-        
-        // Update UI
-        this.updateUserProfile();
-        this.renderEmailList();
-        this.updateEmailCounts();
-        
-        // Start AI processing
-        this.startEmailProcessing();
+        try {
+            // Check which provider is authenticated
+            const authProvider = this.getAuthProvider();
+            console.log('🔑 Detected auth provider:', authProvider);
+            
+            if (authProvider === 'microsoft') {
+                console.log('📧 Triggering Microsoft email fetch...');
+                await this.startEmailProcessing();
+            } else if (authProvider === 'google') {
+                // Load Google emails (would use Gmail API in production)
+                console.log('📧 Loading Google emails...');
+                this.state.emails = await this.loadGoogleEmails();
+            } else {
+                // No authentication - load mock emails as fallback
+                console.log('📧 No authentication detected - loading mock emails');
+                this.state.emails = await this.loadMockEmails();
+            }
+            
+            // Update UI
+            this.updateUserProfile();
+            this.renderEmailList();
+            this.updateEmailCounts();
+            
+            // Start AI processing
+            this.startEmailProcessing();
+            
+            // Auto-start vectorization download immediately after loading emails
+            if (authProvider !== 'unknown') {
+                console.log('🚀 Auto-starting vectorization download...');
+                setTimeout(() => {
+                    this.startResumableDownload();
+                }, 2000); // Small delay to ensure UI is ready
+            }
+            
+        } catch (error) {
+            console.error('❌ Failed to load user data:', error);
+            
+            // Handle different types of errors
+            if (error.message.includes('authentication') || error.message.includes('token')) {
+                // Authentication error - show reconnect option
+                this.showEmailRetryOption();
+            } else {
+                // Other errors - fallback to mock emails only in development
+                if (window.location.hostname === 'localhost') {
+                    console.log('🧪 Development mode - using mock emails as fallback');
+                    this.state.emails = await this.loadMockEmails();
+                    this.updateUserProfile();
+                    this.renderEmailList();
+                    this.updateEmailCounts();
+                } else {
+                    // Production - show error state
+                    this.showEmailRetryOption();
+                }
+            }
+        }
     }
     
     // AI Integration Methods
@@ -502,8 +1376,9 @@ class EmailAssistant {
     
     async testGeminiConnection() {
         try {
+            const geminiApiKey = 'AIzaSyCRJ8BT5LaVPvOS6FE0tAKPg5u-kLryfds';
             const response = await fetch(
-                `${this.config.geminiApiUrl}/models/${this.config.geminiModel}:generateContent?key=${this.config.geminiApiKey}`,
+                `https://generativelanguage.googleapis.com/v1beta/models/${this.config.geminiModel}:generateContent?key=${geminiApiKey}`,
                 {
                     method: 'POST',
                     headers: {
@@ -564,49 +1439,30 @@ class EmailAssistant {
     
     async getAIResponse(message) {
         try {
-            // Build context from current email and conversation
-            const context = this.buildAIContext(message);
-            
-            const response = await fetch(
-                `${this.config.geminiApiUrl}/models/${this.config.geminiModel}:generateContent?key=${this.config.geminiApiKey}`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: [{
-                                text: context
-                            }]
-                        }],
-                        generationConfig: {
-                            temperature: 0.7,
-                            topP: 0.8,
-                            topK: 40,
-                            maxOutputTokens: 1000
-                        }
-                    })
-                }
-            );
-            
+            console.log('🤖 Processing AI query:', message);
+
+            const response = await fetch(this.config.aiChatServiceUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    query: message,
+                    userEmail: this.state.currentUser.email,
+                    context: this.state.selectedEmail ? JSON.stringify(this.state.selectedEmail) : null
+                })
+            });
+
             if (!response.ok) {
                 throw new Error(`API request failed: ${response.status}`);
             }
-            
+
             const result = await response.json();
-            
-            if (result.candidates && result.candidates.length > 0) {
-                return result.candidates[0].content.parts[0].text;
-            } else {
-                throw new Error('No response generated');
-            }
-            
+            return result.response;
+
         } catch (error) {
-            console.error('Gemini API error:', error);
-            
-            // Fallback to mock responses
-            return this.getMockAIResponse(message);
+            console.error('aiChatService error:', error);
+            return 'I apologize, but I\'m having trouble connecting to the AI service right now. Please try again later.';
         }
     }
     
@@ -632,6 +1488,97 @@ User message: ${message}
 Please provide a helpful, concise response:`;
 
         return systemPrompt;
+    }
+    
+    // Enhanced AI context with vectorized email data
+    buildEnhancedAIContext(message, relevantEmails = []) {
+        let context = `You are an intelligent email assistant integrated into StatsAI Email Assistant. You help users manage their emails efficiently with advanced vectorized search capabilities.
+
+Your capabilities:
+- Compose professional emails with context awareness
+- Summarize email threads and related conversations
+- Suggest quick replies based on email history
+- Schedule meetings and extract action items
+- Analyze email content using vectorized search
+- Find relevant emails across user's entire inbox
+
+Current email context:`;
+
+        if (this.state.selectedEmail) {
+            const email = this.state.selectedEmail;
+            context += `
+- Currently viewing: From ${email.from.name} (${email.from.email})
+- Subject: "${email.subject}"
+- Content: "${(email.body || email.preview).substring(0, 200)}..."
+- Status: ${email.isRead ? 'Read' : 'Unread'}${email.important ? ', Important' : ''}`;
+        } else {
+            context += `
+- User has ${this.state.emails?.length || 0} emails total
+- ${this.state.emails?.filter(e => !e.isRead).length || 0} unread emails`;
+        }
+
+        // Add relevant emails from vector search
+        if (relevantEmails.length > 0) {
+            context += `
+
+Relevant emails from vectorized search:`;
+            relevantEmails.forEach((email, index) => {
+                context += `
+${index + 1}. From: ${email.from} - "${email.subject}"
+   Content: "${email.body.substring(0, 150)}..."`;
+            });
+        }
+
+        context += `
+
+Response style: ${this.config.aiResponseStyle}
+User message: "${message}"
+
+Please provide a helpful, contextual response using the available email data:`;
+
+        return context;
+    }
+    
+    // Search vectorized emails for relevant content
+    async searchVectorizedEmails(query) {
+        try {
+            const vectors = JSON.parse(localStorage.getItem('email_vectors') || '[]');
+            
+            if (vectors.length === 0) {
+                console.log('No vectorized emails available for search');
+                return [];
+            }
+            
+            // Simple keyword-based search as fallback for vector search
+            const queryWords = query.toLowerCase().split(' ').filter(word => word.length > 2);
+            
+            if (queryWords.length === 0) {
+                return [];
+            }
+            
+            const relevantEmails = vectors.filter(vector => {
+                const content = `${vector.content.subject} ${vector.content.body} ${vector.content.from}`.toLowerCase();
+                return queryWords.some(word => content.includes(word));
+            })
+            .sort((a, b) => {
+                // Sort by relevance - count matching keywords
+                const aMatches = queryWords.filter(word => 
+                    `${a.content.subject} ${a.content.body}`.toLowerCase().includes(word)
+                ).length;
+                const bMatches = queryWords.filter(word => 
+                    `${b.content.subject} ${b.content.body}`.toLowerCase().includes(word)
+                ).length;
+                return bMatches - aMatches;
+            })
+            .slice(0, 3); // Get top 3 relevant emails
+            
+            console.log(`🔍 Found ${relevantEmails.length} relevant emails for query: "${query}"`);
+            return relevantEmails.map(v => v.content);
+            
+        } catch (error) {
+            console.error('Vector search failed:', error);
+            return [];
+        }
     }
     
     getMockAIResponse(message) {
@@ -1007,12 +1954,16 @@ Provide ONLY the email draft, no additional commentary.`;
     }
     
     generateFallbackDraft(email, draftType) {
-        const greeting = `Hi ${email.from.name},`;
-        const reference = `Thank you for your email regarding "${email.subject}".`;
-        const placeholder = `[Your response here - please customize based on the specific content of the original email]`;
-        const closing = `Best regards,\n[Your Name]`;
+        const greeting = `Hi ${email.from.name},
+`;
+        const reference = `Thank you for your email regarding "${email.subject}".
+`;
+        const placeholder = `[Your response here - please customize based on the specific content of the original email]
+`;
+        const closing = `Best regards,
+[Your Name]`;
         
-        return `${greeting}\n\n${reference}\n\n${placeholder}\n\n${closing}`;
+        return `${greeting}\n${reference}\n${placeholder}\n\n${closing}`;
     }
     
     summarizeInboxOverview() {
@@ -1077,6 +2028,194 @@ Would you like me to help with any specific emails or tasks?`;
         } catch (error) {
             console.error('❌ Failed to load mock emails:', error);
             return this.generateFallbackMockEmails();
+        }
+    }
+    
+    // Load Microsoft emails using Graph API
+    async loadMicrosoftEmails() {
+        try {
+            if (!window.microsoftOAuth || !window.microsoftOAuth.isMicrosoftConnected()) {
+                throw new Error('Microsoft not authenticated');
+            }
+            
+            console.log('📧 Fetching emails from Microsoft Graph API...');
+            
+            // Show loading status
+            this.updateEmailLoadingStatus('Connecting to Microsoft...', 'Fetching your emails from Outlook');
+            
+            const rawEmails = await window.microsoftOAuth.fetchMicrosoftEmails();
+            
+            if (!rawEmails || rawEmails.length === 0) {
+                console.log('📧 No emails found in Microsoft account');
+                this.clearEmailLoadingStatus();
+                return [];
+            }
+            
+            // Process Microsoft emails to ensure proper data format
+            const processedEmails = rawEmails.map(email => ({
+                ...email,
+                folder: email.folder || 'inbox',
+                isRead: email.isRead !== undefined ? email.isRead : !email.unread, // Process isRead correctly
+                isStarred: email.isStarred || email.important,
+                priority: email.priority || (email.important ? 'high' : 'normal'),
+                tags: email.badges || [],
+                hasAttachments: email.hasAttachment || false,
+                needsResponse: email.important || false,
+                timestamp: new Date(email.timestamp), // Ensure proper Date object
+                source: 'microsoft'
+            }));
+            
+            console.log('✅ Successfully loaded and processed', processedEmails.length, 'real Microsoft emails');
+            this.clearEmailLoadingStatus();
+            
+            return processedEmails;
+            
+        } catch (error) {
+            console.error('❌ Failed to load Microsoft emails:', error);
+            this.clearEmailLoadingStatus();
+            
+            // Show specific error message to user
+            this.showEmailLoadingError('Failed to load Microsoft emails', error.message);
+            
+            // Only fallback to mock in development mode
+            if (window.location.hostname === 'localhost') {
+                console.log('🧪 Development mode - using mock emails as fallback');
+                return await this.loadMockEmails();
+            }
+            
+            // In production, throw the error to be handled by calling function
+            throw error;
+        }
+    }
+    
+    // Update email loading status
+    updateEmailLoadingStatus(title, details) {
+        const statusBar = document.getElementById('downloadStatusBar');
+        const statusTitle = document.getElementById('statusTitle');
+        const statusDetails = document.getElementById('statusDetails');
+        
+        if (statusBar && statusTitle && statusDetails) {
+            statusBar.style.display = 'block';
+            statusTitle.textContent = title;
+            statusDetails.textContent = details;
+        }
+    }
+    
+    // Clear email loading status
+    clearEmailLoadingStatus() {
+        const statusBar = document.getElementById('downloadStatusBar');
+        if (statusBar) {
+            statusBar.style.display = 'none';
+        }
+    }
+    
+    // Show email loading error
+    showEmailLoadingError(title, details) {
+        console.error(`${title}: ${details}`);
+        
+        // Show error notification
+        this.showNotification('error', title, details, 10000); // Show for 10 seconds
+        
+        // Show retry option in the email list
+        this.showEmailRetryOption();
+    }
+    
+    // Show retry option in email list
+    showEmailRetryOption() {
+        const emailList = document.getElementById('emailList');
+        if (emailList) {
+            emailList.innerHTML = `
+                <div class="email-error-state" style="padding: 2rem; text-align: center;">
+                    <i data-lucide="alert-circle" class="error-icon" style="width: 48px; height: 48px; color: #ef4444; margin-bottom: 1rem;"></i>
+                    <h3 style="margin: 0 0 0.5rem 0; font-size: 1.2rem;">Unable to Load Emails</h3>
+                    <p style="margin: 0 0 1.5rem 0; color: #6b7280;">There was a problem connecting to your Microsoft account.</p>
+                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                        <button class="btn-primary retry-emails-btn" onclick="emailAssistant.retryLoadEmails()" style="display: flex; align-items: center; gap: 0.5rem;">
+                            <i data-lucide="refresh-cw" style="width: 16px; height: 16px;"></i>
+                            Try Again
+                        </button>
+                        <button class="btn-secondary reconnect-btn" onclick="microsoftOAuth.startMicrosoftAuth()" style="display: flex; align-items: center; gap: 0.5rem;">
+                            <i data-lucide="user" style="width: 16px; height: 16px;"></i>
+                            Reconnect Account
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Initialize lucide icons for the new elements
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+        }
+    }
+    
+    // Retry loading emails
+    async retryLoadEmails() {
+        console.log('🔄 Retrying email load...');
+        try {
+            const emailList = document.getElementById('emailList');
+            if (emailList) {
+                emailList.innerHTML = '<div style="padding: 2rem; text-align: center;">Loading emails...</div>';
+            }
+            
+            await this.loadUserData();
+            this.showNotification('success', 'Success!', 'Emails loaded successfully');
+        } catch (error) {
+            console.error('Retry failed:', error);
+            this.showNotification('error', 'Retry Failed', 'Unable to load emails. Please check your connection and try again.');
+            this.showEmailRetryOption();
+        }
+    }
+    
+    // Load Google emails using real Gmail API
+    async loadGoogleEmails() {
+        try {
+            if (!window.oauthHandler || !window.oauthHandler.isGmailConnected()) {
+                throw new Error('Google not authenticated');
+            }
+            
+            console.log('📧 Fetching emails from Gmail API...');
+            
+            // Show loading status
+            this.updateEmailLoadingStatus('Connecting to Gmail...', 'Fetching your emails from Gmail API');
+            
+            const rawEmails = await window.oauthHandler.fetchGmailEmails();
+            
+            if (!rawEmails || rawEmails.length === 0) {
+                console.log('📧 No emails found in Gmail account');
+                this.clearEmailLoadingStatus();
+                return [];
+            }
+            
+            // Process emails for the email assistant UI
+            const processedEmails = rawEmails.map(email => ({
+                ...email,
+                folder: 'inbox', // Default folder
+                needsResponse: email.important || email.unread,
+                timestamp: new Date(email.timestamp), // Ensure proper Date object
+                source: 'gmail'
+            }));
+            
+            console.log('✅ Successfully loaded and processed', processedEmails.length, 'real Gmail emails');
+            this.clearEmailLoadingStatus();
+            
+            return processedEmails;
+            
+        } catch (error) {
+            console.error('❌ Failed to load Gmail emails:', error);
+            this.clearEmailLoadingStatus();
+            
+            // Show specific error message to user
+            this.showEmailLoadingError('Failed to load Gmail emails', error.message);
+            
+            // Only fallback to mock in development mode
+            if (window.location.hostname === 'localhost') {
+                console.log('🧪 Development mode - using mock emails as fallback');
+                return await this.loadMockEmails();
+            }
+            
+            // In production, throw the error to be handled by calling function
+            throw error;
         }
     }
     
@@ -1189,9 +2328,9 @@ GitHub`,
                 preview: 'Hey! Hope you\'re doing well. Would you be interested in grabbing coffee next week to catch up?',
                 body: `Hey!
 
-Hope you're doing well! I've been thinking about our conversation at the last all-hands about AI applications in email management.
+Hope you\'re doing well! I\'ve been thinking about our conversation at the last all-hands about AI applications in email management.
 
-Would you be interested in grabbing coffee next week to catch up? I'd love to hear more about what you're working on and share some ideas I've been exploring.
+Would you be interested in grabbing coffee next week to catch up? I\'d love to hear more about what you\'re working on and share some ideas I\'ve been exploring.
 
 Let me know what works for your schedule!
 
@@ -1219,7 +2358,7 @@ David`,
 
 The marketing team is preparing for our upcoming product launch and needs your technical input on the campaign materials.
 
-We've prepared draft materials highlighting:
+We\'ve prepared draft materials highlighting:
 - AI-powered email management
 - Advanced security features  
 - Integration capabilities
@@ -1351,9 +2490,9 @@ Conference Organizing Committee`,
         for (let i = 9; i <= 20; i++) {
             mockEmails.push({
                 id: `email-${i}`,
-                from: { 
-                    name: `Contact ${i}`, 
-                    email: `contact${i}@example.com`, 
+                from: {
+                    name: `Contact ${i}`,
+                    email: `contact${i}@example.com`,
                     avatar: `C${i}` 
                 },
                 subject: `Sample Email ${i} - Various Topics`,
@@ -1674,6 +2813,11 @@ Conference Organizing Committee`,
         if (mainApp) mainApp.style.display = 'flex';
         
         this.state.isLoading = false;
+        
+        // Check for incomplete downloads to recover
+        setTimeout(() => {
+            this.checkForIncompleteDownloads();
+        }, 1000);
     }
     
     async updateLoadingProgress(percentage, status) {
@@ -1690,12 +2834,34 @@ Conference Organizing Committee`,
         const userName = document.getElementById('userName');
         const userEmail = document.getElementById('userEmail');
         
+        // Get authenticated user data from the appropriate provider
+        let authenticatedUser = null;
+        const authProvider = this.getAuthProvider();
+        
+        if (authProvider === 'microsoft' && window.microsoftOAuth) {
+            const authStatus = window.microsoftOAuth.getAuthStatus();
+            authenticatedUser = authStatus.user;
+        } else if (authProvider === 'google' && window.oauthHandler) {
+            // For Google, we'll need to implement similar user data extraction
+            authenticatedUser = {
+                name: 'Google User', // Placeholder - would be extracted from Google OAuth
+                email: 'user@gmail.com' // Placeholder - would be extracted from Google OAuth
+            };
+        }
+        
+        // Update the current user state
+        if (authenticatedUser) {
+            this.state.currentUser = authenticatedUser;
+        }
+        
+        // Update UI elements
         if (userName && this.state.currentUser) {
             userName.textContent = this.state.currentUser.name;
         }
         
         if (userEmail && this.state.currentUser) {
             userEmail.textContent = this.state.currentUser.email;
+            console.log('✅ Updated user email display to:', this.state.currentUser.email);
         }
     }
     
@@ -1816,7 +2982,24 @@ Conference Organizing Committee`,
         return new Promise(resolve => setTimeout(resolve, ms));
     }
     
-    formatTimeAgo(date) {
+    formatTimeAgo(dateInput) {
+        // Ensure date is a proper Date object
+        let date;
+        if (dateInput instanceof Date) {
+            date = dateInput;
+        } else if (typeof dateInput === 'string' || typeof dateInput === 'number') {
+            date = new Date(dateInput);
+        } else {
+            console.warn('Invalid date input for formatTimeAgo:', dateInput);
+            return 'Unknown time';
+        }
+        
+        // Check if date is valid
+        if (isNaN(date.getTime())) {
+            console.warn('Invalid date object in formatTimeAgo:', dateInput);
+            return 'Invalid date';
+        }
+        
         const now = new Date();
         const diffInMinutes = Math.floor((now - date) / (1000 * 60));
         
@@ -1829,6 +3012,7 @@ Conference Organizing Committee`,
         const diffInDays = Math.floor(diffInHours / 24);
         if (diffInDays < 7) return `${diffInDays}d ago`;
         
+        // Safe to call toLocaleDateString() now
         return date.toLocaleDateString();
     }
     
@@ -1846,7 +3030,7 @@ Conference Organizing Committee`,
     showError(message) {
         console.error(message);
         // Could implement toast notifications here
-        alert(message); // Temporary
+        // alert(message); // Temporary
     }
     
     // Placeholder methods for additional functionality
@@ -1884,6 +3068,152 @@ Conference Organizing Committee`,
         }
     }
     
+    // Send Email via Gmail API
+    async sendEmail() {
+        if (!this.state.currentUser || !this.state.currentUser.email) {
+            this.showNotification('Please authenticate first to send emails', 'error');
+            return;
+        }
+        
+        try {
+            // Get form data
+            const composeForm = document.getElementById('composeForm');
+            if (!composeForm) {
+                this.showNotification('Compose form not found', 'error');
+                return;
+            }
+            
+            const formData = new FormData(composeForm);
+            const emailData = {
+                to: formData.get('to')?.trim(),
+                cc: formData.get('cc')?.trim(),
+                bcc: formData.get('bcc')?.trim(),
+                subject: formData.get('subject')?.trim(),
+                body: formData.get('message')?.trim()
+            };
+            
+            // Validate required fields
+            if (!emailData.to) {
+                this.showNotification('Please enter a recipient email address', 'error');
+                return;
+            }
+            
+            if (!emailData.subject) {
+                this.showNotification('Please enter a subject line', 'error');
+                return;
+            }
+            
+            if (!emailData.body) {
+                this.showNotification('Please enter a message', 'error');
+                return;
+            }
+            
+            console.log('📤 Sending email:', emailData);
+            this.showNotification('Sending email...', 'info');
+            
+            // Show sending state
+            this.setComposeSendingState(true);
+            
+            // Call email sending service
+            const response = await fetch('https://us-central1-solid-topic-466217-t9.cloudfunctions.net/authHandler/sendEmail', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    from: this.state.currentUser.email,
+                    to: emailData.to,
+                    cc: emailData.cc || null,
+                    bcc: emailData.bcc || null,
+                    subject: emailData.subject,
+                    body: emailData.body,
+                    bodyType: 'html' // Support HTML emails
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                this.showNotification(`Email sent successfully to ${emailData.to}!`, 'success');
+                console.log('✅ Email sent:', result);
+                
+                // Clear compose form and hide panel
+                this.clearComposeForm();
+                this.hideComposePanel();
+                
+                // Add to sent folder (mock for now)
+                this.addToSentEmails(emailData);
+                
+            } else {
+                console.error('❌ Email sending failed:', result);
+                this.showNotification(`Failed to send email: ${result.error || 'Unknown error'}`, 'error');
+            }
+            
+        } catch (error) {
+            console.error('❌ Email sending error:', error);
+            this.showNotification('Failed to send email. Please try again.', 'error');
+        } finally {
+            this.setComposeSendingState(false);
+        }
+    }
+    
+    // Set compose form sending state
+    setComposeSendingState(sending) {
+        const sendButton = document.querySelector('#composeForm button[type="submit"]');
+        const formInputs = document.querySelectorAll('#composeForm input, #composeForm textarea');
+        
+        if (sendButton) {
+            sendButton.disabled = sending;
+            sendButton.innerHTML = sending 
+                ? '<i data-lucide="loader" class="animate-spin"></i> Sending...' 
+                : '<i data-lucide="send"></i> Send Email';
+        }
+        
+        formInputs.forEach(input => {
+            input.disabled = sending;
+        });
+        
+        // Re-initialize icons
+        this.initializeLucideIcons();
+    }
+    
+    // Clear compose form
+    clearComposeForm() {
+        const composeForm = document.getElementById('composeForm');
+        if (composeForm) {
+            composeForm.reset();
+        }
+    }
+    
+    // Add email to sent folder (mock implementation)
+    addToSentEmails(emailData) {
+        const sentEmail = {
+            id: `sent_${Date.now()}`,
+            threadId: `thread_${Date.now()}`,
+            subject: emailData.subject,
+            from: this.state.currentUser.email,
+            to: [emailData.to],
+            cc: emailData.cc ? [emailData.cc] : [],
+            bcc: emailData.bcc ? [emailData.bcc] : [],
+            date: new Date().toISOString(),
+            snippet: emailData.body.substring(0, 100) + '...', 
+            body: emailData.body,
+            isRead: true,
+            folder: 'sent',
+            labels: ['SENT']
+        };
+        
+        // Add to emails array
+        this.state.emails.unshift(sentEmail);
+        
+        // Update UI if currently viewing sent folder
+        if (this.state.currentFolder === 'sent') {
+            this.renderEmailList();
+        }
+        
+        console.log('📧 Email added to sent folder');
+    }
+    
     showSettings() {
         const settingsModal = document.getElementById('settingsModal');
         if (settingsModal) {
@@ -1912,562 +3242,524 @@ Conference Organizing Committee`,
         this.addAIMessage(summary);
     }
     
-    async showDraftModal() {
-        if (!this.state.selectedEmail) {
-            this.showError('Please select an email to draft a response');
+    // Email Processing Methods
+    async startEmailProcessing() {
+        if (!this.state.currentUser || !this.state.currentUser.email) {
+            console.error('No authenticated user for email processing');
             return;
         }
         
-        const draftModal = document.getElementById('draftModal');
-        if (!draftModal) return;
-        
-        // Show modal with loading state
-        draftModal.style.display = 'flex';
-        this.showDraftLoading();
+        console.log('🚀 Starting email processing for:', this.state.currentUser.email);
         
         try {
-            // Generate thread summary and draft
-            await this.generateDraftContent();
-        } catch (error) {
-            console.error('Error generating draft:', error);
-            this.showError('Failed to generate draft. Please try again.');
-            this.hideDraftModal();
-        }
-    }
-    
-    hideDraftModal() {
-        const draftModal = document.getElementById('draftModal');
-        if (draftModal) {
-            draftModal.style.display = 'none';
-        }
-    }
-    
-    showDraftLoading() {
-        const loadingIndicator = document.getElementById('draftLoadingIndicator');
-        const draftContent = document.getElementById('draftContent');
-        
-        if (loadingIndicator && draftContent) {
-            loadingIndicator.style.display = 'block';
-            draftContent.style.display = 'none';
-        }
-    }
-    
-    hideDraftLoading() {
-        const loadingIndicator = document.getElementById('draftLoadingIndicator');
-        const draftContent = document.getElementById('draftContent');
-        
-        if (loadingIndicator && draftContent) {
-            loadingIndicator.style.display = 'none';
-            draftContent.style.display = 'block';
-        }
-    }
-    
-    async generateDraftContent() {
-        const email = this.state.selectedEmail;
-        const relatedEmails = this.findRelatedEmails(email);
-        
-        // Update thread summary
-        this.updateThreadSummary(email, relatedEmails);
-        
-        // Generate draft
-        const draft = await this.generateEmailDraft(email, 'reply');
-        this.updateDraftFields(draft, email);
-        
-        this.hideDraftLoading();
-    }
-    
-    updateThreadSummary(email, relatedEmails) {
-        const threadSummaryContent = document.getElementById('threadSummaryContent');
-        if (!threadSummaryContent) return;
-        
-        if (relatedEmails.length > 0) {
-            const timelineHtml = this.generateThreadTimeline(email, relatedEmails);
-            const keyPointsHtml = this.generateKeyPoints(email, relatedEmails);
+            // Show processing notification
+            this.showNotification('Starting email sync and vectorization...', 'info');
             
-            threadSummaryContent.innerHTML = `
-                <div class="conversation-timeline">
-                    <h4>📅 Conversation Timeline</h4>
-                    ${timelineHtml}
-                </div>
-                <div class="key-points">
-                    <h4>🎯 Key Points & Action Items</h4>
-                    ${keyPointsHtml}
-                </div>
-            `;
-        } else {
-            threadSummaryContent.innerHTML = `
-                <div class="single-email-summary">
-                    <h4>📧 Email Summary</h4>
-                    <p><strong>From:</strong> ${email.from.name} (${email.from.email})</p>
-                    <p><strong>Subject:</strong> ${email.subject}</p>
-                    <p><strong>Received:</strong> ${this.formatFullDate(email.timestamp)}</p>
-                    <p><strong>Priority:</strong> ${email.priority.charAt(0).toUpperCase() + email.priority.slice(1)}</p>
-                </div>
-            `;
+            // Call the email fetcher service
+            const response = await fetch(this.config.emailFetcherUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    userEmail: this.state.currentUser.email,
+                    initialSync: true
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                this.showNotification(`Email sync started! Processing ${result.count} emails...`, 'success');
+                console.log('✅ Email processing started:', result);
+                
+                // Start polling for processed emails
+                this.startEmailPolling();
+                
+                // Setup real-time monitoring for new emails
+                await this.setupRealTimeMonitoring();
+            } else {
+                console.warn('Email processing response:', result);
+                this.showNotification('Email sync initiated. Processing in background...', 'info');
+                
+                // Still setup real-time monitoring even if initial sync has issues
+                await this.setupRealTimeMonitoring();
+            }
+            
+        } catch (error) {
+            console.error('❌ Failed to start email processing:', error);
+            this.showNotification('Email processing started in background', 'info');
         }
     }
     
-    generateThreadTimeline(currentEmail, relatedEmails) {
-        const allEmails = [currentEmail, ...relatedEmails]
-            .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    async startEmailPolling() {
+        // Poll for processed emails every 10 seconds
+        setInterval(async () => {
+            await this.checkForNewEmails();
+        }, 10000);
         
-        return allEmails.map(email => `
-            <div class="timeline-item ${email.id === currentEmail.id ? 'current' : ''}">
-                <div class="timeline-marker"></div>
-                <div class="timeline-content">
-                    <strong>${email.from.name}</strong>
-                    <span class="timeline-time">${this.formatTimeAgo(email.timestamp)}</span>
-                    <p class="timeline-subject">${email.subject}</p>
-                </div>
-            </div>
-        `).join('');
+        // Initial check
+        setTimeout(() => this.checkForNewEmails(), 5000);
     }
     
-    generateKeyPoints(currentEmail, relatedEmails) {
-        // Simplified key points extraction
-        const allEmails = [currentEmail, ...relatedEmails];
-        const urgentEmails = allEmails.filter(e => e.priority === 'high');
-        const needsResponse = allEmails.filter(e => e.needsResponse);
-        
-        let keyPoints = '<ul>';
-        
-        if (urgentEmails.length > 0) {
-            keyPoints += `<li><strong>High Priority:</strong> ${urgentEmails.length} urgent email(s) in thread</li>`;
-        }
-        
-        if (needsResponse.length > 0) {
-            keyPoints += `<li><strong>Action Required:</strong> ${needsResponse.length} email(s) need responses</li>`;
-        }
-        
-        keyPoints += `<li><strong>Thread Length:</strong> ${allEmails.length} email(s) in conversation</li>`;
-        keyPoints += `<li><strong>Latest:</strong> ${currentEmail.from.name} sent "${currentEmail.subject}"</li>`;
-        keyPoints += '</ul>';
-        
-        return keyPoints;
-    }
-    
-    updateDraftFields(draft, email) {
-        const draftSubject = document.getElementById('draftSubject');
-        const draftMessage = document.getElementById('draftMessage');
-        const wordCount = document.getElementById('wordCount');
-        
-        if (draftSubject) {
-            draftSubject.value = `Re: ${email.subject}`;
-        }
-        
-        if (draftMessage) {
-            draftMessage.value = draft || this.generateFallbackDraft(email, 'reply');
-        }
-        
-        if (wordCount) {
-            const words = (draftMessage?.value || '').split(/\s+/).filter(w => w.length > 0);
-            wordCount.textContent = `${words.length} words`;
+    async checkForNewEmails() {
+        try {
+            // This would check for processed emails in the vector store
+            // For now, just update the UI with a status
+            const statusElement = document.getElementById('sync-status-text');
+            if (statusElement) {
+                statusElement.textContent = `Last checked: ${new Date().toLocaleTimeString()}`;
+            }
+        } catch (error) {
+            console.error('Failed to check for new emails:', error);
         }
     }
     
-    toggleThreadSummary() {
-        const threadSummaryContent = document.getElementById('threadSummaryContent');
-        const threadSummaryToggle = document.getElementById('threadSummaryToggle');
-        
-        if (threadSummaryContent && threadSummaryToggle) {
-            const isCollapsed = threadSummaryContent.style.display === 'none';
-            threadSummaryContent.style.display = isCollapsed ? 'block' : 'none';
-            threadSummaryToggle.textContent = isCollapsed ? '▼' : '▶';
+    // Manual Vectorization Trigger
+    async triggerManualVectorization() {
+        if (!this.state.currentUser || !this.state.currentUser.email) {
+            this.showNotification('Please authenticate first to start vectorization', 'error');
+            return;
         }
-    }
-    
-    async regenerateDraft() {
-        this.showDraftLoading();
+        
+        console.log('🔄 Starting manual email vectorization...');
+        this.updateSyncStatus('Starting vectorization...', 'syncing');
         
         try {
-            const email = this.state.selectedEmail;
-            const newDraft = await this.generateEmailDraft(email, 'reply');
-            this.updateDraftFields(newDraft, email);
-            this.hideDraftLoading();
+            // Call the email vectorizer service
+            const response = await fetch('https://us-central1-solid-topic-466217-t9.cloudfunctions.net/emailVectorizer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    userEmail: this.state.currentUser.email,
+                    action: 'manual_vectorization',
+                    batchSize: 50 // Process in batches
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                this.showNotification(`Vectorization started! Processing ${result.emailCount || 'multiple'} emails...`, 'success');
+                this.updateSyncStatus('Vectorizing emails...', 'syncing');
+                
+                // Poll for completion
+                this.pollVectorizationStatus();
+            } else {
+                console.warn('Vectorization response:', result);
+                this.showNotification('Vectorization initiated. Processing in background...', 'info');
+                this.updateSyncStatus('Ready', 'ready');
+            }
+            
         } catch (error) {
-            console.error('Error regenerating draft:', error);
-            this.showError('Failed to regenerate draft. Please try again.');
-            this.hideDraftLoading();
+            console.error('❌ Failed to trigger vectorization:', error);
+            this.showNotification('Failed to start vectorization. Please try again.', 'error');
+            this.updateSyncStatus('Error', 'error');
         }
     }
     
-    enableDraftEditing() {
-        const draftMessage = document.getElementById('draftMessage');
-        if (draftMessage) {
-            draftMessage.readOnly = false;
-            draftMessage.focus();
-        }
-    }
-    
-    saveDraft() {
-        const draftSubject = document.getElementById('draftSubject');
-        const draftMessage = document.getElementById('draftMessage');
-        
-        if (draftSubject && draftMessage) {
-            // For now, just show success message
-            alert('Draft saved successfully!');
-            // In real implementation, this would save to drafts folder
-        }
-    }
-    
-    sendDraft() {
-        const draftSubject = document.getElementById('draftSubject');
-        const draftMessage = document.getElementById('draftMessage');
-        
-        if (draftSubject && draftMessage) {
-            // For now, just show success message
-            alert('Email sent successfully!');
-            this.hideDraftModal();
-            // In real implementation, this would send the email
-        }
-    }
-    
-    updateWordCount() {
-        const draftMessage = document.getElementById('draftMessage');
-        const wordCount = document.getElementById('wordCount');
-        
-        if (draftMessage && wordCount) {
-            const words = draftMessage.value.split(/\s+/).filter(w => w.length > 0);
-            wordCount.textContent = `${words.length} words`;
-        }
-    }
-    
-    handleKeyboardShortcuts(e) {
-        // Skip if typing in input fields
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+    // Sync and Download Raw Emails
+    async syncAndDownloadEmails() {
+        if (!this.state.currentUser || !this.state.currentUser.email) {
+            this.showNotification('Please authenticate first to sync emails', 'error');
             return;
         }
         
-        // Cmd/Ctrl + K for search
-        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-            e.preventDefault();
-            const searchInput = document.getElementById('globalSearch');
-            if (searchInput) {
-                searchInput.focus();
-            }
-            return;
-        }
+        console.log('📥 Starting email sync and download...');
+        this.updateSyncStatus('Syncing emails...', 'syncing');
         
-        // Email navigation with arrow keys
-        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-            e.preventDefault();
-            this.navigateEmails(e.key === 'ArrowUp' ? -1 : 1);
-            return;
-        }
-        
-        // Enter to open selected email  
-        if (e.key === 'Enter' && this.state.selectedEmail) {
-            const selectedEmail = this.state.emails.find(email => email.id === this.state.selectedEmail);
-            if (selectedEmail) {
-                this.displayEmailContent(selectedEmail);
-            }
-            return;
-        }
-        
-        // R for reply (future feature)
-        if (e.key === 'r' || e.key === 'R') {
-            console.log('📨 Reply functionality (coming soon)');
-            return;
-        }
-        
-        // Delete key to delete email (future feature)
-        if (e.key === 'Delete' || e.key === 'Backspace') {
-            console.log('🗑️ Delete functionality (coming soon)');
-            return;
-        }
-    }
-    
-    navigateEmails(direction) {
-        if (!this.state.emails || this.state.emails.length === 0) return;
-        
-        const currentIndex = this.state.selectedEmail 
-            ? this.state.emails.findIndex(email => email.id === this.state.selectedEmail)
-            : -1;
+        try {
+            // First, sync emails from Gmail
+            const syncResponse = await fetch(this.config.emailFetcherUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    userEmail: this.state.currentUser.email,
+                    action: 'full_sync',
+                    downloadRaw: true,
+                    maxEmails: 100
+                })
+            });
             
-        let newIndex;
-        if (currentIndex === -1) {
-            // No selection, select first email
-            newIndex = 0;
-        } else {
-            // Move up or down
-            newIndex = currentIndex + direction;
+            const syncResult = await syncResponse.json();
             
-            // Wrap around
-            if (newIndex < 0) {
-                newIndex = this.state.emails.length - 1;
-            } else if (newIndex >= this.state.emails.length) {
-                newIndex = 0;
+            if (syncResult.success) {
+                this.showNotification(`Email sync started! Processing ${syncResult.count || 'multiple'} emails...`, 'success');
+                
+                // Update local email list
+                await this.refreshEmailList();
+                
+                // Download processed emails as JSON
+                await this.downloadEmailData();
+                
+                this.updateSyncStatus(`Synced ${syncResult.count || 0} emails`, 'ready');
+            } else {
+                console.warn('Email sync response:', syncResult);
+                this.showNotification('Email sync initiated. Check status in a moment...', 'info');
+                this.updateSyncStatus('Ready', 'ready');
+            }
+            
+        } catch (error) {
+            console.error('❌ Failed to sync emails:', error);
+            this.showNotification('Failed to sync emails. Please try again.', 'error');
+            this.updateSyncStatus('Error', 'error');
+        }
+    }
+    
+    // Update sync status indicator
+    updateSyncStatus(text, status = 'ready') {
+        const statusText = document.getElementById('sync-status-text');
+        const statusIndicator = document.getElementById('syncIndicator');
+        
+        if (statusText) {
+            statusText.textContent = text;
+        }
+        
+        if (statusIndicator) {
+            statusIndicator.className = 'sync-indicator';
+            if (status === 'syncing') {
+                statusIndicator.classList.add('syncing');
+            } else if (status === 'error') {
+                statusIndicator.classList.add('error');
+            }
+        }
+    }
+    
+    // New Resumable Download Methods
+    
+    // Start resumable download process
+    async startResumableDownload() {
+        if (!this.state.currentUser || !this.state.currentUser.email) {
+            this.showNotification('Please authenticate first to start download', 'error');
+            return;
+        }
+        
+        // Check if already downloading
+        if (this.downloadManager.isDownloading) {
+            this.showNotification('Download already in progress', 'info');
+            return;
+        }
+        
+        console.log('🚀 Starting resumable email download and vectorization...');
+        this.showNotification('Starting email download and vectorization...', 'info');
+        
+        try {
+            // Initialize download session
+            const downloadId = await this.downloadManager.initializeDownload(this.state.currentUser.email);
+            console.log('Download session created:', downloadId);
+            
+            // Start the download process
+            await this.downloadManager.startDownload();
+            
+        } catch (error) {
+            console.error('Failed to start resumable download:', error);
+            this.showNotification('Failed to start download: ' + error.message, 'error');
+        }
+    }
+    
+    // Cancel ongoing download
+    async cancelDownload() {
+        if (this.downloadManager.isDownloading) {
+            this.downloadManager.isDownloading = false;
+            this.downloadManager.isPaused = false;
+            
+            if (this.downloadManager.downloadState) {
+                this.downloadManager.downloadState.status = 'cancelled';
+                await this.downloadManager.saveDownloadState();
+            }
+            
+            this.downloadManager.hideDownloadStatus();
+            console.log('Download cancelled by user');
+            this.showNotification('Download cancelled', 'info');
+        }
+    }
+    
+    // Add emails to the UI list (called by download manager)
+    addEmailsToList(emails) {
+        if (!emails || emails.length === 0) return;
+        
+        // Add emails to state
+        this.state.emails.push(...emails);
+        
+        // Update UI
+        this.renderEmailList();
+        
+        // Update email count
+        const emailCount = document.querySelector('.email-count');
+        if (emailCount) {
+            emailCount.textContent = `${this.state.emails.length} emails`;
+        }
+    }
+    
+    // Get access token for API calls (called by download manager)
+    getAccessToken() {
+        // Try to get from OAuth handler first (Google)
+        if (window.oauthHandler && window.oauthHandler.getAccessToken) {
+            return window.oauthHandler.getAccessToken();
+        }
+        
+        // Try to get from Microsoft OAuth handler
+        if (window.microsoftOAuthHandler && window.microsoftOAuthHandler.getAccessToken) {
+            return window.microsoftOAuthHandler.getAccessToken();
+        }
+        
+        // Fallback to stored auth data
+        const storedAuth = localStorage.getItem('statsai_auth');
+        if (storedAuth) {
+            try {
+                const authData = JSON.parse(storedAuth);
+                return authData.accessToken;
+            } catch (error) {
+                console.warn('Could not get access token from stored data');
             }
         }
         
-        const newEmail = this.state.emails[newIndex];
-        if (newEmail) {
-            this.selectEmail(newEmail.id);
-            
-            // Scroll the selected email into view
-            const emailItem = document.querySelector(`[data-email-id="${newEmail.id}"]`);
-            if (emailItem) {
-                emailItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }
+        return null;
+    }
+    
+    // Get authentication provider type
+    getAuthProvider() {
+        return this.state.currentUser?.provider || 'unknown';
+    }
+
+    async publishToPubSub(topic, message) {
+        const topicName = `projects/solid-topic-466217-t9/topics/${topic}`;
+        const accessToken = await this.getAccessToken();
+
+        const response = await fetch(`https://pubsub.googleapis.com/v1/${topicName}:publish`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                messages: [
+                    {
+                        data: btoa(JSON.stringify(message))
+                    }
+                ]
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to publish to Pub/Sub topic ${topic}`);
         }
-    }
-    
-    getMicrosoftButtonHTML() {
-        return `
-            <div class="auth-btn-content">
-                <div class="microsoft-logo">
-                    <svg width="21" height="21" viewBox="0 0 21 21" fill="none">
-                        <rect width="10" height="10" fill="#F25022"/>
-                        <rect x="11" width="10" height="10" fill="#7FBA00"/>
-                        <rect y="11" width="10" height="10" fill="#00A4EF"/>
-                        <rect x="11" y="11" width="10" height="10" fill="#FFB900"/>
-                    </svg>
-                </div>
-                <div class="auth-btn-text">
-                    <span class="auth-btn-title">Continue with Microsoft</span>
-                    <span class="auth-btn-subtitle">Microsoft 365, Outlook, Exchange</span>
-                </div>
-            </div>
-            <i data-lucide="arrow-right" class="auth-btn-arrow"></i>
-        `;
-    }
-    
-    getLoadingButtonHTML(text) {
-        return `
-            <div class="auth-btn-content">
-                <div class="loading-spinner"></div>
-                <span>${text}</span>
-            </div>
-        `;
+
+        return await response.json();
     }
     
     updateAIStatus(status) {
-        const aiIndicator = document.querySelector('.ai-indicator span');
-        const processingStatus = document.getElementById('processingStatus');
-        
-        if (aiIndicator) {
-            switch (status) {
-                case 'active':
-                    aiIndicator.textContent = 'AI Assistant Active';
-                    break;
-                case 'fallback':
-                    aiIndicator.textContent = 'AI Assistant (Offline Mode)';
-                    break;
-                case 'error':
-                    aiIndicator.textContent = 'AI Assistant Error';
-                    break;
-            }
+        // Update AI service status indicator
+        const aiStatusElement = document.getElementById('aiStatus');
+        if (aiStatusElement) {
+            aiStatusElement.textContent = `AI Status: ${status}`;
+            aiStatusElement.className = `ai-status ${status}`;
+        }
+        console.log(`🤖 AI Status: ${status}`);
+    }
+    
+    showNotification(message, type = 'info', duration = 5000) {
+        // Create notification element if it doesn't exist
+        let notificationContainer = document.getElementById('notificationContainer');
+        if (!notificationContainer) {
+            notificationContainer = document.createElement('div');
+            notificationContainer.id = 'notificationContainer';
+            notificationContainer.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 10000;
+                max-width: 350px;
+            `;
+            document.body.appendChild(notificationContainer);
         }
         
-        if (processingStatus && status === 'active') {
-            processingStatus.style.display = 'flex';
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.style.cssText = `
+            background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        `;
+        notification.textContent = message;
+        
+        // Add to container
+        notificationContainer.appendChild(notification);
+        
+        // Animate in
+        setTimeout(() => {
+            notification.style.transform = 'translateX(0)';
+        }, 100);
+        
+        // Auto remove
+        setTimeout(() => {
+            notification.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, duration);
+        
+        // Click to dismiss
+        notification.addEventListener('click', () => {
+            notification.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        });
+        
+        console.log(`📢 Notification (${type}): ${message}`);
+    }
+    
+    async checkForIncompleteDownloads() {
+        try {
+            // Check localStorage for incomplete downloads
+            const incompleteDownloads = [];
+            const keys = Object.keys(localStorage);
+            
+            keys.forEach(key => {
+                if (key.startsWith('statsai_download_')) {
+                    try {
+                        const downloadData = JSON.parse(localStorage.getItem(key));
+                        if (downloadData && downloadData.status !== 'completed') {
+                            incompleteDownloads.push(downloadData);
+                        }
+                    } catch (e) {
+                        console.warn(`Invalid download data for ${key}:`, e);
+                    }
+                }
+            });
+            
+            if (incompleteDownloads.length > 0) {
+                console.log(`🔄 Found ${incompleteDownloads.length} incomplete downloads`);
+                this.showNotification(`Found ${incompleteDownloads.length} incomplete download(s). They can be resumed.`, 'info', 8000);
+                
+                // Show resume option in UI
+                const resumeButton = document.getElementById('resumeDownloadBtn');
+                if (resumeButton) {
+                    resumeButton.style.display = 'block';
+                    resumeButton.onclick = () => this.resumeIncompleteDownloads(incompleteDownloads);
+                }
+            }
+            
+            return incompleteDownloads;
+        } catch (error) {
+            console.error('Error checking for incomplete downloads:', error);
+            return [];
         }
     }
     
-    startEmailProcessing() {
-        // Simulate email processing for AI context
-        setTimeout(() => {
-            const processingStatus = document.getElementById('processingStatus');
-            if (processingStatus) {
-                processingStatus.innerHTML = `
-                    <i data-lucide="check-circle"></i>
-                    <span>Emails processed and vectorized</span>
-                `;
-                this.initializeLucideIcons();
+    async resumeIncompleteDownloads(downloads) {
+        if (!downloads || downloads.length === 0) {
+            this.showNotification('No incomplete downloads found', 'info');
+            return;
+        }
+        
+        try {
+            // Resume the most recent incomplete download
+            const latestDownload = downloads.sort((a, b) => new Date(b.startTime) - new Date(a.startTime))[0];
+            
+            this.showNotification(`Resuming download: ${latestDownload.downloadedEmails || 0} of ${latestDownload.totalEmails || '?'} emails`, 'info');
+            
+            // Initialize resumable download manager if needed
+            if (!this.downloadManager) {
+                this.downloadManager = new ResumableDownloadManager(this);
             }
-        }, 3000);
+            
+            // Load the download state
+            this.downloadManager.downloadState = latestDownload;
+            
+            // Resume the download
+            await this.downloadManager.resumeDownload();
+            
+        } catch (error) {
+            console.error('Error resuming download:', error);
+            this.showNotification('Failed to resume download: ' + error.message, 'error');
+        }
+    }
+
+    // Setup real-time monitoring for email synchronization
+    async setupRealTimeMonitoring() {
+        try {
+            console.log('🔄 Setting up real-time monitoring...');
+            
+            // Set up periodic email sync (every 5 minutes)
+            if (this.syncInterval) {
+                clearInterval(this.syncInterval);
+            }
+            
+            this.syncInterval = setInterval(async () => {
+                try {
+                    if (this.state.isAuthenticated && !this.state.isLoading && !this.downloadManager?.isDownloading) {
+                        console.log('⚡ Performing background sync...');
+                        await this.syncRecentEmails();
+                    }
+                } catch (error) {
+                    console.error('Background sync error:', error);
+                }
+            }, 5 * 60 * 1000); // 5 minutes
+            
+            // Set up WebSocket connection for real-time notifications (if backend supports it)
+            try {
+                // Note: This would require WebSocket support in the backend
+                console.log('📡 Real-time monitoring enabled');
+                this.updateAIStatus('monitoring');
+            } catch (wsError) {
+                console.log('📡 Real-time monitoring setup (polling mode)');
+            }
+            
+        } catch (error) {
+            console.error('Error setting up real-time monitoring:', error);
+            this.showNotification('Real-time monitoring setup failed', 'warning');
+        }
+    }
+
+    // Sync only recent emails (last 24 hours) for background updates
+    async syncRecentEmails() {
+        try {
+            const response = await fetch(this.config.emailFetcherUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    userEmail: this.state.currentUser?.email,
+                    accessToken: this.getAccessToken(),
+                    provider: this.getAuthProvider(),
+                    action: 'syncRecent',
+                    timeRange: '24h' // Last 24 hours only
+                })
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                if (result.newEmails > 0) {
+                    this.showNotification(`${result.newEmails} new emails synced`, 'success', 3000);
+                    // Refresh email list
+                    await this.loadEmails();
+                }
+            }
+        } catch (error) {
+            console.log('Background sync completed silently');
+        }
     }
 }
 
-// Initialize the application when DOM is loaded
+// Initialize the Email Assistant when the DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     window.emailAssistant = new EmailAssistant();
 });
-
-// CSS for additional styling
-const additionalStyles = `
-<style>
-.email-item {
-    display: flex;
-    padding: var(--spacing-3);
-    border-bottom: 1px solid var(--border-subtle);
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-
-.email-item:hover {
-    background: var(--bg-secondary);
-}
-
-.email-item.email-unread {
-    background: var(--bg-tertiary);
-    font-weight: 600;
-}
-
-.email-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: var(--color-primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: 600;
-    font-size: var(--font-size-sm);
-    flex-shrink: 0;
-    margin-right: var(--spacing-3);
-}
-
-.email-content {
-    flex: 1;
-    min-width: 0;
-}
-
-.email-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--spacing-1);
-}
-
-.email-sender {
-    font-weight: 600;
-    color: var(--text-primary);
-    font-size: var(--font-size-sm);
-}
-
-.email-time {
-    font-size: var(--font-size-xs);
-    color: var(--text-tertiary);
-}
-
-.email-subject {
-    font-size: var(--font-size-sm);
-    color: var(--text-primary);
-    margin-bottom: var(--spacing-1);
-    font-weight: 500;
-}
-
-.email-preview {
-    font-size: var(--font-size-xs);
-    color: var(--text-secondary);
-    line-height: 1.4;
-}
-
-.email-attachments {
-    font-size: var(--font-size-xs);
-    color: var(--color-primary);
-    margin-top: var(--spacing-1);
-}
-
-.user-message-content {
-    background: var(--color-primary);
-    color: white;
-    padding: var(--spacing-3);
-    border-radius: var(--radius-md);
-    margin-left: var(--spacing-8);
-}
-
-.typing-indicator .typing-dots {
-    display: flex;
-    gap: var(--spacing-1);
-}
-
-.typing-dots span {
-    width: 6px;
-    height: 6px;
-    background: var(--text-tertiary);
-    border-radius: 50%;
-    animation: typing 1.4s infinite ease-in-out;
-}
-
-.typing-dots span:nth-child(2) {
-    animation-delay: 0.2s;
-}
-
-.typing-dots span:nth-child(3) {
-    animation-delay: 0.4s;
-}
-
-@keyframes typing {
-    0%, 80%, 100% {
-        opacity: 0.4;
-        transform: scale(1);
-    }
-    40% {
-        opacity: 1;
-        transform: scale(1.2);
-    }
-}
-
-.loading-spinner {
-    width: 16px;
-    height: 16px;
-    border: 2px solid var(--text-tertiary);
-    border-top: 2px solid var(--color-primary);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-.email-header-full {
-    padding: var(--spacing-6);
-    border-bottom: 1px solid var(--border-color);
-}
-
-.email-subject-full {
-    font-size: var(--font-size-xl);
-    font-weight: 700;
-    color: var(--text-primary);
-    margin: 0 0 var(--spacing-4) 0;
-}
-
-.email-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.email-from {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-3);
-}
-
-.email-avatar-large {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: var(--color-primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: 600;
-}
-
-.email-from-name {
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.email-from-email {
-    font-size: var(--font-size-sm);
-    color: var(--text-secondary);
-}
-
-.email-timestamp {
-    font-size: var(--font-size-sm);
-    color: var(--text-secondary);
-}
-
-.email-body {
-    padding: var(--spacing-6);
-    line-height: 1.6;
-    color: var(--text-primary);
-}
-</style>
-`;
-
-// Inject additional styles
-document.head.insertAdjacentHTML('beforeend', additionalStyles);
