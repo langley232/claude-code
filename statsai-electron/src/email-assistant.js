@@ -74,12 +74,16 @@ class ResumableDownloadManager {
         try {
             this.updateStatus('Counting emails...', 'Fetching total email count');
             
+            // Ensure we have valid tokens
+            await this.emailAssistant.ensureValidTokens();
+            
             const response = await fetch(this.emailAssistant.config.emailFetcherUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     userEmail: this.downloadState.userEmail,
                     accessToken: this.emailAssistant.getAccessToken(),
+                    refreshToken: this.emailAssistant.getRefreshToken(),
                     provider: this.emailAssistant.getAuthProvider(),
                     action: 'getEmailCount'
                 })
@@ -138,9 +142,13 @@ class ResumableDownloadManager {
     
     // Process single batch of emails
     async processBatch() {
+        // Ensure we have valid tokens for this batch
+        await this.emailAssistant.ensureValidTokens();
+        
         const batchData = {
             userEmail: this.downloadState.userEmail,
             accessToken: this.emailAssistant.getAccessToken(),
+            refreshToken: this.emailAssistant.getRefreshToken(),
             provider: this.emailAssistant.getAuthProvider(),
             action: 'downloadBatch',
             pageToken: this.downloadState.nextPageToken,
@@ -447,35 +455,65 @@ class ResumableDownloadManager {
     
     // UI Status Updates
     showDownloadStatus() {
-        document.getElementById('downloadStatusBar').style.display = 'block';
+        const statusBar = document.getElementById('processingStatus');
+        if (statusBar) {
+            statusBar.style.display = 'block';
+        }
     }
     
     hideDownloadStatus() {
-        document.getElementById('downloadStatusBar').style.display = 'none';
+        const statusBar = document.getElementById('processingStatus');
+        if (statusBar) {
+            statusBar.style.display = 'none';
+        }
     }
     
     showVectorizationStatus() {
-        document.getElementById('vectorizationStatus').style.display = 'block';
+        const statusBar = document.getElementById('processingStatus');
+        if (statusBar) {
+            statusBar.style.display = 'block';
+        }
     }
     
     updateStatus(title, details) {
-        document.getElementById('statusTitle').textContent = title;
-        document.getElementById('statusDetails').textContent = details;
+        // Use existing loading status element or fallback to console
+        const statusElement = document.getElementById('loadingStatus');
+        if (statusElement) {
+            statusElement.textContent = title + (details ? ': ' + details : '');
+        } else {
+            console.log('Status:', title, details);
+        }
     }
     
     updateProgress() {
         const percentage = this.downloadState.totalEmails > 0 
             ? (this.downloadState.downloadedEmails / this.downloadState.totalEmails) * 100 
             : 0;
-            
-        document.getElementById('downloadProgress').style.width = `${percentage}%`;
-        document.getElementById('progressText').textContent = 
-            `${this.downloadState.downloadedEmails} / ${this.downloadState.totalEmails} emails`;
+        
+        // Use existing progress elements or fallback
+        const progressElement = document.getElementById('progressFill');
+        const statusElement = document.getElementById('loadingStatus');
+        
+        if (progressElement) {
+            progressElement.style.width = `${percentage}%`;
+        }
+        
+        if (statusElement) {
+            statusElement.textContent = `${this.downloadState.downloadedEmails} / ${this.downloadState.totalEmails} emails`;
+        } else {
+            console.log('Progress:', `${this.downloadState.downloadedEmails} / ${this.downloadState.totalEmails} emails`);
+        }
     }
     
     updateVectorizationProgress() {
-        document.getElementById('vectorProgress').textContent = 
-            `Vectorizing: ${this.downloadState.vectorizedEmails} / ${this.downloadState.downloadedEmails} processed`;
+        const statusElement = document.getElementById('loadingStatus');
+        const message = `Vectorizing: ${this.downloadState.vectorizedEmails} / ${this.downloadState.downloadedEmails} processed`;
+        
+        if (statusElement) {
+            statusElement.textContent = message;
+        } else {
+            console.log('Vectorization Progress:', message);
+        }
     }
     
     // Utility methods
@@ -1289,6 +1327,26 @@ class EmailAssistant {
                 </div>
             </div>
             <i data-lucide="arrow-right" class="auth-btn-arrow"></i>
+        `;
+    }
+    
+    // Get loading button HTML for authentication states
+    getLoadingButtonHTML(message = 'Connecting...') {
+        return `
+            <div class="auth-btn-content">
+                <div class="loading-spinner">
+                    <svg width="21" height="21" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="31.416" stroke-dashoffset="31.416">
+                            <animate attributeName="stroke-dasharray" dur="2s" values="0 31.416;15.708 15.708;0 31.416" repeatCount="indefinite"/>
+                            <animate attributeName="stroke-dashoffset" dur="2s" values="0;-15.708;-31.416" repeatCount="indefinite"/>
+                        </circle>
+                    </svg>
+                </div>
+                <div class="auth-btn-text">
+                    <span class="auth-btn-title">${message}</span>
+                    <span class="auth-btn-subtitle">Please wait...</span>
+                </div>
+            </div>
         `;
     }
     
@@ -3255,6 +3313,9 @@ Conference Organizing Committee`,
             // Show processing notification
             this.showNotification('Starting email sync and vectorization...', 'info');
             
+            // Ensure we have valid tokens first
+            await this.ensureValidTokens();
+            
             // Call the email fetcher service
             const response = await fetch(this.config.emailFetcherUrl, {
                 method: 'POST',
@@ -3263,6 +3324,9 @@ Conference Organizing Committee`,
                 },
                 body: JSON.stringify({
                     userEmail: this.state.currentUser.email,
+                    accessToken: this.getAccessToken(),
+                    refreshToken: this.getRefreshToken(),
+                    provider: this.getAuthProvider(),
                     initialSync: true
                 })
             });
@@ -3372,6 +3436,9 @@ Conference Organizing Committee`,
         
         try {
             // First, sync emails from Gmail
+            // Ensure valid tokens before sync
+            await this.ensureValidTokens();
+            
             const syncResponse = await fetch(this.config.emailFetcherUrl, {
                 method: 'POST',
                 headers: {
@@ -3379,6 +3446,9 @@ Conference Organizing Committee`,
                 },
                 body: JSON.stringify({
                     userEmail: this.state.currentUser.email,
+                    accessToken: this.getAccessToken(),
+                    refreshToken: this.getRefreshToken(),
+                    provider: this.getAuthProvider(),
                     action: 'full_sync',
                     downloadRaw: true,
                     maxEmails: 100
@@ -3519,6 +3589,57 @@ Conference Organizing Committee`,
         }
         
         return null;
+    }
+    
+    // Get refresh token for API calls
+    getRefreshToken() {
+        // Try to get from OAuth handler first (Google)
+        if (window.oauthHandler && window.oauthHandler.getRefreshToken) {
+            return window.oauthHandler.getRefreshToken();
+        }
+        
+        // Try to get from Microsoft OAuth handler  
+        if (window.microsoftOAuthHandler && window.microsoftOAuthHandler.getRefreshToken) {
+            return window.microsoftOAuthHandler.getRefreshToken();
+        }
+        
+        // Fallback to localStorage
+        return localStorage.getItem('gmail_refresh_token') || null;
+    }
+    
+    // Ensure we have valid tokens, refresh if needed
+    async ensureValidTokens() {
+        try {
+            const accessToken = this.getAccessToken();
+            const refreshToken = this.getRefreshToken();
+            
+            console.log('🔑 Checking token validity...', {
+                hasAccessToken: !!accessToken,
+                hasRefreshToken: !!refreshToken
+            });
+            
+            if (!accessToken && !refreshToken) {
+                throw new Error('No tokens available - user needs to re-authenticate');
+            }
+            
+            // If we have OAuth handler, use its token management
+            if (window.oauthHandler) {
+                // Store tokens in Cloud Function if needed
+                await window.oauthHandler.ensureTokensInCloudFunction();
+                
+                // Refresh token if access token is missing but refresh token exists
+                if (!accessToken && refreshToken) {
+                    console.log('🔄 Access token missing, refreshing...');
+                    await window.oauthHandler.refreshAccessToken();
+                }
+            }
+            
+            console.log('✅ Token validation complete');
+            
+        } catch (error) {
+            console.error('❌ Token validation failed:', error);
+            throw error;
+        }
     }
     
     // Get authentication provider type
@@ -3731,6 +3852,9 @@ Conference Organizing Committee`,
     // Sync only recent emails (last 24 hours) for background updates
     async syncRecentEmails() {
         try {
+            // Ensure valid tokens before sync
+            await this.ensureValidTokens();
+            
             const response = await fetch(this.config.emailFetcherUrl, {
                 method: 'POST',
                 headers: {
@@ -3739,6 +3863,7 @@ Conference Organizing Committee`,
                 body: JSON.stringify({
                     userEmail: this.state.currentUser?.email,
                     accessToken: this.getAccessToken(),
+                    refreshToken: this.getRefreshToken(),
                     provider: this.getAuthProvider(),
                     action: 'syncRecent',
                     timeRange: '24h' // Last 24 hours only
