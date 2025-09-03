@@ -11,7 +11,7 @@ class OAuthHandler {
             oauthCallbackUrl: 'https://oauthtest-qjyr5poabq-uc.a.run.app/auth/google/callback',
             
             // Client-side OAuth config  
-            clientId: '609535336419-nar9fcv646la5lne0h10n2dcdmlm7qak.apps.googleusercontent.com',
+            clientId: process.env.GOOGLE_OAUTH_CLIENT_ID || window.GOOGLE_OAUTH_CLIENT_ID,
             scopes: [
                 'https://www.googleapis.com/auth/gmail.readonly',
                 'https://www.googleapis.com/auth/userinfo.email', 

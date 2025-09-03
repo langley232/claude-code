@@ -42,7 +42,7 @@ functions.http('oauthTest', (req, res) => {
 });
 
 async function handleOAuthStart(req, res) {
-    const clientId = "609535336419-nar9fcv646la5lne0h10n2dcdmlm7qak.apps.googleusercontent.com";
+    const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
     const redirectUri = "https://us-central1-solid-topic-466217-t9.cloudfunctions.net/oauthTest/auth/google/callback";
     const scope = "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.metadata https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile";
     const state = `test-${Date.now()}`;
@@ -74,9 +74,13 @@ async function handleOAuthCallback(req, res) {
     console.log('OAuth callback received:', { code: code.substring(0, 10) + '...', state });
 
     try {
-        // Use hardcoded credentials that we know work
-        const clientId = "609535336419-nar9fcv646la5lne0h10n2dcdmlm7qak.apps.googleusercontent.com";
-        const clientSecret = "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";
+        // Use the same working approach as oauth-backend.js - get secret from Secret Manager
+        const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
+        const clientSecret = await getGoogleClientSecret();
+        
+        console.log('Using client_id:', clientId);
+        console.log('Using client_secret from Secret Manager:', !!clientSecret);
+        console.log('Client secret ending:', clientSecret.slice(-4));
 
         // Create OAuth2 client  
         const oauth2Client = new google.auth.OAuth2(
@@ -167,7 +171,7 @@ async function handleSimpleTest(req, res) {
     
     if (!code) {
         // Start OAuth flow with direct credentials
-        const clientId = "609535336419-nar9fcv646la5lne0h10n2dcdmlm7qak.apps.googleusercontent.com";
+        const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
         const redirectUri = "https://us-central1-solid-topic-466217-t9.cloudfunctions.net/oauthTest/simple-test";
         
         const authUrl = `https://accounts.google.com/o/oauth2/auth?` +
@@ -181,11 +185,14 @@ async function handleSimpleTest(req, res) {
         return res.redirect(authUrl);
     }
     
-    // Handle callback with hardcoded credentials
+    // Handle callback using Secret Manager (same as working oauth-backend.js)
     try {
+        const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
+        const clientSecret = await getGoogleClientSecret();
+        
         const oauth2Client = new google.auth.OAuth2(
-            "609535336419-nar9fcv646la5lne0h10n2dcdmlm7qak.apps.googleusercontent.com",
-            "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",
+            clientId,
+            clientSecret,
             "https://us-central1-solid-topic-466217-t9.cloudfunctions.net/oauthTest/simple-test"
         );
         
@@ -206,5 +213,18 @@ async function handleSimpleTest(req, res) {
             error: error.message,
             details: error.response?.data || 'No additional details'
         });
+    }
+}
+
+// Get Google client secret from Secret Manager (same as working oauth-backend.js)
+async function getGoogleClientSecret() {
+    try {
+        const [secret] = await secretManager.accessSecretVersion({
+            name: 'projects/solid-topic-466217-t9/secrets/google-oauth-client-secret/versions/latest'
+        });
+        return secret.payload.data.toString();
+    } catch (error) {
+        console.error('❌ Failed to get Google client secret:', error);
+        throw new Error('Failed to retrieve Google client secret');
     }
 }
