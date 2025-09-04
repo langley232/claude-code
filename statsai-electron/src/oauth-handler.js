@@ -65,21 +65,16 @@ class OAuthHandler {
     
     // Start OAuth flow - redirect to GCP endpoint
     startOAuth() {
-        console.log('🔑 Starting OAuth flow...');
+        console.log('🔑 Starting OAuth flow via backend...');
         
         // Store state for validation
         const state = this.generateStateToken();
         localStorage.setItem('oauth_state', state);
         localStorage.setItem('oauth_start_time', Date.now().toString());
         
-        // Construct OAuth URL
-        const authUrl = new URL('https://accounts.google.com/o/oauth2/auth');
-        authUrl.searchParams.set('client_id', this.config.clientId);
-        authUrl.searchParams.set('redirect_uri', this.config.oauthRedirectUri);
-        authUrl.searchParams.set('scope', this.config.scopes.join(' '));
-        authUrl.searchParams.set('response_type', 'code');
+        // Use backend OAuth start endpoint instead of constructing URL directly
+        const authUrl = new URL(this.config.oauthStartUrl);
         authUrl.searchParams.set('state', state);
-        authUrl.searchParams.set('access_type', 'offline');
         authUrl.searchParams.set('prompt', 'consent');
         
         // Show loading state

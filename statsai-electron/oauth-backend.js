@@ -116,7 +116,7 @@ app.get('/auth/google/callback', async (req, res) => {
         const { code, error } = req.query;
         if (error) {
             console.error('❌ OAuth error:', error);
-            return res.redirect(`http://localhost:3001/email-assistant.html?oauth=error&error=${error}`);
+            return res.redirect(`https://atlasweb.info/email-assistant.html?oauth=error&error=${error}`);
         }
         if (!code) {
             return res.status(400).json({ error: 'No authorization code received' });
