@@ -1271,7 +1271,7 @@ class EmailAssistant {
                 
             } else {
                 // Fallback: redirect directly to OAuth start URL
-                window.location.href = 'https://us-central1-solid-topic-466217-t9.cloudfunctions.net/oauthTest/auth/google/start';
+                window.location.href = 'https://oauthtest-609535336419.us-central1.run.app/auth/google/start';
             }
         } catch (error) {
             console.error('❌ Google authentication failed:', error);
@@ -3881,6 +3881,24 @@ Conference Organizing Committee`,
         } catch (error) {
             console.log('Background sync completed silently');
         }
+    }
+
+    // Handle global search input with debouncing
+    handleGlobalSearch(query) {
+        // Clear existing timeout
+        if (this.searchTimeout) {
+            clearTimeout(this.searchTimeout);
+        }
+        
+        // Debounce search input
+        this.searchTimeout = setTimeout(() => {
+            if (query.trim().length > 0) {
+                this.performSearch(query.trim());
+            } else {
+                // If query is empty, reload all emails
+                this.loadEmails();
+            }
+        }, 300); // 300ms debounce
     }
 }
 
