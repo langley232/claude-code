@@ -7,8 +7,8 @@ class OAuthHandler {
     constructor() {
         this.config = {
             // GCP OAuth endpoints
-            oauthStartUrl: 'https://oauthtest-qjyr5poabq-uc.a.run.app/auth/google/start',
-            oauthCallbackUrl: 'https://oauthtest-qjyr5poabq-uc.a.run.app/auth/google/callback',
+            oauthStartUrl: 'https://oauthtest-609535336419.us-central1.run.app/auth/google/start',
+            oauthCallbackUrl: 'https://oauthtest-609535336419.us-central1.run.app/auth/google/callback',
             
             // Client-side OAuth config  
             clientId: '609535336419-nar9fcv646la5lne0h10n2dcdmlm7qak.apps.googleusercontent.com',
@@ -19,7 +19,7 @@ class OAuthHandler {
             ],
             
             // OAuth redirect configuration - must match backend exactly
-            oauthRedirectUri: 'https://oauthtest-qjyr5poabq-uc.a.run.app/auth/google/callback',
+            oauthRedirectUri: 'https://oauthtest-609535336419.us-central1.run.app/auth/google/callback',
             
             // Local development URLs
             frontendUrl: 'http://localhost:3000',
@@ -402,6 +402,9 @@ class OAuthHandler {
         if (window.history && window.history.pushState) {
             const url = new URL(window.location);
             url.searchParams.delete('oauth');
+            url.searchParams.delete('access_token');
+            url.searchParams.delete('refresh_token');
+            url.searchParams.delete('expires_in');
             url.searchParams.delete('code');
             url.searchParams.delete('state');
             url.searchParams.delete('error');
@@ -540,9 +543,9 @@ class OAuthHandler {
             
             // Try multiple token endpoints for compatibility
             const tokenEndpoints = [
-                'https://oauthtest-qjyr5poabq-uc.a.run.app/auth/google/tokens',
-                'https://oauthtest-qjyr5poabq-uc.a.run.app/auth/google/user-tokens',
-                'https://oauthtest-qjyr5poabq-uc.a.run.app/tokens'
+                'https://oauthtest-609535336419.us-central1.run.app/auth/google/tokens',
+                'https://oauthtest-609535336419.us-central1.run.app/auth/google/user-tokens',
+                'https://oauthtest-609535336419.us-central1.run.app/tokens'
             ];
             
             let tokenData = null;
@@ -703,6 +706,9 @@ class OAuthHandler {
     async refreshAccessToken() {
         const refreshToken = this.getRefreshToken();
         if (!refreshToken || refreshToken === 'null') {
+            // No refresh token available, force re-authentication
+            this.clearAuthentication();
+            this.notifyEmailAssistant('oauth_error', 'Session expired. Please sign in again.');
             throw new Error('No refresh token available - user needs to re-authenticate');
         }
         
@@ -710,7 +716,7 @@ class OAuthHandler {
             console.log('🔄 Refreshing access token...');
             
             // Call Cloud Run service to refresh token
-            const response = await fetch('https://oauthtest-qjyr5poabq-uc.a.run.app/auth/google/refresh', {
+            const response = await fetch('https://oauthtest-609535336419.us-central1.run.app/auth/google/refresh', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -722,14 +728,21 @@ class OAuthHandler {
             });
             
             if (!response.ok) {
+                const errorData = await response.json();
+                if (errorData.action === 'reauthentication_required') {
+                    // Refresh token is invalid or expired. Clear everything and force login.
+                    this.clearAuthentication();
+                    this.notifyEmailAssistant('oauth_error', 'Your session has expired. Please sign in again.');
+                }
                 throw new Error(`Token refresh failed: ${response.status}`);
             }
             
             const tokenData = await response.json();
             
-            // Update stored tokens
+            // Update stored tokens with the new access token and expiry
             this.state.authToken = tokenData.access_token;
             localStorage.setItem('gmail_token', tokenData.access_token);
+            localStorage.setItem('gmail_token_expiry', tokenData.expires_in);
             localStorage.setItem('auth_timestamp', Date.now().toString());
             
             console.log('✅ Access token refreshed successfully');
@@ -737,6 +750,7 @@ class OAuthHandler {
             
         } catch (error) {
             console.error('❌ Token refresh failed:', error);
+            // Propagate error to the caller
             throw error;
         }
     }

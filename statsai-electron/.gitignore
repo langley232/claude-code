@@ -1,0 +1,30 @@
+node_modules/
+.env
+.env.local
+.env.production
+.env.staging
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Credentials and sensitive information
+../email-vectorization/prevent-regression.md
+
+# Local development
+.DS_Store
+.vscode/
+.idea/
+
+# Build outputs
+dist/
+build/
+*.tgz
+*.tar.gz
+
+# Testing
+coverage/
+.nyc_output/
+
+# Cloud deployment
+.gcloudignore

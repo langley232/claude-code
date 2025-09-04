@@ -3,11 +3,17 @@
   "version": "1.0.0",
   "description": "OAuth backend for Gmail authentication with refresh token storage",
   "main": "oauth-backend.js",
+  "scripts": {
+    "start": "NODE_ENV=production node oauth-backend.js"
+  },
   "dependencies": {
     "@google-cloud/functions-framework": "^3.3.0",
     "@google-cloud/secret-manager": "^4.2.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^4.18.2",
     "googleapis": "^126.0.1",
-    "cors": "^2.8.5"
+    "ssh2-sftp-client": "^12.0.1"
   },
   "engines": {
     "node": ">=18.0.0"
