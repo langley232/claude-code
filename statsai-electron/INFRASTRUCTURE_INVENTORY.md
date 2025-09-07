@@ -72,7 +72,7 @@ This document provides a comprehensive inventory of all deployed infrastructure 
 |----------|--------|---------------|
 | **Azure AD App Registration** | ✅ Active | EmailVectorization |
 | **Client ID** | ✅ Active | `313c822a-94d8-4913-b289-9c01ffb63c95` |
-| **Client Secret** | ✅ Active | `4DN8Q~2x_1OfUSB6GgzcEMfQ~cSoU.9izwUmla_M` |
+| **Client Secret** | ✅ Active | `YOUR_AZURE_CLIENT_SECRET` |
 | **Client Secret ID** | ✅ Active | `888888be-92ff-4086-b467-1496f4e6b85d` |
 | **Publisher Domain** | ✅ Active | `NETORGFT10012942.onmicrosoft.com` |
 
