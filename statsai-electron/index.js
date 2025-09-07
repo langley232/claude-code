@@ -42,7 +42,7 @@ functions.http('oauthTest', (req, res) => {
 });
 
 async function handleOAuthStart(req, res) {
-    const clientId = "609535336419-nar9fcv646la5lne0h10n2dcdmlm7qak.apps.googleusercontent.com";
+    const clientId = process.env.GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID";
     const redirectUri = "https://us-central1-solid-topic-466217-t9.cloudfunctions.net/oauthTest/auth/google/callback";
     const scope = "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.metadata https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile";
     const state = `test-${Date.now()}`;
@@ -75,8 +75,8 @@ async function handleOAuthCallback(req, res) {
 
     try {
         // Use hardcoded credentials that we know work
-        const clientId = "609535336419-nar9fcv646la5lne0h10n2dcdmlm7qak.apps.googleusercontent.com";
-        const clientSecret = "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";
+        const clientId = process.env.GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID";
+        const clientSecret = process.env.GOOGLE_CLIENT_SECRET || "YOUR_GOOGLE_CLIENT_SECRET";
 
         // Create OAuth2 client  
         const oauth2Client = new google.auth.OAuth2(
@@ -167,7 +167,7 @@ async function handleSimpleTest(req, res) {
     
     if (!code) {
         // Start OAuth flow with direct credentials
-        const clientId = "609535336419-nar9fcv646la5lne0h10n2dcdmlm7qak.apps.googleusercontent.com";
+        const clientId = process.env.GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID";
         const redirectUri = "https://us-central1-solid-topic-466217-t9.cloudfunctions.net/oauthTest/simple-test";
         
         const authUrl = `https://accounts.google.com/o/oauth2/auth?` +
@@ -184,8 +184,8 @@ async function handleSimpleTest(req, res) {
     // Handle callback with hardcoded credentials
     try {
         const oauth2Client = new google.auth.OAuth2(
-            "609535336419-nar9fcv646la5lne0h10n2dcdmlm7qak.apps.googleusercontent.com",
-            "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",
+            process.env.GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID",
+            process.env.GOOGLE_CLIENT_SECRET || "YOUR_GOOGLE_CLIENT_SECRET",
             "https://us-central1-solid-topic-466217-t9.cloudfunctions.net/oauthTest/simple-test"
         );
         

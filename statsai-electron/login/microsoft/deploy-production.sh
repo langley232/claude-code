@@ -72,7 +72,7 @@ gcloud run deploy $SERVICE_NAME \
     --set-env-vars "NEXT_PUBLIC_STYTCH_PUBLIC_TOKEN=public-token-live-30730eba-4d7e-422c-b17c-7be3efdc27b5" \
     --set-env-vars "STYTCH_PROJECT_ENV=production" \
     --set-env-vars "AZURE_CLIENT_ID=313c822a-94d8-4913-b289-9c01ffb63c95" \
-    --set-env-vars "AZURE_CLIENT_SECRET=4DN8Q~2x_1OfUSB6GgzcEMfQ~cSoU.9izwUmla_M" \
+    --set-env-vars "AZURE_CLIENT_SECRET=YOUR_AZURE_CLIENT_SECRET" \
     --set-env-vars "AZURE_TENANT_ID=9cef4078-3934-49cd-b448-c0d1d2f482fc"
 
 # Get the service URL

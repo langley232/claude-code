@@ -14,7 +14,7 @@ functions.http('simpleOAuthTest', async (req, res) => {
     
     if (!code) {
         // Start OAuth flow
-        const clientId = "609535336419-nar9fcv646la5lne0h10n2dcdmlm7qak.apps.googleusercontent.com";
+        const clientId = process.env.GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID";
         const redirectUri = "https://us-central1-solid-topic-466217-t9.cloudfunctions.net/simpleOAuthTest";
         
         const authUrl = `https://accounts.google.com/o/oauth2/auth?` +
@@ -31,8 +31,8 @@ functions.http('simpleOAuthTest', async (req, res) => {
     // Handle callback
     try {
         const oauth2Client = new google.auth.OAuth2(
-            "609535336419-nar9fcv646la5lne0h10n2dcdmlm7qak.apps.googleusercontent.com",
-            "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",
+            process.env.GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID",
+            process.env.GOOGLE_CLIENT_SECRET || "YOUR_GOOGLE_CLIENT_SECRET",
             "https://us-central1-solid-topic-466217-t9.cloudfunctions.net/simpleOAuthTest"
         );
         

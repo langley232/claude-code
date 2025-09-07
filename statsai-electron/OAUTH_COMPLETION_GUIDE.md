@@ -56,7 +56,7 @@ After extensive testing and configuration, the Microsoft OAuth system is **95% c
 ### New Azure AD Credentials (Active)
 ```bash
 AZURE_CLIENT_ID=313c822a-94d8-4913-b289-9c01ffb63c95
-AZURE_CLIENT_SECRET=4DN8Q~2x_1OfUSB6GgzcEMfQ~cSoU.9izwUmla_M
+AZURE_CLIENT_SECRET=YOUR_AZURE_CLIENT_SECRET
 AZURE_TENANT_ID=9cef4078-3934-49cd-b448-c0d1d2f482fc
 ```
 
