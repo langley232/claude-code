@@ -262,10 +262,18 @@ When creating websites or user interfaces, **always use the Aura design approach
 # After Playwright usage, cleanup screenshots
 rm -f *.png
 rm -rf /tmp/playwright-mcp-output/
+find . -name "*.png" -path "*playwright*" -delete
 
 # Close browser instances
 browser.close() # in Playwright context
 ```
+
+#### **IMPORTANT: Mandatory Playwright Cleanup**
+**ALWAYS delete all .png files after browser testing sessions:**
+- Delete all screenshots generated during testing
+- Clean up temporary files to prevent repository bloat
+- Use: `find . -name "*.png" -path "*playwright*" -delete`
+- This is a critical requirement for all browser testing workflows
 
 ## Working with This Repository
 

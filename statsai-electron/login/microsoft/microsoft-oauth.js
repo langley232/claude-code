@@ -18,8 +18,8 @@ class MicrosoftOAuthHandler {
             ],
             authority: 'https://login.microsoftonline.com/organizations',
             
-            // GCP backend for token processing (dedicated Microsoft service)
-            tokenProcessorUrl: 'https://microsoft-authhandler-609535336419.us-central1.run.app'
+            // GCP backend for token processing (similar to Google)
+            tokenProcessorUrl: 'https://authhandler-609535336419.us-central1.run.app'
         };
         
         this.state = {

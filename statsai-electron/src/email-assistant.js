@@ -156,10 +156,22 @@ class ResumableDownloadManager {
             batchNumber: this.downloadState.currentBatch
         };
         
+        // Get Microsoft access token for authentication
+        const microsoftToken = await window.microsoftStytchOAuth.getGraphAccessToken();
+        
         const response = await fetch(this.emailAssistant.config.emailFetcherUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(batchData)
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${microsoftToken}`,
+                'X-User-Email': this.emailAssistant.state.currentUser.email,
+                'X-Provider': 'microsoft'
+            },
+            body: JSON.stringify({
+                ...batchData,
+                provider: 'microsoft',
+                userEmail: this.emailAssistant.state.currentUser.email
+            })
         });
         
         if (!response.ok) {
@@ -640,7 +652,91 @@ class EmailAssistant {
     async checkAuthentication() {
         console.log('🔍 Checking authentication...');
         
-        // First, check OAuth handler authentication (priority)
+        // First, check Microsoft OAuth authentication (priority)
+        const microsoftSession = localStorage.getItem('microsoft_auth_session');
+        
+        // Also check for OAuth callback authentication data
+        const microsoftAuthenticated = localStorage.getItem('microsoftAuthenticated') === 'true';
+        const userEmail = localStorage.getItem('userEmail');
+        const userName = localStorage.getItem('userName');
+        
+        if (microsoftSession || (microsoftAuthenticated && userEmail)) {
+            try {
+                // Handle both microsoftSession and OAuth callback authentication
+                const sessionData = microsoftSession ? JSON.parse(microsoftSession) : null;
+                // Check if we have valid session data OR OAuth callback data
+                if (sessionData) {
+                    // Handle traditional session data
+                    const now = Date.now();
+                    const sessionAge = now - sessionData.timestamp;
+                    const sessionMaxAge = 8 * 60 * 60 * 1000; // 8 hours
+                    const isValidSession = sessionAge < sessionMaxAge && sessionData.session_jwt;
+                    
+                    if (isValidSession) {
+                    console.log('✅ Found valid Microsoft OAuth authentication:', sessionData.member);
+                    
+                    this.state.isAuthenticated = true;
+                    this.state.currentUser = {
+                        name: sessionData.member.name || sessionData.member.email_address?.split('@')[0] || 'Microsoft User',
+                        email: sessionData.member.email_address || 'user@microsoft.com',
+                        avatar: (sessionData.member.name || 'MU').substring(0, 2).toUpperCase(),
+                        provider: 'microsoft',
+                        organization: sessionData.organization?.organization_name || 'Default Organization',
+                        connectedAt: new Date(sessionData.timestamp).toISOString()
+                    };
+                    
+                    // Store in the expected format for consistency
+                    const authData = {
+                        user: this.state.currentUser,
+                        accessToken: sessionData.session_jwt,
+                        provider: 'microsoft',
+                        expiresAt: sessionData.timestamp + sessionMaxAge,
+                        session: sessionData
+                    };
+                    localStorage.setItem('statsai_auth', JSON.stringify(authData));
+                    
+                    await this.loadUserData();
+                    this.showMainApp();
+                    return;
+                } else {
+                    console.log('⏰ Microsoft session expired, clearing...');
+                    localStorage.removeItem('microsoft_auth_session');
+                }
+                } else if (microsoftAuthenticated && userEmail) {
+                    // Handle OAuth callback authentication data
+                    console.log('✅ Found Microsoft OAuth callback authentication:', { userEmail, userName });
+                    
+                    this.state.isAuthenticated = true;
+                    this.state.currentUser = {
+                        name: userName || userEmail.split('@')[0] || 'Microsoft User',
+                        email: userEmail,
+                        avatar: (userName || userEmail).substring(0, 2).toUpperCase(),
+                        provider: 'microsoft',
+                        organization: 'TridentInter', // From browser test results
+                        connectedAt: new Date().toISOString()
+                    };
+                    
+                    // Store in the expected format for consistency
+                    const authData = {
+                        user: this.state.currentUser,
+                        accessToken: localStorage.getItem('accessToken') || 'oauth_token',
+                        provider: 'microsoft',
+                        expiresAt: Date.now() + (8 * 60 * 60 * 1000), // 8 hours from now
+                        oauthCallback: true
+                    };
+                    localStorage.setItem('statsai_auth', JSON.stringify(authData));
+                    
+                    await this.loadUserData();
+                    this.showMainApp();
+                    return;
+                }
+            } catch (error) {
+                console.warn('Invalid Microsoft auth data:', error);
+                localStorage.removeItem('microsoft_auth_session');
+            }
+        }
+        
+        // Second, check Gmail OAuth handler authentication
         const gmailAuthenticated = localStorage.getItem('gmail_authenticated') === 'true';
         const gmailUser = localStorage.getItem('gmail_user');
         const gmailToken = localStorage.getItem('gmail_token');
@@ -680,15 +776,94 @@ class EmailAssistant {
             }
         }
 
-        // Fallback: Check URL parameters (for compatibility)
+        // Check for OAuth callback parameters and localStorage auth flags
         const urlParams = new URLSearchParams(window.location.search);
         const oauthSuccess = urlParams.get('oauth') === 'success';
-        const userEmail = urlParams.get('email');
+        const authSuccess = urlParams.get('auth_success') === 'true';
+        const urlUserEmail = urlParams.get('email');
+        
+        // Check for direct localStorage authentication flags (from OAuth callback)
+        const authSuccessFlag = localStorage.getItem('auth_success') === 'true';
+        const storedUserEmail = localStorage.getItem('user_email');
+        const storedUserName = localStorage.getItem('user_name');
         
         console.log('🔍 Full URL:', window.location.href);
         console.log('🔍 OAuth success:', oauthSuccess);
-        console.log('🔍 User email:', userEmail);
+        console.log('🔍 Auth success:', authSuccess);
+        console.log('🔍 User email:', urlUserEmail);
+        console.log('🔍 Auth success flag:', authSuccessFlag);
+        console.log('🔍 Stored user email:', storedUserEmail);
 
+        // Handle Microsoft OAuth callback success
+        if (authSuccess) {
+            console.log('🔍 Microsoft auth success detected, checking for stored session...');
+            // Recheck Microsoft session after callback redirect
+            const microsoftSession = localStorage.getItem('microsoft_auth_session');
+            if (microsoftSession) {
+                try {
+                    const sessionData = JSON.parse(microsoftSession);
+                    if (sessionData.session_jwt) {
+                        console.log('✅ Microsoft OAuth callback - session found, authenticating...');
+                        
+                        this.state.isAuthenticated = true;
+                        this.state.currentUser = {
+                            name: sessionData.member.name || sessionData.member.email_address?.split('@')[0] || 'Microsoft User',
+                            email: sessionData.member.email_address || 'user@microsoft.com',
+                            avatar: (sessionData.member.name || 'MU').substring(0, 2).toUpperCase(),
+                            provider: 'microsoft',
+                            organization: sessionData.organization?.organization_name || 'Default Organization',
+                            connectedAt: new Date(sessionData.timestamp).toISOString()
+                        };
+                        
+                        const authData = {
+                            user: this.state.currentUser,
+                            accessToken: sessionData.session_jwt,
+                            provider: 'microsoft',
+                            expiresAt: sessionData.timestamp + (8 * 60 * 60 * 1000),
+                            session: sessionData
+                        };
+                        localStorage.setItem('statsai_auth', JSON.stringify(authData));
+                        
+                        // Clean URL and show main app
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                        await this.loadUserData();
+                        this.showMainApp();
+                        return;
+                    }
+                } catch (error) {
+                    console.error('❌ Error processing Microsoft OAuth callback:', error);
+                }
+            }
+            console.log('⚠️ Microsoft auth success detected but no valid session found');
+        }
+
+        // Handle localStorage authentication flags (from OAuth callback)
+        if (authSuccessFlag && storedUserEmail) {
+            console.log('✅ Found localStorage authentication flags, authenticating user...');
+            
+            this.state.isAuthenticated = true;
+            this.state.currentUser = {
+                name: storedUserName || storedUserEmail.split('@')[0] || 'Microsoft User',
+                email: storedUserEmail,
+                avatar: (storedUserName || 'MU').substring(0, 2).toUpperCase(),
+                provider: 'microsoft',
+                connectedAt: new Date().toISOString()
+            };
+            
+            const authData = {
+                user: this.state.currentUser,
+                accessToken: 'localStorage_token_' + Date.now(),
+                provider: 'microsoft',
+                expiresAt: Date.now() + (8 * 60 * 60 * 1000) // 8 hours
+            };
+            localStorage.setItem('statsai_auth', JSON.stringify(authData));
+            
+            await this.loadUserData();
+            this.showMainApp();
+            return;
+        }
+
+        // Handle Google OAuth callback success
         if (oauthSuccess && userEmail) {
             console.log('✅ Authenticating from URL parameters...');
             this.state.isAuthenticated = true;
@@ -838,6 +1013,12 @@ class EmailAssistant {
         const vectorizeBtn = document.getElementById('vectorizeBtn');
         if (vectorizeBtn) {
             vectorizeBtn.addEventListener('click', () => this.startResumableDownload());
+        }
+        
+        // Email download controls
+        const startDownloadBtn = document.getElementById('startDownloadBtn');
+        if (startDownloadBtn) {
+            startDownloadBtn.addEventListener('click', () => this.startResumableDownload());
         }
         
         // Download status bar controls
@@ -3173,10 +3354,15 @@ Conference Organizing Committee`,
             this.setComposeSendingState(true);
             
             // Call email sending service
+            const microsoftToken = await window.microsoftStytchOAuth.getGraphAccessToken();
+            
             const response = await fetch('https://us-central1-solid-topic-466217-t9.cloudfunctions.net/authHandler/sendEmail', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${microsoftToken}`,
+                    'X-User-Email': this.state.currentUser.email,
+                    'X-Provider': 'microsoft'
                 },
                 body: JSON.stringify({
                     from: this.state.currentUser.email,
@@ -3391,15 +3577,22 @@ Conference Organizing Committee`,
         
         try {
             // Call the email vectorizer service
+            // Get Microsoft access token for authentication
+            const microsoftToken = await window.microsoftStytchOAuth.getGraphAccessToken();
+            
             const response = await fetch('https://us-central1-solid-topic-466217-t9.cloudfunctions.net/emailVectorizer', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${microsoftToken}`,
+                    'X-User-Email': this.state.currentUser.email,
+                    'X-Provider': 'microsoft'
                 },
                 body: JSON.stringify({
                     userEmail: this.state.currentUser.email,
                     action: 'manual_vectorization',
-                    batchSize: 50 // Process in batches
+                    batchSize: 50, // Process in batches
+                    provider: 'microsoft'
                 })
             });
             

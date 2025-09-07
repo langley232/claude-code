@@ -10,6 +10,12 @@ yarn-error.log*
 
 # Credentials and sensitive information
 ../email-vectorization/prevent-regression.md
+azure-credentials.json
+microsoft-config.json
+*.pem
+*.p12
+*.pfx
+client-secret-*.txt
 
 # Local development
 .DS_Store

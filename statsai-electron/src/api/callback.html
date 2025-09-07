@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OAuth Callback Processing...</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: white;
+        }
+        .callback-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .loading {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .status {
+            margin-top: 20px;
+            font-size: 16px;
+        }
+        .error {
+            color: #ff6b6b;
+        }
+        .success {
+            color: #4ecdc4;
+        }
+    </style>
+</head>
+<body>
+    <div class="callback-container">
+        <div class="loading">Processing Microsoft Authentication...</div>
+        <div class="spinner"></div>
+        <div class="status" id="status">Validating credentials...</div>
+    </div>
+
+    <script>
+        console.log('🔄 OAuth Callback Handler Started');
+        
+        // Parse URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Stytch callback parameters
+        const type = urlParams.get('type');
+        const token = urlParams.get('token');
+        const session = urlParams.get('session');
+        const organizations = urlParams.get('organizations');
+        const error = urlParams.get('error');
+        
+        // Direct Azure AD callback parameters
+        const code = urlParams.get('code');
+        const state = urlParams.get('state');
+        const azureError = urlParams.get('error');
+        const errorDescription = urlParams.get('error_description');
+        
+        const statusEl = document.getElementById('status');
+        
+        // Handle direct Azure AD authorization code (most common case)
+        if (code && !token) {
+            console.log('🔄 Processing direct Azure AD authorization code');
+            statusEl.innerHTML = '<span class="success">Authorization successful! Exchanging code for tokens...</span>';
+            
+            // Exchange authorization code for tokens via our backend
+            fetch(`https://microsoft-authhandler-609535336419.us-central1.run.app/auth/microsoft/callback`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    code: code,
+                    state: state
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('🔄 Backend token exchange response:', data);
+                
+                if (data.type === 'authenticated' && data.session_jwt) {
+                    // Store session in localStorage
+                    const authSession = {
+                        session_jwt: data.session_jwt,
+                        session_token: data.session_token,
+                        member: data.member,
+                        organization: data.organization,
+                        timestamp: Date.now()
+                    };
+                    
+                    localStorage.setItem('microsoft_auth_session', JSON.stringify(authSession));
+                    
+                    // Store Microsoft refresh token if available
+                    if (data.refresh_token) {
+                        localStorage.setItem('microsoft_refresh_token', data.refresh_token);
+                    }
+                    
+                    // Store token expiry if available
+                    if (data.expires_at) {
+                        localStorage.setItem('microsoft_token_expiry', data.expires_at);
+                    }
+                    
+                    console.log('✅ Microsoft session stored successfully');
+                    statusEl.innerHTML = '<span class="success">Authentication complete! Redirecting to Email Assistant...</span>';
+                    
+                    setTimeout(() => {
+                        window.location.href = '/email-assistant.html?auth_success=true';
+                    }, 2000);
+                    
+                } else {
+                    console.error('❌ Token exchange failed:', data);
+                    statusEl.innerHTML = '<span class="error">Token exchange failed. Redirecting...</span>';
+                    setTimeout(() => {
+                        window.location.href = '/email-assistant.html?auth_error=token_exchange_failed';
+                    }, 3000);
+                }
+            })
+            .catch(error => {
+                console.error('❌ Token exchange error:', error);
+                statusEl.innerHTML = '<span class="error">Authentication failed. Redirecting...</span>';
+                setTimeout(() => {
+                    window.location.href = '/email-assistant.html?auth_error=network_error';
+                }, 3000);
+            });
+            
+        } else if (azureError) {
+            statusEl.innerHTML = `<span class="error">Azure AD error: ${errorDescription || azureError}</span>`;
+            setTimeout(() => {
+                window.location.href = '/email-assistant.html?auth_error=' + encodeURIComponent(azureError);
+            }, 3000);
+        } else if (error) {
+            statusEl.innerHTML = `<span class="error">Authentication failed: ${error}</span>`;
+            setTimeout(() => {
+                window.location.href = '/email-assistant.html?auth_error=' + encodeURIComponent(error);
+            }, 3000);
+        } else if (type === 'authenticated' && session) {
+            try {
+                statusEl.innerHTML = '<span class="success">Authentication successful! Setting up session...</span>';
+                
+                // Parse session data
+                const sessionData = JSON.parse(decodeURIComponent(session));
+                
+                // Store session in localStorage
+                const authSession = {
+                    session_jwt: sessionData.session_jwt,
+                    session_token: sessionData.session_token,
+                    member: sessionData.member,
+                    organization: sessionData.organization,
+                    timestamp: Date.now()
+                };
+                
+                localStorage.setItem('microsoft_auth_session', JSON.stringify(authSession));
+                
+                // Store Microsoft refresh token if available
+                if (sessionData.refresh_token) {
+                    localStorage.setItem('microsoft_refresh_token', sessionData.refresh_token);
+                }
+                
+                // Store token expiry if available
+                if (sessionData.expires_at) {
+                    localStorage.setItem('microsoft_token_expiry', sessionData.expires_at);
+                }
+                
+                console.log('✅ Microsoft session stored successfully');
+                console.log('👤 User:', sessionData.member?.name || 'Unknown');
+                console.log('🏢 Organization:', sessionData.organization?.organization_name || 'Default');
+                
+                statusEl.innerHTML = '<span class="success">Session established! Redirecting to Email Assistant...</span>';
+                
+                // Redirect back to email assistant with success flag
+                setTimeout(() => {
+                    window.location.href = '/email-assistant.html?auth_success=true';
+                }, 2000);
+                
+            } catch (parseError) {
+                console.error('❌ Error parsing session data:', parseError);
+                statusEl.innerHTML = '<span class="error">Session parsing failed. Redirecting...</span>';
+                setTimeout(() => {
+                    window.location.href = '/email-assistant.html?auth_error=session_parse_failed';
+                }, 3000);
+            }
+            
+        } else if (type === 'organization_selection' && token && organizations) {
+            statusEl.innerHTML = '<span class="success">Multiple organizations found. Selecting primary organization...</span>';
+            
+            try {
+                const orgList = JSON.parse(decodeURIComponent(organizations));
+                
+                // Auto-select first organization for simplicity
+                if (orgList.length > 0) {
+                    const selectedOrg = orgList[0];
+                    
+                    // Store intermediate session data
+                    const intermediateSession = {
+                        type: 'organization_selection',
+                        token: token,
+                        selected_organization: selectedOrg,
+                        timestamp: Date.now()
+                    };
+                    
+                    localStorage.setItem('microsoft_auth_intermediate', JSON.stringify(intermediateSession));
+                    
+                    statusEl.innerHTML = `<span class="success">Selected organization: ${selectedOrg.organization_name}. Finalizing authentication...</span>`;
+                    
+                    // Redirect to email assistant which will complete org selection
+                    setTimeout(() => {
+                        window.location.href = '/email-assistant.html?auth_step=org_selection';
+                    }, 2000);
+                } else {
+                    throw new Error('No organizations available');
+                }
+                
+            } catch (orgError) {
+                console.error('❌ Error processing organizations:', orgError);
+                statusEl.innerHTML = '<span class="error">Organization selection failed. Redirecting...</span>';
+                setTimeout(() => {
+                    window.location.href = '/email-assistant.html?auth_error=org_selection_failed';
+                }, 3000);
+            }
+            
+        } else if (type === 'create_organization' && token) {
+            statusEl.innerHTML = '<span class="success">Creating new organization...</span>';
+            
+            // Automatically create organization via backend API
+            fetch(`http://localhost:8080/auth/microsoft/create-organization`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    intermediate_session_token: token,
+                    organization_name: 'TridentInter'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('🔄 Organization creation response:', data);
+                
+                if (data.type === 'authenticated' && data.session_jwt) {
+                    // Store completed authentication session
+                    const authSession = {
+                        session_jwt: data.session_jwt,
+                        session_token: data.session_token,
+                        member: data.member,
+                        organization: data.organization,
+                        timestamp: Date.now()
+                    };
+                    
+                    localStorage.setItem('microsoft_auth_session', JSON.stringify(authSession));
+                    localStorage.removeItem('microsoft_auth_intermediate');
+                    
+                    // Store Microsoft refresh token if available
+                    if (data.refresh_token) {
+                        localStorage.setItem('microsoft_refresh_token', data.refresh_token);
+                    }
+                    
+                    // Store token expiry if available
+                    if (data.expires_at) {
+                        localStorage.setItem('microsoft_token_expiry', data.expires_at);
+                    }
+                    
+                    console.log('✅ Organization created and session established');
+                    statusEl.innerHTML = '<span class="success">Organization created! Redirecting to Email Assistant...</span>';
+                    
+                    setTimeout(() => {
+                        window.location.href = '/email-assistant.html?auth_success=true';
+                    }, 2000);
+                    
+                } else {
+                    console.error('❌ Organization creation failed:', data);
+                    statusEl.innerHTML = '<span class="error">Organization creation failed. Redirecting...</span>';
+                    setTimeout(() => {
+                        window.location.href = '/email-assistant.html?auth_error=org_creation_failed';
+                    }, 3000);
+                }
+            })
+            .catch(error => {
+                console.error('❌ Organization creation error:', error);
+                statusEl.innerHTML = '<span class="error">Organization creation failed. Redirecting...</span>';
+                setTimeout(() => {
+                    window.location.href = '/email-assistant.html?auth_error=network_error';
+                }, 3000);
+            });
+            
+        } else {
+            console.error('❌ Unknown callback parameters:', { type, token, session, organizations, error });
+            statusEl.innerHTML = '<span class="error">Unknown authentication state. Redirecting...</span>';
+            setTimeout(() => {
+                window.location.href = '/email-assistant.html?auth_error=unknown_state';
+            }, 3000);
+        }
+        
+        // Log all parameters for debugging
+        console.log('📋 OAuth Callback Parameters:', {
+            type: type,
+            token: token ? '***' + token.slice(-6) : null,
+            session: session ? 'present' : null,
+            organizations: organizations ? 'present' : null,
+            error: error
+        });
+    </script>
+</body>
+</html>

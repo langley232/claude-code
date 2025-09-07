@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microsoft OAuth Callback - AtlasWeb</title>
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .callback-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4285f4;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-message {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .error-message {
+            color: #d32f2f;
+            background: rgba(211, 47, 47, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .success-message {
+            color: #2e7d32;
+            background: rgba(46, 125, 50, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .redirect-info {
+            font-size: 14px;
+            color: #666;
+            margin-top: 20px;
+        }
+
+        .microsoft-logo {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 20px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="callback-container">
+        <svg class="microsoft-logo" viewBox="0 0 23 23" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M1 1H11V11H1V1Z" fill="#F35325"/>
+            <path d="M12 1H22V11H12V1Z" fill="#81BC06"/>
+            <path d="M1 12H11V22H1V12Z" fill="#05A6F0"/>
+            <path d="M12 12H22V22H12V12Z" fill="#FFBA08"/>
+        </svg>
+        
+        <div id="loading" class="loading-state">
+            <div class="loading-spinner"></div>
+            <div class="status-message">Processing Microsoft authentication...</div>
+        </div>
+
+        <div id="error" class="error-state" style="display: none;">
+            <div class="error-message">
+                <h3>Authentication Error</h3>
+                <p id="error-details">An error occurred during authentication.</p>
+            </div>
+            <button onclick="retryAuthentication()" class="retry-btn">Try Again</button>
+        </div>
+
+        <div id="success" class="success-state" style="display: none;">
+            <div class="success-message">
+                <h3>Authentication Successful!</h3>
+                <p>Redirecting you to the email assistant...</p>
+            </div>
+        </div>
+
+        <div class="redirect-info">
+            <p>Powered by Microsoft Identity Platform + Stytch</p>
+        </div>
+    </div>
+
+    <script>
+        // Microsoft OAuth Callback Handler
+        // This handles the OAuth callback from Stytch after Microsoft authentication
+
+        const BACKEND_URL = 'https://microsoft-authhandler-609535336419.us-central1.run.app';
+        
+        class OAuthCallbackHandler {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                console.log('🔐 Microsoft OAuth callback handler initialized');
+                this.processCallback();
+            }
+
+            // Extract OAuth parameters from URL
+            getCallbackParams() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const hashParams = new URLSearchParams(window.location.hash.substring(1));
+                
+                return {
+                    // Stytch OAuth token
+                    token: urlParams.get('token') || hashParams.get('token'),
+                    stytch_token_type: urlParams.get('stytch_token_type') || hashParams.get('stytch_token_type'),
+                    
+                    // Error parameters
+                    error: urlParams.get('error') || hashParams.get('error'),
+                    error_description: urlParams.get('error_description') || hashParams.get('error_description'),
+                    
+                    // State parameter (CSRF protection)
+                    state: urlParams.get('state') || hashParams.get('state')
+                };
+            }
+
+            // Process the OAuth callback
+            async processCallback() {
+                try {
+                    const params = this.getCallbackParams();
+                    console.log('📋 Callback parameters:', { ...params, token: params.token ? '[PRESENT]' : '[MISSING]' });
+
+                    // Check for errors first
+                    if (params.error) {
+                        this.showError(`OAuth Error: ${params.error}`, params.error_description || 'Authentication failed');
+                        return;
+                    }
+
+                    // Check for required token
+                    if (!params.token) {
+                        this.showError('Missing Token', 'No authentication token received from Stytch');
+                        return;
+                    }
+
+                    // Send token to backend for processing
+                    const result = await this.exchangeToken(params.token, params.stytch_token_type);
+                    
+                    if (result.success) {
+                        await this.handleAuthSuccess(result);
+                    } else {
+                        this.showError('Authentication Failed', result.error || 'Unknown error occurred');
+                    }
+
+                } catch (error) {
+                    console.error('❌ Callback processing error:', error);
+                    this.showError('Processing Error', error.message || 'Failed to process authentication');
+                }
+            }
+
+            // Exchange token with backend
+            async exchangeToken(token, tokenType) {
+                try {
+                    console.log('🔄 Exchanging token with backend...');
+                    
+                    const response = await fetch(`${BACKEND_URL}/auth/microsoft/callback`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            token: token,
+                            stytch_token_type: tokenType || 'oauth'
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Backend error: ${response.status} ${response.statusText}`);
+                    }
+
+                    const result = await response.json();
+                    console.log('✅ Backend response:', result.type);
+                    
+                    return { success: true, ...result };
+                } catch (error) {
+                    console.error('❌ Token exchange error:', error);
+                    return { success: false, error: error.message };
+                }
+            }
+
+            // Handle successful authentication
+            async handleAuthSuccess(result) {
+                console.log('🎉 Authentication successful:', result.type);
+
+                if (result.type === 'organization_selection') {
+                    // User has multiple organizations - show selection UI
+                    await this.handleOrganizationSelection(result);
+                } else if (result.type === 'create_organization') {
+                    // New user needs to create an organization
+                    await this.handleOrganizationCreation(result);
+                } else if (result.type === 'authenticated') {
+                    // Fully authenticated - store session and redirect
+                    this.storeSession(result);
+                    this.showSuccess();
+                    this.redirectToApp();
+                }
+            }
+
+            // Handle organization selection (for users with multiple orgs)
+            async handleOrganizationSelection(result) {
+                // For now, auto-select the first organization or create a new one
+                if (result.organizations && result.organizations.length > 0) {
+                    const orgResult = await this.selectOrganization(
+                        result.intermediate_session_token,
+                        result.organizations[0].organization_id
+                    );
+                    
+                    if (orgResult.success) {
+                        this.storeSession(orgResult);
+                        this.showSuccess();
+                        this.redirectToApp();
+                    } else {
+                        this.showError('Organization Selection Failed', orgResult.error);
+                    }
+                } else {
+                    // No organizations - create a new one
+                    const orgResult = await this.createOrganization(
+                        result.intermediate_session_token,
+                        'AtlasWeb Organization'
+                    );
+                    
+                    if (orgResult.success) {
+                        this.storeSession(orgResult);
+                        this.showSuccess();
+                        this.redirectToApp();
+                    } else {
+                        this.showError('Organization Creation Failed', orgResult.error);
+                    }
+                }
+            }
+
+            // Handle organization creation
+            async handleOrganizationCreation(result) {
+                const orgResult = await this.createOrganization(
+                    result.intermediate_session_token,
+                    'AtlasWeb Organization'
+                );
+                
+                if (orgResult.success) {
+                    this.storeSession(orgResult);
+                    this.showSuccess();
+                    this.redirectToApp();
+                } else {
+                    this.showError('Organization Creation Failed', orgResult.error);
+                }
+            }
+
+            // Select an organization
+            async selectOrganization(intermediateToken, organizationId) {
+                try {
+                    const response = await fetch(`${BACKEND_URL}/auth/microsoft/select-organization`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            intermediate_session_token: intermediateToken,
+                            organization_id: organizationId
+                        })
+                    });
+
+                    return await response.json();
+                } catch (error) {
+                    return { success: false, error: error.message };
+                }
+            }
+
+            // Create a new organization
+            async createOrganization(intermediateToken, organizationName) {
+                try {
+                    const response = await fetch(`${BACKEND_URL}/auth/microsoft/create-organization`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            intermediate_session_token: intermediateToken,
+                            organization_name: organizationName
+                        })
+                    });
+
+                    return await response.json();
+                } catch (error) {
+                    return { success: false, error: error.message };
+                }
+            }
+
+            // Store session in localStorage
+            storeSession(result) {
+                const sessionData = {
+                    session_jwt: result.session_jwt,
+                    member: result.member,
+                    organization: result.organization,
+                    timestamp: Date.now()
+                };
+
+                localStorage.setItem('microsoft_auth_session', JSON.stringify(sessionData));
+                console.log('💾 Session stored successfully');
+            }
+
+            // Show loading state
+            showLoading(message = 'Processing...') {
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('error').style.display = 'none';
+                document.getElementById('success').style.display = 'none';
+                document.querySelector('.status-message').textContent = message;
+            }
+
+            // Show error state
+            showError(title, details) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('success').style.display = 'none';
+                
+                document.querySelector('#error h3').textContent = title;
+                document.getElementById('error-details').textContent = details;
+            }
+
+            // Show success state
+            showSuccess() {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'none';
+                document.getElementById('success').style.display = 'block';
+            }
+
+            // Redirect to the main application
+            redirectToApp() {
+                setTimeout(() => {
+                    window.location.href = '/email-assistant';
+                }, 2000);
+            }
+        }
+
+        // Retry authentication
+        function retryAuthentication() {
+            window.location.href = '/email-assistant';
+        }
+
+        // Initialize callback handler when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new OAuthCallbackHandler();
+        });
+    </script>
+</body>
+</html>

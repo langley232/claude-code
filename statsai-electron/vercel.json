@@ -28,6 +28,10 @@
       "dest": "/src/email-assistant.html"
     },
     {
+      "src": "/api/callback",
+      "dest": "/src/oauth-callback.html"
+    },
+    {
       "src": "/registration",
       "dest": "/src/registration.html"
     },
@@ -69,6 +73,13 @@
     {
       "src": "/email-assistant.js",
       "dest": "/src/email-assistant.js",
+      "headers": {
+        "Content-Type": "application/javascript"
+      }
+    },
+    {
+      "src": "/microsoft-stytch-oauth.js",
+      "dest": "/src/microsoft-stytch-oauth.js",
       "headers": {
         "Content-Type": "application/javascript"
       }

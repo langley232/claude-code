@@ -6,7 +6,7 @@
 class OAuthHandler {
     constructor() {
         this.config = {
-            // GCP OAuth endpoints
+            // GCP OAuth endpoints - using Cloud Run for both start and callback
             oauthStartUrl: 'https://oauthtest-609535336419.us-central1.run.app/auth/google/start',
             oauthCallbackUrl: 'https://oauthtest-609535336419.us-central1.run.app/auth/google/callback',
             

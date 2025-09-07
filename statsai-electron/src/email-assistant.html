@@ -226,7 +226,7 @@
                     <div class="email-list-header">
                         <div class="list-title">
                             <h2>Inbox</h2>
-                            <span class="email-count">12 emails</span>
+                            <span class="email-count" id="emailCount">0 emails</span>
                         </div>
                         <div class="list-actions">
                             <button class="list-action-btn" title="Select all">
@@ -234,6 +234,33 @@
                             </button>
                             <button class="list-action-btn" title="Refresh">
                                 <i data-lucide="refresh-cw"></i>
+                            </button>
+                            <button class="list-action-btn" title="Download Emails" id="startDownloadBtn">
+                                <i data-lucide="download"></i>
+                            </button>
+                            <button class="list-action-btn" title="Pause Download" id="pauseDownloadBtn" style="display: none;">
+                                <i data-lucide="pause"></i>
+                            </button>
+                            <button class="list-action-btn" title="Resume Download" id="resumeDownloadBtn" style="display: none;">
+                                <i data-lucide="play"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Email Download Status Bar -->
+                    <div class="download-status-bar" id="downloadStatusBar" style="display: none;">
+                        <div class="download-progress">
+                            <div class="progress-info">
+                                <span id="downloadStatusText">Preparing download...</span>
+                                <span id="downloadProgress">0/0</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="downloadProgressFill" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                        <div class="download-controls">
+                            <button class="download-control-btn" id="cancelDownloadBtn">
+                                <i data-lucide="x"></i>
                             </button>
                         </div>
                     </div>
@@ -549,6 +576,7 @@
     </div>
 
     <!-- Scripts -->
+    <script src="microsoft-stytch-oauth.js"></script>
     <script src="email-assistant.js"></script>
 </body>
 </html>

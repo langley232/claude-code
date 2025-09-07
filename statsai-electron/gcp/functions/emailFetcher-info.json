@@ -1,0 +1,51 @@
+{
+  "buildConfig": {
+    "automaticUpdatePolicy": {},
+    "build": "projects/609535336419/locations/us-central1/builds/9e6a46e3-ec7f-4029-aade-df7316ed35cc",
+    "dockerRegistry": "ARTIFACT_REGISTRY",
+    "dockerRepository": "projects/solid-topic-466217-t9/locations/us-central1/repositories/gcf-artifacts",
+    "entryPoint": "emailFetcher",
+    "runtime": "nodejs20",
+    "serviceAccount": "projects/solid-topic-466217-t9/serviceAccounts/609535336419-compute@developer.gserviceaccount.com",
+    "source": {
+      "storageSource": {
+        "bucket": "gcf-v2-sources-609535336419-us-central1",
+        "generation": "1756749059927151",
+        "object": "emailFetcher/function-source.zip"
+      }
+    },
+    "sourceProvenance": {
+      "resolvedStorageSource": {
+        "bucket": "gcf-v2-sources-609535336419-us-central1",
+        "generation": "1756749059927151",
+        "object": "emailFetcher/function-source.zip"
+      }
+    }
+  },
+  "createTime": "2025-08-31T10:50:11.929086574Z",
+  "environment": "GEN_2",
+  "labels": {
+    "deployment-tool": "cli-gcloud"
+  },
+  "name": "projects/solid-topic-466217-t9/locations/us-central1/functions/emailFetcher",
+  "satisfiesPzi": true,
+  "serviceConfig": {
+    "allTrafficOnLatestRevision": true,
+    "availableCpu": "0.3333",
+    "availableMemory": "512M",
+    "environmentVariables": {
+      "LOG_EXECUTION_ID": "true"
+    },
+    "ingressSettings": "ALLOW_ALL",
+    "maxInstanceCount": 60,
+    "maxInstanceRequestConcurrency": 1,
+    "revision": "emailfetcher-00007-ger",
+    "service": "projects/solid-topic-466217-t9/locations/us-central1/services/emailfetcher",
+    "serviceAccountEmail": "609535336419-compute@developer.gserviceaccount.com",
+    "timeoutSeconds": 540,
+    "uri": "https://emailfetcher-qjyr5poabq-uc.a.run.app"
+  },
+  "state": "ACTIVE",
+  "updateTime": "2025-09-01T17:53:16.084330323Z",
+  "url": "https://us-central1-solid-topic-466217-t9.cloudfunctions.net/emailFetcher"
+}

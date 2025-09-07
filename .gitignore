@@ -3,6 +3,10 @@
 .env.local
 .env.production
 
+# Microsoft OAuth Credentials (SECURITY)
+**/MICROSOFT_ARCHITECTURE_PLAN.md
+statsai-electron/MICROSOFT_ARCHITECTURE_PLAN.md
+
 # Node modules
 node_modules/
 npm-debug.log*
