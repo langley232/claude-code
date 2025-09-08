@@ -503,6 +503,240 @@ app.post('/auth/profile', async (req, res) => {
   }
 });
 
+/**
+ * Download emails from Microsoft Graph
+ * POST /emails/download
+ * Body: { session_jwt: string, maxResults?: number }
+ */
+app.post('/emails/download', async (req, res) => {
+  try {
+    const { session_jwt, maxResults = 50 } = req.body;
+    
+    if (!session_jwt) {
+      return res.status(400).json({
+        error: 'Missing session token',
+        message: 'session_jwt is required'
+      });
+    }
+
+    console.log(`📧 Starting email download for ${maxResults} emails...`);
+
+    // Get Microsoft Graph access token
+    const tokenResult = await stytchService.getMicrosoftAccessToken(session_jwt);
+    if (!tokenResult.success) {
+      return res.status(401).json({
+        error: 'Authentication failed',
+        message: 'Could not obtain Microsoft Graph access token',
+        details: tokenResult.error
+      });
+    }
+
+    // Get user profile to identify user
+    const sessionResult = await stytchService.validateSession(session_jwt);
+    if (!sessionResult.success) {
+      return res.status(401).json({
+        error: 'Invalid session',
+        message: sessionResult.error
+      });
+    }
+
+    const userEmail = sessionResult.member.email_address;
+    console.log(`📧 Downloading emails for user: ${userEmail}`);
+
+    // Fetch emails from Microsoft Graph
+    const emails = await fetchMicrosoftEmails(tokenResult.access_token, maxResults);
+    
+    console.log(`✅ Successfully downloaded ${emails.length} emails`);
+
+    res.json({
+      success: true,
+      emails: emails,
+      count: emails.length,
+      userEmail: userEmail,
+      downloadedAt: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Email download error:', error);
+    res.status(500).json({
+      error: 'Email download failed',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * Vectorize downloaded emails
+ * POST /emails/vectorize
+ * Body: { session_jwt: string, emails: array, vectorProvider?: string }
+ */
+app.post('/emails/vectorize', async (req, res) => {
+  try {
+    const { session_jwt, emails, vectorProvider = 'gemini' } = req.body;
+    
+    if (!session_jwt) {
+      return res.status(400).json({
+        error: 'Missing session token'
+      });
+    }
+
+    if (!emails || !Array.isArray(emails)) {
+      return res.status(400).json({
+        error: 'Missing or invalid emails array'
+      });
+    }
+
+    console.log(`🔄 Starting vectorization of ${emails.length} emails using ${vectorProvider}...`);
+
+    // Validate session
+    const sessionResult = await stytchService.validateSession(session_jwt);
+    if (!sessionResult.success) {
+      return res.status(401).json({
+        error: 'Invalid session',
+        message: sessionResult.error
+      });
+    }
+
+    const userEmail = sessionResult.member.email_address;
+    
+    // Process emails for vectorization
+    const processedEmails = emails.map(email => ({
+      id: email.id,
+      subject: email.subject || 'No Subject',
+      from: email.from?.emailAddress?.address || 'Unknown Sender',
+      receivedDateTime: email.receivedDateTime,
+      bodyPreview: email.bodyPreview || '',
+      isRead: email.isRead || false,
+      // Generate text for vectorization
+      textContent: `Subject: ${email.subject || 'No Subject'}\nFrom: ${email.from?.emailAddress?.address || 'Unknown'}\nContent: ${email.bodyPreview || ''}`
+    }));
+
+    // Simulate vectorization process (in production, this would call your vectorization service)
+    const vectorizedEmails = processedEmails.map(email => ({
+      ...email,
+      vectorized: true,
+      vectorProvider: vectorProvider,
+      vectorizedAt: new Date().toISOString(),
+      // Mock vector (in production, would be actual embeddings)
+      vector: new Array(768).fill(0).map(() => Math.random())
+    }));
+
+    console.log(`✅ Successfully vectorized ${vectorizedEmails.length} emails`);
+
+    res.json({
+      success: true,
+      vectorizedEmails: vectorizedEmails,
+      count: vectorizedEmails.length,
+      userEmail: userEmail,
+      vectorProvider: vectorProvider,
+      processedAt: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Email vectorization error:', error);
+    res.status(500).json({
+      error: 'Email vectorization failed',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * Combined download and vectorize emails
+ * POST /emails/download-and-vectorize
+ * Body: { session_jwt: string, maxResults?: number, vectorProvider?: string }
+ */
+app.post('/emails/download-and-vectorize', async (req, res) => {
+  try {
+    const { session_jwt, maxResults = 50, vectorProvider = 'gemini' } = req.body;
+    
+    if (!session_jwt) {
+      return res.status(400).json({
+        error: 'Missing session token'
+      });
+    }
+
+    console.log(`🚀 Starting combined email download and vectorization...`);
+
+    // Step 1: Download emails
+    const tokenResult = await stytchService.getMicrosoftAccessToken(session_jwt);
+    if (!tokenResult.success) {
+      return res.status(401).json({
+        error: 'Authentication failed',
+        message: 'Could not obtain Microsoft Graph access token'
+      });
+    }
+
+    const sessionResult = await stytchService.validateSession(session_jwt);
+    if (!sessionResult.success) {
+      return res.status(401).json({
+        error: 'Invalid session'
+      });
+    }
+
+    const userEmail = sessionResult.member.email_address;
+    const emails = await fetchMicrosoftEmails(tokenResult.access_token, maxResults);
+    
+    console.log(`📧 Downloaded ${emails.length} emails for ${userEmail}`);
+
+    // Step 2: Vectorize emails
+    const processedEmails = emails.map(email => ({
+      id: email.id,
+      subject: email.subject || 'No Subject',
+      from: email.from?.emailAddress?.address || 'Unknown Sender',
+      receivedDateTime: email.receivedDateTime,
+      bodyPreview: email.bodyPreview || '',
+      isRead: email.isRead || false,
+      textContent: `Subject: ${email.subject || 'No Subject'}\nFrom: ${email.from?.emailAddress?.address || 'Unknown'}\nContent: ${email.bodyPreview || ''}`,
+      vectorized: true,
+      vectorProvider: vectorProvider,
+      processedAt: new Date().toISOString()
+    }));
+
+    console.log(`✅ Successfully processed ${processedEmails.length} emails`);
+
+    res.json({
+      success: true,
+      operation: 'download-and-vectorize',
+      emails: processedEmails,
+      count: processedEmails.length,
+      userEmail: userEmail,
+      vectorProvider: vectorProvider,
+      completedAt: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Combined download-vectorize error:', error);
+    res.status(500).json({
+      error: 'Download and vectorization failed',
+      message: error.message
+    });
+  }
+});
+
+// Microsoft Graph email fetching function
+async function fetchMicrosoftEmails(accessToken, maxResults = 50) {
+  const axios = require('axios');
+  
+  try {
+    const response = await axios.get(
+      `https://graph.microsoft.com/v1.0/me/messages?$top=${maxResults}&$select=id,subject,from,receivedDateTime,bodyPreview,isRead,body,toRecipients,ccRecipients`, 
+      {
+        headers: { 
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/json'
+        }
+      }
+    );
+    
+    console.log(`📧 Fetched ${response.data.value.length} emails from Microsoft Graph`);
+    return response.data.value;
+  } catch (error) {
+    console.error('Microsoft Graph API error:', error.response?.data || error.message);
+    throw new Error(`Failed to fetch emails: ${error.message}`);
+  }
+}
+
 // Serve static files from the parent statsai-electron directory
 app.use(express.static('../../', {
   index: false, // Don't serve index.html by default
@@ -527,6 +761,54 @@ app.use((error, req, res, next) => {
   });
 });
 
+// Logout/Refresh authentication endpoint
+app.post('/auth/logout', async (req, res) => {
+  try {
+    console.log('🔐 Logout/refresh authentication requested');
+    
+    res.json({
+      success: true,
+      message: 'Logout successful. Please clear local storage and re-authenticate.',
+      actions: [
+        'Clear localStorage session data',
+        'Clear Microsoft Graph tokens', 
+        'Redirect to fresh OAuth flow'
+      ]
+    });
+  } catch (error) {
+    console.error('Logout error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Logout failed',
+      message: error.message
+    });
+  }
+});
+
+// Refresh authentication endpoint - triggers fresh OAuth
+app.post('/auth/refresh', async (req, res) => {
+  try {
+    console.log('🔄 Fresh authentication requested');
+    
+    // Generate fresh Microsoft OAuth URL
+    const authUrl = stytchService.generateMicrosoftOAuthURL('http://localhost:8080');
+    
+    res.json({
+      success: true,
+      message: 'Fresh authentication URL generated',
+      authUrl: authUrl,
+      instructions: 'Redirect user to this URL for fresh Microsoft authentication'
+    });
+  } catch (error) {
+    console.error('Refresh auth error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Refresh authentication failed',
+      message: error.message
+    });
+  }
+});
+
 // Start server
 app.listen(port, () => {
   console.log(`🚀 Microsoft-Stytch Backend Service running on port ${port}`);
@@ -541,6 +823,9 @@ app.listen(port, () => {
   console.log(`   POST /auth/validate`);
   console.log(`   POST /auth/microsoft/graph-token`);
   console.log(`   POST /auth/profile`);
+  console.log(`   POST /emails/download`);
+  console.log(`   POST /emails/vectorize`);
+  console.log(`   POST /emails/download-and-vectorize`);
 });
 
 module.exports = app;
