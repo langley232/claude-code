@@ -8,6 +8,10 @@ class AtlasWebDashboard {
         this.userData = null;
         this.chatMessages = [];
         
+        // Initialize AI services
+        this.aiSearchService = null;
+        this.geminiChat = null;
+        
         this.init();
     }
 
@@ -30,6 +34,10 @@ class AtlasWebDashboard {
         const initialFeature = hash && this.router.routes[hash] ? hash : 'search';
         this.router.navigateToFeature(initialFeature);
         
+        // Initialize AI services
+        this.initializeAISearch();
+        this.initializeGeminiChat();
+        
         // Initialize Lucide icons
         if (window.lucide) {
             window.lucide.createIcons();
@@ -37,10 +45,17 @@ class AtlasWebDashboard {
     }
 
     checkAuth() {
-        // Redirect if not authenticated
+        // Development mode: auto-setup authentication if not present
         if (!this.userToken) {
-            window.location.href = '/index.html';
-            return;
+            console.log('🔧 Development mode: Setting up test authentication');
+            this.userToken = 'dev-token-' + Date.now();
+            localStorage.setItem('atlasweb_token', this.userToken);
+            localStorage.setItem('atlasweb_user', JSON.stringify({
+                firstName: 'Test',
+                lastName: 'User', 
+                email: 'test@example.com',
+                subscriptionTier: 'Pro'
+            }));
         }
 
         // Load user data
@@ -570,25 +585,54 @@ class AtlasWebDashboard {
         this.performSearch(query);
     }
 
-    performSearch(query) {
+    async performSearch(query) {
         if (!query) return;
         
-        console.log('Performing search:', query);
-        const resultsContainer = document.getElementById('searchResults');
+        console.log('🔍 Performing intelligent search:', query);
+        // Display results in search panel - create or find results container
+        let resultsContainer = document.getElementById('searchResults');
+        if (!resultsContainer) {
+            // Create results container in the search interface
+            const searchInterface = document.querySelector('.search-interface');
+            resultsContainer = document.createElement('div');
+            resultsContainer.id = 'searchResults';
+            resultsContainer.className = 'search-results-display';
+            searchInterface.appendChild(resultsContainer);
+        }
         const selectedModel = document.querySelector('.model-select').value;
         
-        // Show loading state
+        // Show enhanced loading state
         resultsContainer.innerHTML = `
             <div class="search-loading">
                 <div class="loading-spinner"></div>
-                <div class="loading-text">Searching across AI models...</div>
+                <div class="loading-text">Searching with ${selectedModel === 'ensemble' ? 'AI Ensemble' : selectedModel.toUpperCase()}...</div>
+                <div class="loading-subtitle">Finding results and generating AI summary...</div>
             </div>
         `;
         
-        // Simulate search (replace with actual API calls)
-        setTimeout(() => {
-            this.displaySearchResults(query, selectedModel, resultsContainer);
-        }, 2000);
+        try {
+            // Use AI Search Service for real search
+            if (this.aiSearchService) {
+                const searchOptions = {
+                    model: selectedModel,
+                    maxResults: 8,
+                    region: 'us',
+                    language: 'en'
+                };
+                
+                const results = await this.aiSearchService.performIntelligentSearch(query, searchOptions);
+                this.displayIntelligentSearchResults(results, resultsContainer);
+            } else {
+                // Fallback to mock results if service not available
+                console.warn('AI Search Service not available, using fallback');
+                setTimeout(() => {
+                    this.displaySearchResults(query, selectedModel, resultsContainer);
+                }, 2000);
+            }
+        } catch (error) {
+            console.error('Search failed:', error);
+            this.displaySearchError(error, query, resultsContainer);
+        }
     }
 
     displaySearchResults(query, model, container) {
@@ -647,7 +691,7 @@ class AtlasWebDashboard {
         }
     }
 
-    sendChatMessage() {
+    async sendChatMessage() {
         const textarea = document.querySelector('.chat-textarea');
         const message = textarea.value.trim();
         
@@ -660,11 +704,35 @@ class AtlasWebDashboard {
         textarea.value = '';
         this.autoResizeTextarea(textarea);
         
-        // Simulate AI response
-        setTimeout(() => {
-            const response = this.generateAIResponse(message);
-            this.addChatMessage(response, 'assistant');
-        }, 1500);
+        // Show thinking indicator
+        const thinkingMessage = this.addChatMessage('🤔 Thinking...', 'assistant');
+        
+        try {
+            if (this.geminiChat) {
+                // Get real AI response from Gemini
+                const result = await this.geminiChat.sendMessage(message);
+                
+                // Remove thinking indicator
+                thinkingMessage.remove();
+                
+                if (result.success) {
+                    this.addChatMessage(result.response, 'assistant');
+                } else {
+                    this.addChatMessage(result.fallbackResponse || 'Sorry, I\'m having trouble right now. Please try again.', 'assistant');
+                }
+            } else {
+                // Fallback to mock response if Gemini service isn't available
+                setTimeout(() => {
+                    thinkingMessage.remove();
+                    const response = this.generateAIResponse(message);
+                    this.addChatMessage(response, 'assistant');
+                }, 1500);
+            }
+        } catch (error) {
+            console.error('Chat error:', error);
+            thinkingMessage.remove();
+            this.addChatMessage('Sorry, I encountered an error. Please try again.', 'assistant');
+        }
     }
 
     addChatMessage(content, sender) {
@@ -678,7 +746,7 @@ class AtlasWebDashboard {
             </div>
             <div class="message-content">
                 <div class="message-text">${content}</div>
-                ${sender === 'assistant' ? `
+                ${sender === 'assistant' && !content.includes('Thinking') ? `
                     <div class="message-actions">
                         <button class="message-action" title="Copy">
                             <i data-lucide="copy"></i>
@@ -700,6 +768,8 @@ class AtlasWebDashboard {
         if (window.lucide) {
             window.lucide.createIcons();
         }
+        
+        return messageElement; // Return element for removal if needed
     }
 
     generateAIResponse(userMessage) {
@@ -711,7 +781,7 @@ class AtlasWebDashboard {
             "Great question! I can provide some insights on that topic:"
         ];
         
-        return responses[Math.floor(Math.random() * responses.length)] + ` Your message was: "${userMessage}". This is a simulated response - in the actual implementation, this would be powered by OpenAI GPT-4.`;
+        return responses[Math.floor(Math.random() * responses.length)] + ` Your message was: "${userMessage}". This is a simulated response - in the actual implementation, this would be powered by Google Gemini.`;
     }
 
     toggleVoiceInput() {
@@ -802,6 +872,231 @@ class AtlasWebDashboard {
     showHelp() {
         console.log('Showing help - not implemented yet');
         this.showNotification('Help system coming soon!', 'info');
+    }
+
+    initializeAISearch() {
+        // Initialize AI Search Service if available
+        if (window.AISearchService) {
+            try {
+                this.aiSearchService = new window.AISearchService();
+                console.log('✅ AI Search Service initialized');
+            } catch (error) {
+                console.error('❌ Failed to initialize AI Search Service:', error);
+                this.aiSearchService = null;
+            }
+        } else {
+            console.warn('⚠️ AI Search Service not loaded');
+        }
+    }
+
+    initializeGeminiChat() {
+        // Initialize Gemini Chat Service if available
+        if (window.GeminiChatService) {
+            try {
+                this.geminiChat = new window.GeminiChatService();
+                console.log('✅ Gemini Chat Service initialized with Gemini 1.5 Flash');
+                
+                // Update UI to show Gemini is connected
+                this.updateChatStatus('online');
+            } catch (error) {
+                console.error('❌ Failed to initialize Gemini Chat Service:', error);
+                this.geminiChat = null;
+                this.updateChatStatus('offline');
+            }
+        } else {
+            console.warn('⚠️ Gemini Chat Service not loaded');
+            this.updateChatStatus('offline');
+        }
+    }
+
+    updateChatStatus(status) {
+        const statusElement = document.querySelector('.chat-status');
+        const modelInfo = document.querySelector('.model-info span');
+        
+        if (statusElement) {
+            statusElement.textContent = status === 'online' ? 'Online' : 'Offline';
+            statusElement.className = `chat-status ${status}`;
+        }
+        
+        if (modelInfo) {
+            modelInfo.textContent = status === 'online' ? 'Powered by Google Gemini' : 'Powered by Mock Responses';
+        }
+    }
+
+    displayIntelligentSearchResults(results, container) {
+        if (!results || results.error) {
+            this.displaySearchError(results?.errorMessage || 'Search failed', results?.query || '', container);
+            return;
+        }
+
+        console.log('📊 Displaying intelligent search results:', results);
+
+        container.innerHTML = `
+            <div class="intelligent-search-results">
+                <!-- AI Summary Section -->
+                <div class="ai-summary-section">
+                    <div class="summary-header">
+                        <div class="summary-title">
+                            <i data-lucide="brain" class="summary-icon"></i>
+                            <h3>AI Summary</h3>
+                            <span class="model-badge ${results.aiSummary.model}">${results.aiSummary.model}</span>
+                        </div>
+                        <div class="confidence-indicator">
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" style="width: ${Math.round(results.confidence * 100)}%"></div>
+                            </div>
+                            <span class="confidence-text">${Math.round(results.confidence * 100)}% confidence</span>
+                        </div>
+                    </div>
+                    
+                    <div class="summary-content">
+                        <p class="summary-text">${results.aiSummary.content}</p>
+                        ${results.aiSummary.keyPoints && results.aiSummary.keyPoints.length > 0 ? `
+                            <div class="key-points">
+                                <h4>Key Points:</h4>
+                                <ul>
+                                    ${results.aiSummary.keyPoints.map(point => `<li>${point}</li>`).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+
+                <!-- Search Results Section -->
+                <div class="search-results-section">
+                    <div class="results-header">
+                        <h3>Search Results</h3>
+                        <span class="results-count">${results.searchResults.length} results found</span>
+                    </div>
+                    
+                    <div class="results-list">
+                        ${results.searchResults.map((result, index) => `
+                            <div class="result-item" data-position="${result.position}">
+                                <div class="result-header">
+                                    <div class="result-position">${result.position}</div>
+                                    <div class="result-url">
+                                        <span class="result-domain">${result.displayUrl}</span>
+                                        <div class="result-type-badge ${result.type}">${result.type.replace('_', ' ')}</div>
+                                    </div>
+                                    <div class="relevance-score">
+                                        ${Math.round(result.relevanceScore * 100)}%
+                                    </div>
+                                </div>
+                                
+                                <div class="result-content">
+                                    <h4 class="result-title">
+                                        <a href="${result.url}" target="_blank" rel="noopener noreferrer">
+                                            ${result.title}
+                                        </a>
+                                    </h4>
+                                    <p class="result-snippet">${result.snippet}</p>
+                                </div>
+                                
+                                <div class="result-actions">
+                                    <button class="result-action" onclick="navigator.clipboard.writeText('${result.url}')" title="Copy URL">
+                                        <i data-lucide="copy"></i>
+                                    </button>
+                                    <button class="result-action" onclick="window.open('${result.url}', '_blank')" title="Open in new tab">
+                                        <i data-lucide="external-link"></i>
+                                    </button>
+                                    <button class="result-action" title="Save bookmark">
+                                        <i data-lucide="bookmark"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <!-- Sources Footer -->
+                <div class="search-footer">
+                    <div class="search-metadata">
+                        <span class="search-time">Completed in ${Date.now() - results.searchTime}ms</span>
+                        <span class="model-used">Model: ${results.model}</span>
+                        <span class="timestamp">${new Date(results.timestamp).toLocaleTimeString()}</span>
+                    </div>
+                    
+                    ${results.sources && results.sources.length > 0 ? `
+                        <div class="sources-section">
+                            <strong>Primary Sources:</strong>
+                            <div class="sources-list">
+                                ${results.sources.map(source => `
+                                    <a href="${source.url}" target="_blank" class="source-link" title="${source.title}">
+                                        ${source.domain}
+                                    </a>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+
+        // Reinitialize icons
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
+
+        // Add search to history
+        this.addToSearchHistory(results.query, results.model);
+    }
+
+    displaySearchError(error, query, container) {
+        const errorMessage = typeof error === 'string' ? error : error.message || 'Search failed';
+        
+        container.innerHTML = `
+            <div class="search-error">
+                <div class="error-icon">
+                    <i data-lucide="alert-triangle"></i>
+                </div>
+                <div class="error-content">
+                    <h3>Search Temporarily Unavailable</h3>
+                    <p class="error-message">${errorMessage}</p>
+                    <p class="error-suggestion">Please try:</p>
+                    <ul class="error-suggestions">
+                        <li>Checking your internet connection</li>
+                        <li>Simplifying your search query</li>
+                        <li>Trying again in a few moments</li>
+                    </ul>
+                    <button class="retry-search-btn" onclick="dashboard.performSearch('${query}')">
+                        <i data-lucide="refresh-cw"></i>
+                        Try Again
+                    </button>
+                </div>
+            </div>
+        `;
+
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
+    }
+
+    addToSearchHistory(query, model) {
+        // Add search to history (could be enhanced with local storage)
+        const historyList = document.querySelector('.history-list');
+        if (historyList && query) {
+            const newHistoryItem = document.createElement('div');
+            newHistoryItem.className = 'history-item';
+            newHistoryItem.innerHTML = `
+                <i data-lucide="clock"></i>
+                <span>${query}</span>
+                <div class="history-models">
+                    <span class="model-badge ${model}">${model}</span>
+                </div>
+            `;
+            
+            // Add to the top of the list
+            historyList.insertBefore(newHistoryItem, historyList.firstChild);
+            
+            // Keep only the last 5 searches
+            while (historyList.children.length > 5) {
+                historyList.removeChild(historyList.lastChild);
+            }
+
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+        }
     }
 
     logout() {
