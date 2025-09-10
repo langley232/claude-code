@@ -9,11 +9,18 @@
   "dependencies": {
     "@google-cloud/functions-framework": "^3.3.0",
     "@google-cloud/secret-manager": "^4.2.2",
+    "@tailwindcss/forms": "^0.5.10",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^4.18.2",
     "googleapis": "^126.0.1",
-    "ssh2-sftp-client": "^12.0.1"
+    "lucide-react": "^0.542.0",
+    "ssh2-sftp-client": "^12.0.1",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss": "^4.1.13",
+    "tailwindcss-animate": "^1.0.7"
   },
   "engines": {
     "node": ">=18.0.0"

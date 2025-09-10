@@ -294,5 +294,374 @@ When contributing to or modifying this agent infrastructure:
 - **Permission Issues**: Check file permissions on setup script
 - **Missing Tools**: Verify MCP server installation and configuration
 
+## Dashboard UI Agent Best Practices
+
+### Core Dashboard Design Principles
+
+#### 1. Information Hierarchy & Layout
+- **F-Pattern Layout**: Users scan in an F-pattern - place critical metrics top-left
+- **Progressive Disclosure**: Show overview first, drill-down details on demand
+- **White Space Usage**: 60/40 rule - 60% content, 40% white space for breathing room
+- **Grid Systems**: Use 12-column grid with consistent spacing (8px, 16px, 24px, 32px)
+
+#### 2. Data Visualization Standards
+- **Chart Selection**: Line charts for trends, bar charts for comparisons, pie charts for parts-to-whole (max 7 segments)
+- **Color Psychology**: Green for positive metrics, red for alerts, blue for neutral information
+- **Accessibility**: WCAG AA compliance, minimum 4.5:1 contrast ratio, colorblind-friendly palettes
+- **Real-time Updates**: Use subtle animations for data changes, avoid jarring transitions
+
+#### 3. Component Architecture with shadcn/ui
+```typescript
+// Dashboard Card Component Structure
+const DashboardCard = ({ title, value, trend, icon, className }) => {
+  return (
+    <Card className={cn("p-6", className)}>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        {icon}
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{value}</div>
+        {trend && (
+          <p className="text-xs text-muted-foreground">
+            <span className={trend.positive ? "text-green-600" : "text-red-600"}>
+              {trend.value}
+            </span>
+            {" "}
+            {trend.label}
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+```
+
+#### 4. Responsive Dashboard Design
+- **Mobile First**: Design for 320px minimum width
+- **Breakpoints**: sm(640px), md(768px), lg(1024px), xl(1280px), 2xl(1536px)
+- **Card Stacking**: Vertical stacking on mobile, grid layouts on desktop
+- **Touch Targets**: Minimum 44px touch target size for mobile interactions
+
+#### 5. Performance & Loading States
+- **Skeleton Loading**: Use shadcn Skeleton components for progressive loading
+- **Virtualization**: Implement virtual scrolling for large datasets (react-window)
+- **Caching Strategy**: SWR or React Query for efficient data fetching
+- **Lazy Loading**: Code-split dashboard components by feature
+
+#### 6. Dashboard Component Library (shadcn Integration)
+```bash
+# Essential Dashboard Components
+npx shadcn-ui@latest add card
+npx shadcn-ui@latest add button
+npx shadcn-ui@latest add badge
+npx shadcn-ui@latest add progress
+npx shadcn-ui@latest add skeleton
+npx shadcn-ui@latest add table
+npx shadcn-ui@latest add select
+npx shadcn-ui@latest add date-picker
+npx shadcn-ui@latest add chart
+```
+
+#### 7. UX Patterns for Dashboard Interactions
+- **Drill-Down Navigation**: Breadcrumb trails, contextual back buttons
+- **Filtering & Search**: Persistent filter states, faceted search
+- **Export Functionality**: PDF, CSV, Excel export options
+- **Customization**: Drag-and-drop dashboard widgets, personal preferences
+
+## Mobile UX Agent Best Practices
+
+### iOS Design Standards
+
+#### 1. iOS Human Interface Guidelines Compliance
+- **Navigation**: Use UINavigationController patterns, swipe gestures for back navigation
+- **Typography**: SF Pro system font, dynamic type support for accessibility
+- **Color Scheme**: Support both light and dark modes with semantic colors
+- **Layout**: Safe area compliance, respect notch and home indicator areas
+
+#### 2. Glass Design Implementation (iOS)
+```css
+/* Glass Morphism Effects for iOS */
+.glass-card {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+  border-radius: 16px;
+}
+
+.glass-dark {
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* iOS-style blurred background */
+.ios-blur {
+  backdrop-filter: saturate(180%) blur(20px);
+  background: rgba(255, 255, 255, 0.8);
+}
+```
+
+#### 3. iOS Touch Interactions
+- **Haptic Feedback**: Implement UIImpactFeedback for user actions
+- **Gesture Recognition**: Swipe, pinch, long press, 3D Touch (where available)
+- **Animation**: Use ease-in-out timing, 0.3s duration for transitions
+- **Pull-to-Refresh**: Native iOS refresh control implementation
+
+#### 4. iOS Voice Enablement (Siri Integration)
+```javascript
+// Voice command integration example
+const handleVoiceCommand = (command) => {
+  switch(command.intent) {
+    case 'search_emails':
+      return processEmailSearch(command.query);
+    case 'compose_email':
+      return initiateEmailComposition(command.recipient);
+    case 'get_analytics':
+      return displayAnalytics(command.timeframe);
+  }
+};
+
+// Siri Shortcuts integration
+const registerSiriShortcuts = () => {
+  const shortcuts = [
+    {
+      phrase: "Check my email analytics",
+      action: "openEmailAnalytics",
+      category: "productivity"
+    },
+    {
+      phrase: "Search for recent emails",
+      action: "openEmailSearch",
+      category: "communication"
+    }
+  ];
+  // Register with SiriKit
+};
+```
+
+### Android Material Design Standards
+
+#### 1. Material Design 3 (Material You)
+- **Dynamic Color**: Adapt to user's wallpaper colors
+- **Typography**: Roboto font family, scalable text sizes
+- **Motion**: Material motion system with emphasis on purposeful animation
+- **Components**: Use Material Design Components (MDC) or shadcn alternatives
+
+#### 2. Android Touch & Gesture Patterns
+- **Floating Action Button**: Primary action accessibility
+- **Bottom Navigation**: Main navigation for 3-5 top-level destinations
+- **Swipe Gestures**: Swipe to dismiss, swipe for navigation
+- **Edge-to-Edge**: Utilize full screen real estate with proper padding
+
+#### 3. Android Voice Integration (Google Assistant)
+```javascript
+// Google Assistant Actions integration
+const handleAssistantAction = (action) => {
+  return {
+    'actions.intent.MAIN': () => launchMainActivity(),
+    'custom.search.emails': (params) => searchEmails(params.query),
+    'custom.compose.email': (params) => composeEmail(params.recipient),
+    'custom.get.stats': () => getAnalytics()
+  }[action.name]?.(action.parameters);
+};
+
+// Voice command processing
+const processVoiceInput = async (speechResult) => {
+  const intent = await parseIntent(speechResult);
+  return handleAssistantAction(intent);
+};
+```
+
+#### 4. Android Adaptive Design
+- **Screen Sizes**: Support from 4" phones to 13" tablets
+- **Density Independence**: Use dp (density-independent pixels)
+- **Configuration Changes**: Handle rotation, window size changes
+- **Fold Support**: Optimize for foldable devices
+
+### Cross-Platform Mobile Considerations
+
+#### 1. Touch Interface Standards
+- **Minimum Touch Target**: 44pt (iOS) / 48dp (Android)
+- **Gesture Conflicts**: Avoid competing gestures in same area
+- **Thumb Zones**: Place primary actions in comfortable thumb reach
+- **One-Handed Usage**: Consider reachability on large screens
+
+#### 2. Performance Optimization
+- **Image Optimization**: WebP format, responsive images, lazy loading
+- **Bundle Size**: Code splitting, tree shaking, dynamic imports
+- **Memory Management**: Proper cleanup, avoid memory leaks
+- **Battery Efficiency**: Minimize background processing, optimize animations
+
+#### 3. Voice Enablement Architecture
+```typescript
+// Universal voice interface
+interface VoiceCommand {
+  intent: string;
+  entities: Record<string, any>;
+  confidence: number;
+  platform: 'ios' | 'android' | 'web';
+}
+
+class VoiceController {
+  private handlers = new Map<string, Function>();
+  
+  register(intent: string, handler: Function) {
+    this.handlers.set(intent, handler);
+  }
+  
+  async process(command: VoiceCommand) {
+    const handler = this.handlers.get(command.intent);
+    if (handler && command.confidence > 0.8) {
+      return await handler(command.entities);
+    }
+    return this.handleUnknownCommand(command);
+  }
+}
+```
+
+## Component Library Integration
+
+### shadcn/ui Mobile Optimization
+
+#### 1. Mobile-First Component Configuration
+```json
+// components.json for mobile projects
+{
+  "style": "new-york",
+  "rsc": false,
+  "tsx": true,
+  "tailwind": {
+    "config": "tailwind.config.js",
+    "css": "src/styles/globals.css",
+    "baseColor": "slate",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "aliases": {
+    "components": "./src/components",
+    "utils": "./src/lib/utils",
+    "ui": "./src/components/ui",
+    "lib": "./src/lib",
+    "hooks": "./src/hooks"
+  },
+  "iconLibrary": "lucide",
+  "mobile": {
+    "touchTargetSize": "44px",
+    "gestureSupport": true,
+    "hapticFeedback": true
+  }
+}
+```
+
+#### 2. Essential Mobile Components
+```bash
+# Core mobile UI components
+npx shadcn-ui@latest add button
+npx shadcn-ui@latest add card
+npx shadcn-ui@latest add sheet  # Mobile-friendly modal
+npx shadcn-ui@latest add drawer # Bottom drawer pattern
+npx shadcn-ui@latest add tabs   # Mobile navigation
+npx shadcn-ui@latest add input
+npx shadcn-ui@latest add badge
+npx shadcn-ui@latest add avatar
+npx shadcn-ui@latest add skeleton
+npx shadcn-ui@latest add toast
+```
+
+#### 3. Custom Mobile Components
+```typescript
+// Mobile-optimized Card with touch interactions
+const MobileCard = ({ children, onTap, onLongPress }) => {
+  return (
+    <Card 
+      className="touch-manipulation active:scale-95 transition-transform"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      {children}
+    </Card>
+  );
+};
+
+// Voice-enabled search component
+const VoiceSearch = () => {
+  const [isListening, setIsListening] = useState(false);
+  
+  return (
+    <div className="flex items-center space-x-2">
+      <Input placeholder="Search or speak..." />
+      <Button 
+        variant={isListening ? "destructive" : "outline"}
+        size="icon"
+        onClick={toggleVoiceRecognition}
+      >
+        <Mic className={isListening ? "animate-pulse" : ""} />
+      </Button>
+    </div>
+  );
+};
+```
+
+## Exemplary Design References
+
+### Dashboard Design Inspiration
+
+#### 1. World-Class Dashboard Examples
+- **Linear**: Clean, minimal interface with excellent typography
+- **Notion**: Flexible block-based layout system
+- **Stripe Dashboard**: Clear data hierarchy and progressive disclosure
+- **Vercel Analytics**: Real-time data visualization
+- **Figma**: Collaborative features with intuitive UI
+- **Railway**: Developer-focused dashboard with excellent UX
+
+#### 2. Design System References
+- **Radix UI**: Unstyled, accessible components (shadcn base)
+- **Mantine**: Feature-rich React components
+- **Chakra UI**: Modular and accessible component library
+- **Ant Design**: Enterprise-class UI design language
+- **Tailwind UI**: Premium Tailwind CSS components
+
+### Mobile Design Excellence
+
+#### 1. iOS App Design References
+- **Apollo**: Reddit client with excellent navigation
+- **Things 3**: Task management with beautiful interactions
+- **Reeder**: RSS reader with perfect typography
+- **Darkroom**: Photo editing with glass morphism
+- **Castro**: Podcast app with innovative UI patterns
+
+#### 2. Android Design Excellence
+- **Google Photos**: Material Design mastery
+- **Telegram**: Cross-platform consistency
+- **Spotify**: Music discovery and playback UX
+- **Adobe Lightroom**: Professional tools on mobile
+- **WhatsApp**: Messaging UX perfection
+
+#### 3. Cross-Platform Design Systems
+- **Shopify Polaris**: E-commerce focused design system
+- **Atlassian Design System**: Enterprise collaboration tools
+- **IBM Carbon**: AI and data-focused components
+- **Microsoft Fluent**: Cross-platform design system
+- **Apple Human Interface Guidelines**: iOS design standards
+- **Material Design**: Google's design system
+
+### Voice Interface Examples
+- **Voice Flow**: Conversational AI design tools
+- **Amazon Alexa Skills**: Voice command patterns
+- **Google Assistant Actions**: Voice interaction design
+- **Apple Shortcuts**: Voice automation workflows
+- **Microsoft Cortana**: Enterprise voice assistance
+
+### Prototyping Tools & Resources
+- **Figma**: Collaborative design and prototyping
+- **Framer**: Advanced prototyping with code components
+- **Principle**: Interaction design for mobile
+- **ProtoPie**: Sensor-based prototyping
+- **Adobe XD**: End-to-end UX design platform
+- **InVision**: Design collaboration and handoff
+
 ###
 MCP SERVER look up or connection please use https://www.pulsemcp.com/servers site using REF

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "new-york",
+  "rsc": false,
+  "tsx": true,
+  "tailwind": {
+    "config": "tailwind.config.js",
+    "css": "src/styles/globals.css",
+    "baseColor": "slate",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "aliases": {
+    "components": "./src/components",
+    "utils": "./src/lib/utils",
+    "ui": "./src/components/ui",
+    "lib": "./src/lib",
+    "hooks": "./src/hooks",
+    "material": "./src/components/material"
+  },
+  "iconLibrary": "lucide",
+  "mobile": {
+    "platform": "android",
+    "touchTargetSize": "48dp",
+    "gestureSupport": true,
+    "materialDesign": true,
+    "dynamicColors": true,
+    "voiceIntegration": true
+  },
+  "materialDesign": {
+    "version": "3",
+    "dynamicColor": true,
+    "typography": "roboto",
+    "elevation": true,
+    "components": [
+      "card",
+      "button",
+      "fab",
+      "appbar",
+      "navigation",
+      "searchbar",
+      "chip",
+      "dialog",
+      "snackbar"
+    ]
+  },
+  "registries": {
+    "@react-native": "https://react-native-ui.com/registry/{name}.json",
+    "@material": "https://material-ui.com/registry/{name}.json",
+    "@nativewind": "https://nativewind.dev/registry/{name}.json"
+  }
+}
