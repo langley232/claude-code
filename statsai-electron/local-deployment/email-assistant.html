@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StatsAI Email Assistant</title>
+    
+    <!-- Inter Font Family -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="email-assistant.css">
+</head>
+<body class="theme-snow">
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-logo">
+                <i data-lucide="mail" class="loading-icon"></i>
+                <h1>StatsAI Email Assistant</h1>
+            </div>
+            <div class="loading-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p id="loadingStatus">Initializing...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Authentication Screen -->
+    <div id="authScreen" class="auth-screen" style="display: none;">
+        <div class="auth-container">
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <i data-lucide="mail" class="auth-icon"></i>
+                    <h1>StatsAI Email Assistant</h1>
+                </div>
+                <p class="auth-subtitle">Connect your email to get started with AI-powered assistance</p>
+            </div>
+            
+            <div class="auth-options">
+                <button class="auth-btn microsoft-btn" id="microsoftAuthBtn">
+                    <div class="auth-btn-content">
+                        <div class="microsoft-logo">
+                            <svg width="21" height="21" viewBox="0 0 21 21" fill="none">
+                                <rect width="10" height="10" fill="#F25022"/>
+                                <rect x="11" width="10" height="10" fill="#7FBA00"/>
+                                <rect y="11" width="10" height="10" fill="#00A4EF"/>
+                                <rect x="11" y="11" width="10" height="10" fill="#FFB900"/>
+                            </svg>
+                        </div>
+                        <div class="auth-btn-text">
+                            <span class="auth-btn-title">Continue with Microsoft</span>
+                            <span class="auth-btn-subtitle">Microsoft 365, Outlook, Exchange</span>
+                        </div>
+                    </div>
+                    <i data-lucide="arrow-right" class="auth-btn-arrow"></i>
+                </button>
+                
+                <button class="auth-btn google-btn" id="googleAuthBtn">
+                    <div class="auth-btn-content">
+                        <div class="google-logo">
+                            <svg width="21" height="21" viewBox="0 0 48 48">
+                                <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
+                                <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
+                                <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
+                                <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
+                            </svg>
+                        </div>
+                        <div class="auth-btn-text">
+                            <span class="auth-btn-title">Continue with Google</span>
+                            <span class="auth-btn-subtitle">Gmail, Google Workspace</span>
+                        </div>
+                    </div>
+                    <i data-lucide="clock" class="auth-btn-arrow"></i>
+                </button>
+            </div>
+            
+            <div class="auth-features">
+                <h3>What you'll get:</h3>
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <i data-lucide="brain" class="feature-icon"></i>
+                        <span>AI-powered email assistance with Gemini 2.5</span>
+                    </div>
+                    <div class="feature-item">
+                        <i data-lucide="shield-check" class="feature-icon"></i>
+                        <span>Secure authentication with Microsoft Entra</span>
+                    </div>
+                    <div class="feature-item">
+                        <i data-lucide="database" class="feature-icon"></i>
+                        <span>Intelligent email vectorization and context</span>
+                    </div>
+                    <div class="feature-item">
+                        <i data-lucide="zap" class="feature-icon"></i>
+                        <span>Smart compose and automated responses</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="mainApp" class="main-app" style="display: none;">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="app-logo">
+                    <i data-lucide="mail" class="logo-icon"></i>
+                    <span class="logo-text">StatsAI Email Assistant</span>
+                </div>
+                <div class="search-container">
+                    <i data-lucide="search" class="search-icon"></i>
+                    <input type="text" placeholder="Search emails, contacts, or ask AI..." class="search-input" id="globalSearch">
+                    <div class="search-shortcut">⌘K</div>
+                </div>
+            </div>
+            
+            <div class="header-right">
+                <button class="header-btn" id="settingsBtn" title="Settings">
+                    <i data-lucide="settings"></i>
+                </button>
+                <button class="header-btn" id="themeToggle" title="Toggle theme">
+                    <i data-lucide="moon"></i>
+                </button>
+                <div class="user-profile" id="userProfile">
+                    <div class="user-avatar">
+                        <i data-lucide="user"></i>
+                    </div>
+                    <div class="user-info">
+                        <span class="user-name" id="userName">Loading...</span>
+                        <span class="user-email" id="userEmail">...</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Left Panel: Email List -->
+            <aside class="email-sidebar">
+                <div class="sidebar-header">
+                    <button class="compose-btn" id="composeBtn">
+                        <i data-lucide="pencil"></i>
+                        <span>Compose</span>
+                    </button>
+                </div>
+                
+                <nav class="email-navigation">
+                    <div class="nav-section">
+                        <h3 class="nav-section-title">Mailbox</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item active" data-folder="inbox">
+                                <i data-lucide="inbox"></i>
+                                <span>Inbox</span>
+                                <span class="nav-count">12</span>
+                            </li>
+                            <li class="nav-item" data-folder="sent">
+                                <i data-lucide="send"></i>
+                                <span>Sent</span>
+                            </li>
+                            <li class="nav-item" data-folder="drafts">
+                                <i data-lucide="file-text"></i>
+                                <span>Drafts</span>
+                                <span class="nav-count">3</span>
+                            </li>
+                            <li class="nav-item" data-folder="spam">
+                                <i data-lucide="shield"></i>
+                                <span>Spam</span>
+                            </li>
+                            <li class="nav-item" data-folder="trash">
+                                <i data-lucide="trash-2"></i>
+                                <span>Trash</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="nav-section">
+                        <h3 class="nav-section-title">Smart Folders</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item" data-folder="important">
+                                <i data-lucide="star"></i>
+                                <span>Important</span>
+                                <span class="nav-count">5</span>
+                            </li>
+                            <li class="nav-item" data-folder="calendar">
+                                <i data-lucide="calendar"></i>
+                                <span>Calendar</span>
+                                <span class="nav-count">2</span>
+                            </li>
+                            <li class="nav-item" data-folder="team">
+                                <i data-lucide="users"></i>
+                                <span>Team</span>
+                                <span class="nav-count">8</span>
+                            </li>
+                            <li class="nav-item" data-folder="news">
+                                <i data-lucide="newspaper"></i>
+                                <span>News</span>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+                
+                <div class="ai-status">
+                    <div class="ai-indicator">
+                        <div class="ai-pulse"></div>
+                        <span>AI Assistant Active</span>
+                    </div>
+                    <div class="processing-status" id="processingStatus">
+                        <i data-lucide="cpu"></i>
+                        <span>Processing emails...</span>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Center Panel: Split View -->
+            <section class="email-center-panel">
+                <!-- Top Half: Email List -->
+                <div class="email-list-container">
+                    <div class="email-list-header">
+                        <div class="list-title">
+                            <h2>Inbox</h2>
+                            <span class="email-count" id="emailCount">0 emails</span>
+                        </div>
+                        <div class="list-actions">
+                            <button class="list-action-btn" title="Select all">
+                                <i data-lucide="check-square"></i>
+                            </button>
+                            <button class="list-action-btn" title="Refresh">
+                                <i data-lucide="refresh-cw"></i>
+                            </button>
+                            <button class="list-action-btn" title="Download Emails" id="startDownloadBtn">
+                                <i data-lucide="download"></i>
+                            </button>
+                            <button class="list-action-btn" title="Pause Download" id="pauseDownloadBtn" style="display: none;">
+                                <i data-lucide="pause"></i>
+                            </button>
+                            <button class="list-action-btn" title="Resume Download" id="resumeDownloadBtn" style="display: none;">
+                                <i data-lucide="play"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Email Download Status Bar -->
+                    <div class="download-status-bar" id="downloadStatusBar" style="display: none;">
+                        <div class="download-progress">
+                            <div class="progress-info">
+                                <span id="downloadStatusText">Preparing download...</span>
+                                <span id="downloadProgress">0/0</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="downloadProgressFill" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                        <div class="download-controls">
+                            <button class="download-control-btn" id="cancelDownloadBtn">
+                                <i data-lucide="x"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="email-list" id="emailList">
+                        <!-- Email rows will be populated by JavaScript -->
+                    </div>
+                </div>
+                
+                <!-- Resizer -->
+                <div class="panel-resizer" id="panelResizer"></div>
+                
+                <!-- Bottom Half: Email Content -->
+                <div class="email-content-container">
+                    <div class="email-content-header">
+                        <div class="content-toolbar">
+                            <div class="toolbar-left">
+                                <button class="toolbar-btn" title="Archive">
+                                    <i data-lucide="archive"></i>
+                                </button>
+                                <button class="toolbar-btn" title="Delete">
+                                    <i data-lucide="trash-2"></i>
+                                </button>
+                                <button class="toolbar-btn" title="Mark as spam">
+                                    <i data-lucide="shield"></i>
+                                </button>
+                            </div>
+                            <div class="toolbar-center">
+                                <button class="toolbar-btn ai-btn" id="aiSummarizeBtn" title="AI Summarize Thread">
+                                    <i data-lucide="brain"></i>
+                                    <span>Summarize</span>
+                                </button>
+                                <button class="toolbar-btn ai-btn" id="aiDraftBtn" title="AI Draft Reply">
+                                    <i data-lucide="pen-tool"></i>
+                                    <span>Draft Reply</span>
+                                </button>
+                            </div>
+                            <div class="toolbar-right">
+                                <button class="toolbar-btn" id="replyBtn" title="Reply">
+                                    <i data-lucide="reply"></i>
+                                </button>
+                                <button class="toolbar-btn" title="Forward">
+                                    <i data-lucide="arrow-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="email-content" id="emailContent">
+                        <div class="empty-state">
+                            <i data-lucide="mail" class="empty-icon"></i>
+                            <p>Select an email from the list to read it</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Panel: AI Assistant -->
+            <aside class="ai-assistant">
+                <div class="assistant-header">
+                    <div class="assistant-title">
+                        <i data-lucide="brain"></i>
+                        <h3>AI Assistant</h3>
+                    </div>
+                    <button class="assistant-toggle" id="assistantToggle">
+                        <i data-lucide="chevron-right"></i>
+                    </button>
+                </div>
+                
+                <div class="assistant-content" id="assistantContent">
+                    <div class="chat-container">
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="ai-message">
+                                <div class="message-avatar">
+                                    <i data-lucide="brain"></i>
+                                </div>
+                                <div class="message-content">
+                                    <p>Hello! I'm your AI email assistant. I can help you:</p>
+                                    <ul>
+                                        <li>Compose professional emails</li>
+                                        <li>Summarize long email threads</li>
+                                        <li>Suggest quick replies</li>
+                                        <li>Schedule meetings and events</li>
+                                    </ul>
+                                    <p>What would you like to do?</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="chat-input-container">
+                            <div class="suggested-responses" id="suggestedResponses" style="display: none;">
+                                <div class="suggestions-header">
+                                    <span>Suggested responses:</span>
+                                </div>
+                                <div class="response-buttons" id="responseButtons">
+                                    <!-- Dynamic response buttons will appear here -->
+                                </div>
+                            </div>
+                            
+                            <div class="chat-input">
+                                <input type="text" placeholder="Ask me anything about your emails..." id="chatInput">
+                                <button class="send-btn" id="sendChatBtn">
+                                    <i data-lucide="send"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="quick-actions">
+                                <button class="quick-action-btn" data-action="summarize">
+                                    <i data-lucide="file-text"></i>
+                                    Summarize thread
+                                </button>
+                                <button class="quick-action-btn" data-action="compose">
+                                    <i data-lucide="pencil"></i>
+                                    Compose reply
+                                </button>
+                                <button class="quick-action-btn" data-action="schedule">
+                                    <i data-lucide="calendar"></i>
+                                    Schedule
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="compose-panel" id="composePanel" style="display: none;">
+                        <div class="compose-header">
+                            <h3>Compose Email</h3>
+                            <button class="close-compose" id="closeCompose">
+                                <i data-lucide="x"></i>
+                            </button>
+                        </div>
+                        
+                        <form class="compose-form" id="composeForm">
+                            <div class="compose-field">
+                                <label>To:</label>
+                                <input type="email" id="composeTo" placeholder="Enter email addresses">
+                            </div>
+                            <div class="compose-field">
+                                <label>Subject:</label>
+                                <input type="text" id="composeSubject" placeholder="Email subject">
+                            </div>
+                            <div class="compose-field">
+                                <label>Message:</label>
+                                <div class="compose-editor">
+                                    <div class="editor-toolbar">
+                                        <button type="button" class="editor-btn" data-action="ai-assist">
+                                            <i data-lucide="brain"></i>
+                                            AI Assist
+                                        </button>
+                                        <button type="button" class="editor-btn" data-action="bold">
+                                            <i data-lucide="bold"></i>
+                                        </button>
+                                        <button type="button" class="editor-btn" data-action="italic">
+                                            <i data-lucide="italic"></i>
+                                        </button>
+                                        <button type="button" class="editor-btn" data-action="link">
+                                            <i data-lucide="link"></i>
+                                        </button>
+                                    </div>
+                                    <textarea id="composeMessage" placeholder="Type your message here... (or use AI Assist for smart composition)"></textarea>
+                                </div>
+                            </div>
+                            <div class="compose-actions">
+                                <button type="button" class="btn-secondary" id="saveDraft">
+                                    <i data-lucide="save"></i>
+                                    Save Draft
+                                </button>
+                                <button type="submit" class="btn-primary" id="sendEmail">
+                                    <i data-lucide="send"></i>
+                                    Send Email
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </aside>
+        </main>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <button class="modal-close" id="closeSettings">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-section">
+                    <h3>AI Configuration</h3>
+                    <div class="setting-item">
+                        <label>AI Model:</label>
+                        <select id="aiModel">
+                            <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                            <option value="gemini-pro">Gemini Pro</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label>Response Style:</label>
+                        <select id="responseStyle">
+                            <option value="professional">Professional</option>
+                            <option value="casual">Casual</option>
+                            <option value="concise">Concise</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Vector Storage</h3>
+                    <div class="setting-item">
+                        <label>Storage Provider:</label>
+                        <select id="vectorProvider">
+                            <option value="google-vector">Google Vector Store</option>
+                            <option value="tigergraph">TigerGraph</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label>Processing Status:</label>
+                        <div class="processing-info">
+                            <span id="processedEmails">0</span> emails processed
+                            <button class="btn-secondary" id="reprocessEmails">Reprocess All</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Draft Modal -->
+    <div id="draftModal" class="modal" style="display: none;">
+        <div class="modal-content draft-modal-content">
+            <div class="modal-header">
+                <h2>🤖 AI Email Draft</h2>
+                <button class="modal-close" id="closeDraft">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body draft-modal-body">
+                <!-- Thread Summary Section -->
+                <div class="thread-summary-section" id="threadSummarySection" style="display: none;">
+                    <div class="summary-header">
+                        <h3>📧 Thread Summary</h3>
+                        <button class="collapse-btn" id="toggleThreadSummary">▼</button>
+                    </div>
+                    <div class="summary-content" id="threadSummaryContent">
+                        <!-- Thread summary will be populated here -->
+                    </div>
+                </div>
+                
+                <!-- Draft Generation Section -->
+                <div class="draft-section">
+                    <div class="draft-header">
+                        <h3>📝 Draft Email</h3>
+                        <div class="draft-actions">
+                            <button class="btn-secondary" id="regenerateDraft">
+                                <i data-lucide="refresh-cw"></i>
+                                Regenerate
+                            </button>
+                            <button class="btn-secondary" id="editDraft">
+                                <i data-lucide="edit"></i>
+                                Edit Mode
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="draft-content">
+                        <div class="draft-loading" id="draftLoading" style="display: none;">
+                            <div class="loading-spinner"></div>
+                            <p>Generating AI draft...</p>
+                        </div>
+                        
+                        <div class="draft-form" id="draftForm">
+                            <div class="draft-field">
+                                <label>Subject:</label>
+                                <input type="text" id="draftSubject" readonly>
+                            </div>
+                            
+                            <div class="draft-field">
+                                <label>Message:</label>
+                                <textarea id="draftMessage" rows="12" readonly></textarea>
+                            </div>
+                            
+                            <div class="draft-suggestions" id="draftSuggestions" style="display: none;">
+                                <h4>Suggested Improvements:</h4>
+                                <div class="suggestions-list" id="suggestionsList">
+                                    <!-- Suggestions will be populated here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="draft-footer">
+                        <div class="draft-stats">
+                            <span class="draft-stat" id="wordCount">0 words</span>
+                            <span class="draft-stat" id="toneIndicator">Professional tone</span>
+                        </div>
+                        <div class="draft-buttons">
+                            <button class="btn-secondary" id="saveDraftBtn">
+                                <i data-lucide="save"></i>
+                                Save Draft
+                            </button>
+                            <button class="btn-primary" id="sendDraftBtn">
+                                <i data-lucide="send"></i>
+                                Send Email
+                            </button>
+                            <button class="btn-secondary" id="cancelDraftBtn">
+                                <i data-lucide="x"></i>
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="microsoft-stytch-oauth.js"></script>
+    <script src="email-assistant.js"></script>
+</body>
+</html>

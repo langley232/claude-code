@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AtlasWeb - Create Your Account</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: https://unpkg.com https://fonts.googleapis.com https://fonts.gstatic.com https://cdn.plaid.com https://us-central1-solid-topic-466217-t9.cloudfunctions.net https://cdnjs.cloudflare.com; connect-src 'self' https://us-central1-solid-topic-466217-t9.cloudfunctions.net https://cdn.plaid.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.plaid.com https://cdnjs.cloudflare.com;">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body>
+    <!-- Interactive AI Background -->
+    <div class="ai-background" id="aiBackground" aria-hidden="true">
+        <div class="floating-element floating-1"></div>
+        <div class="floating-element floating-2"></div>
+        <div class="floating-element floating-3"></div>
+        <div class="floating-element floating-4"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="aura-nav">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <div class="logo-icon">
+                    <svg class="logo-svg" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="16" cy="16" r="14" fill="url(#logoGradient)" stroke="url(#logoStroke)" stroke-width="1"/>
+                        <path d="M2 16 L30 16 M16 2 L16 30" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/>
+                        <path d="M8 6 Q16 12 24 6 M8 26 Q16 20 24 26" stroke="rgba(255,255,255,0.4)" stroke-width="0.5"/>
+                        <path d="M6 8 Q12 16 6 24 M26 8 Q20 16 26 24" stroke="rgba(255,255,255,0.4)" stroke-width="0.5"/>
+                        <text x="16" y="21" text-anchor="middle" fill="white" font-size="12" font-weight="800" font-family="Inter">A</text>
+                        <defs>
+                            <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#6366f1"/>
+                                <stop offset="50%" style="stop-color:#8b5cf6"/>
+                                <stop offset="100%" style="stop-color:#06b6d4"/>
+                            </linearGradient>
+                            <linearGradient id="logoStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.3"/>
+                                <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0.1"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <span class="logo-text">AtlasWeb</span>
+            </div>
+
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="index.html#features" class="nav-link">Features</a>
+                <a href="pricing.html" class="nav-link">Pricing</a>
+            </div>
+
+            <div class="nav-actions">
+                <div class="theme-toggle-group">
+                    <button class="theme-toggle" title="Light mode" data-theme="light">
+                        <i data-lucide="sun"></i>
+                    </button>
+                    <button class="theme-toggle active" title="Dark mode" data-theme="dark">
+                        <i data-lucide="moon"></i>
+                    </button>
+                </div>
+                
+                <button class="btn-secondary">Login</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Registration Section -->
+    <section class="registration-section">
+        <div class="registration-container">
+            <!-- Progress Steps -->
+            <div class="registration-steps">
+                <div class="step active">
+                    <div class="step-indicator">1</div>
+                    <span class="step-label">Account</span>
+                </div>
+                <div class="step-line"></div>
+                <div class="step">
+                    <div class="step-indicator">2</div>
+                    <span class="step-label">Plan</span>
+                </div>
+                <div class="step-line"></div>
+                <div class="step">
+                    <div class="step-indicator">3</div>
+                    <span class="step-label">Payment</span>
+                </div>
+            </div>
+
+            <!-- Registration Form -->
+            <div class="registration-form-container">
+                <!-- Step 1: Account Information -->
+                <div class="form-step active" id="step-account">
+                    <div class="form-header">
+                        <h1 class="form-title">Create Your Account</h1>
+                        <p class="form-subtitle">Join thousands of users experiencing the future of intelligent browsing</p>
+                    </div>
+
+                    <form class="registration-form" id="accountForm">
+                        <div class="form-group">
+                            <label for="firstName" class="form-label">First Name</label>
+                            <input type="text" id="firstName" name="firstName" class="form-input" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="lastName" class="form-label">Last Name</label>
+                            <input type="text" id="lastName" name="lastName" class="form-input" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email" class="form-label">Email Address</label>
+                            <input type="email" id="email" name="email" class="form-input" required>
+                            <div class="form-hint">We'll send you account updates and important notifications</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="company" class="form-label">Company (Optional)</label>
+                            <input type="text" id="company" name="company" class="form-input">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password" class="form-label">Password</label>
+                            <div class="password-input-wrapper">
+                                <input type="password" id="password" name="password" class="form-input" required>
+                                <button type="button" class="password-toggle" onclick="togglePassword('password')">
+                                    <i data-lucide="eye-off"></i>
+                                </button>
+                            </div>
+                            <div class="password-strength">
+                                <div class="strength-bar">
+                                    <div class="strength-fill"></div>
+                                </div>
+                                <span class="strength-text">Password strength</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="confirmPassword" class="form-label">Confirm Password</label>
+                            <div class="password-input-wrapper">
+                                <input type="password" id="confirmPassword" name="confirmPassword" class="form-input" required>
+                                <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword')">
+                                    <i data-lucide="eye-off"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="terms" name="terms" required>
+                                <span class="checkmark"></span>
+                                I agree to the <a href="#" class="form-link">Terms of Service</a> and <a href="#" class="form-link">Privacy Policy</a>
+                            </label>
+                        </div>
+
+                        <div class="form-group checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="newsletter" name="newsletter">
+                                <span class="checkmark"></span>
+                                Send me product updates and feature announcements
+                            </label>
+                        </div>
+
+                        <button type="submit" class="form-submit">
+                            Continue to Plan Selection
+                            <i data-lucide="arrow-right"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Step 2: Plan Selection -->
+                <div class="form-step" id="step-plan">
+                    <div class="form-header">
+                        <h1 class="form-title">Choose Your Plan</h1>
+                        <p class="form-subtitle">Select the plan that best fits your needs. You can change anytime.</p>
+                    </div>
+
+                    <div class="plan-selection">
+                        <!-- Basic Plan -->
+                        <div class="plan-option" data-plan="basic">
+                            <div class="plan-header">
+                                <h3 class="plan-name">Basic</h3>
+                                <div class="plan-price">
+                                    <span class="price-amount">$20</span>
+                                    <span class="price-period">/month</span>
+                                </div>
+                            </div>
+                            <ul class="plan-features">
+                                <li><i data-lucide="check"></i> AI Search & Code Assistant</li>
+                                <li><i data-lucide="check"></i> Email & Booking Agents</li>
+                                <li><i data-lucide="check"></i> Translation & Productivity Tools</li>
+                                <li><i data-lucide="x"></i> Writer Integration</li>
+                                <li><i data-lucide="x"></i> Advanced Research</li>
+                            </ul>
+                        </div>
+
+                        <!-- Pro Plan -->
+                        <div class="plan-option recommended" data-plan="pro">
+                            <div class="plan-badge">Recommended</div>
+                            <div class="plan-header">
+                                <h3 class="plan-name">Pro</h3>
+                                <div class="plan-price">
+                                    <span class="price-amount">$200</span>
+                                    <span class="price-period">/month</span>
+                                </div>
+                            </div>
+                            <ul class="plan-features">
+                                <li><i data-lucide="check"></i> Everything in Basic</li>
+                                <li><i data-lucide="check"></i> Writer Integration</li>
+                                <li><i data-lucide="check"></i> Creative Design Suite</li>
+                                <li><i data-lucide="check"></i> Video & Animation Tools</li>
+                                <li><i data-lucide="x"></i> Advanced Research</li>
+                            </ul>
+                        </div>
+
+                        <!-- Max Plan -->
+                        <div class="plan-option" data-plan="max">
+                            <div class="plan-header">
+                                <h3 class="plan-name">Max</h3>
+                                <div class="plan-price">
+                                    <span class="price-amount">$300</span>
+                                    <span class="price-period">/month</span>
+                                </div>
+                            </div>
+                            <ul class="plan-features">
+                                <li><i data-lucide="check"></i> Everything in Pro</li>
+                                <li><i data-lucide="check"></i> Advanced Research</li>
+                                <li><i data-lucide="check"></i> Mobile Personal Assistant</li>
+                                <li><i data-lucide="check"></i> iPad & iPhone Apps</li>
+                                <li><i data-lucide="check"></i> Cross-platform Sync</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="goToStep(1)">
+                            <i data-lucide="arrow-left"></i>
+                            Back
+                        </button>
+                        <button type="button" class="form-submit" id="continueToPayment" disabled>
+                            Continue to Payment
+                            <i data-lucide="arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Payment -->
+                <div class="form-step" id="step-payment">
+                    <div class="form-header">
+                        <h1 class="form-title">Complete Your Order</h1>
+                        <p class="form-subtitle">Secure payment processing powered by Stripe</p>
+                    </div>
+
+                    <!-- Order Summary -->
+                    <div class="order-summary">
+                        <h3>Order Summary</h3>
+                        <div class="order-item">
+                            <span class="order-description">AtlasWeb <span id="selectedPlanName">Pro</span> Plan</span>
+                            <span class="order-price" id="selectedPlanPrice">$200/month</span>
+                        </div>
+                        <div class="order-total">
+                            <span>Total</span>
+                            <span id="orderTotal">$200/month</span>
+                        </div>
+                    </div>
+
+                    <!-- Payment Form -->
+                    <form class="payment-form" id="paymentForm">
+                        <div class="form-group">
+                            <label for="cardNumber" class="form-label">Card Number</label>
+                            <input type="text" id="cardNumber" name="cardNumber" class="form-input" placeholder="1234 5678 9012 3456" required>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="expiryDate" class="form-label">Expiry Date</label>
+                                <input type="text" id="expiryDate" name="expiryDate" class="form-input" placeholder="MM/YY" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="cvv" class="form-label">CVV</label>
+                                <input type="text" id="cvv" name="cvv" class="form-input" placeholder="123" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="billingName" class="form-label">Cardholder Name</label>
+                            <input type="text" id="billingName" name="billingName" class="form-input" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="billingAddress" class="form-label">Billing Address</label>
+                            <input type="text" id="billingAddress" name="billingAddress" class="form-input" required>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="billingCity" class="form-label">City</label>
+                                <input type="text" id="billingCity" name="billingCity" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="billingZip" class="form-label">ZIP Code</label>
+                                <input type="text" id="billingZip" name="billingZip" class="form-input" required>
+                            </div>
+                        </div>
+
+                        <div class="security-notice">
+                            <i data-lucide="shield-check"></i>
+                            <span>Your payment information is encrypted and secure</span>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="btn-secondary" onclick="goToStep(2)">
+                                <i data-lucide="arrow-left"></i>
+                                Back to Plan Selection
+                            </button>
+                            <button type="button" class="form-submit" onclick="proceedToExternalPayment()">
+                                <i data-lucide="credit-card"></i>
+                                Proceed to Secure Payment
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="script.js"></script>
+    <script src="auth.js"></script>
+    <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+</body>
+</html>

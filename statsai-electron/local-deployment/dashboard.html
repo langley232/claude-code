@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AtlasWeb AI Dashboard</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: https://unpkg.com https://fonts.googleapis.com https://fonts.gstatic.com https://cdn.plaid.com https://us-central1-solid-topic-466217-t9.cloudfunctions.net https://cdnjs.cloudflare.com; connect-src 'self' https://us-central1-solid-topic-466217-t9.cloudfunctions.net https://cdn.plaid.com https://unpkg.com https://cdnjs.cloudflare.com https://api.duckduckgo.com https://generativelanguage.googleapis.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.plaid.com https://cdnjs.cloudflare.com;">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+</head>
+<body class="dashboard-body">
+    <!-- Dashboard Container -->
+    <div class="dashboard-container">
+        <!-- Top Navigation Bar - HIDDEN -->
+        <header class="dashboard-header" style="display: none;">
+        </header>
+
+        <!-- Dashboard Content -->
+        <main class="dashboard-main">
+
+            <!-- Middle Panel: AI Search Engine (50%) -->
+            <section class="middle-panel">
+                <div class="search-container">
+                    <div class="search-header">
+                        <h2 class="search-title">Ensemble AI Search</h2>
+                        <div class="model-selector">
+                            <select class="model-select">
+                                <option value="ensemble">🤖 Ensemble (Auto)</option>
+                                <option value="xai">⚡ xAI Grok</option>
+                                <option value="gemini">🧠 Google Gemini</option>
+                                <option value="openai">🎯 OpenAI GPT-4</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="search-interface">
+                        <div class="search-box">
+                            <div class="search-input-wrapper">
+                                <i data-lucide="search" class="search-input-icon"></i>
+                                <textarea 
+                                    class="main-search-input" 
+                                    placeholder="Ask anything... AI will search across multiple models for the best answer"
+                                    rows="1"
+                                ></textarea>
+                                <div class="search-actions">
+                                    <button class="search-submit">
+                                        <i data-lucide="arrow-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Panel: AI Chatbot (50%) -->
+            <section class="right-panel">
+                <div class="chat-container">
+                    <div class="chat-header">
+                        <div class="chat-title">
+                            <i data-lucide="message-square" class="chat-icon"></i>
+                            <h3>AI Assistant</h3>
+                            <span class="chat-status online">Online</span>
+                        </div>
+                        <div class="chat-actions">
+                            <button class="chat-action-btn" title="Voice input">
+                                <i data-lucide="mic"></i>
+                            </button>
+                            <button class="chat-action-btn" title="Clear chat">
+                                <i data-lucide="trash-2"></i>
+                            </button>
+                            <button class="chat-action-btn" title="Settings">
+                                <i data-lucide="settings"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="chat-messages" id="chatMessages">
+                        <!-- Welcome message -->
+                        <div class="message assistant-message">
+                            <div class="message-avatar">
+                                <i data-lucide="bot"></i>
+                            </div>
+                            <div class="message-content">
+                                <div class="message-text">
+                                    👋 Hi! I'm your AI assistant powered by Google Gemini. I can help you with questions, 
+                                    research, writing, coding, and more. I have access to your search context 
+                                    and can provide personalized assistance.
+                                </div>
+                                <div class="message-actions">
+                                    <button class="message-action">
+                                        <i data-lucide="copy"></i>
+                                    </button>
+                                    <button class="message-action">
+                                        <i data-lucide="thumbs-up"></i>
+                                    </button>
+                                    <button class="message-action">
+                                        <i data-lucide="thumbs-down"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="chat-input">
+                        <div class="input-container">
+                            <button class="input-action" id="voiceBtn" title="Voice input">
+                                <i data-lucide="mic"></i>
+                            </button>
+                            <textarea 
+                                class="chat-textarea" 
+                                placeholder="Ask me anything..."
+                                rows="1"
+                            ></textarea>
+                            <button class="input-action" id="sendBtn" title="Send message">
+                                <i data-lucide="send"></i>
+                            </button>
+                        </div>
+                        <div class="input-footer">
+                            <div class="context-info">
+                                <i data-lucide="link"></i>
+                                <span>Context-aware responses</span>
+                            </div>
+                            <div class="model-info">
+                                <span>Powered by Google Gemini</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Loading overlay -->
+    <div class="loading-overlay" style="display: none;">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-message">Loading...</div>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="router.js"></script>
+    <script src="ai-search-service.js"></script>
+    <script src="gemini-chat-service.js"></script>
+    <script src="dashboard.js"></script>
+</body>
+</html>
