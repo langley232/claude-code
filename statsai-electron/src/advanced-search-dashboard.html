@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Search Dashboard - StatsAI</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: https://unpkg.com https://fonts.googleapis.com https://fonts.gstatic.com https://cdnjs.cloudflare.com https://api.brightdata.com;">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles/globals.css">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <style>
+        :root {
+            --sidebar-width: 280px;
+            --header-height: 64px;
+        }
+        
+        .dashboard-layout {
+            display: grid;
+            grid-template-columns: var(--sidebar-width) 1fr;
+            grid-template-rows: var(--header-height) 1fr;
+            height: 100vh;
+            background: hsl(var(--background));
+        }
+        
+        .sidebar {
+            grid-column: 1;
+            grid-row: 1 / -1;
+            border-right: 1px solid hsl(var(--border));
+            background: hsl(var(--card));
+        }
+        
+        .header {
+            grid-column: 2;
+            grid-row: 1;
+            border-bottom: 1px solid hsl(var(--border));
+            background: hsl(var(--background));
+        }
+        
+        .main-content {
+            grid-column: 2;
+            grid-row: 2;
+            overflow-y: auto;
+            background: hsl(var(--background));
+        }
+        
+        .platform-item {
+            transition: all 0.2s ease;
+        }
+        
+        .platform-item:hover {
+            background: hsl(var(--accent));
+        }
+        
+        .platform-item.active {
+            background: hsl(var(--primary));
+            color: hsl(var(--primary-foreground));
+        }
+        
+        .search-card {
+            backdrop-filter: blur(8px);
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid hsl(var(--border));
+        }
+        
+        .dark .search-card {
+            background: rgba(0, 0, 0, 0.4);
+        }
+        
+        .usage-indicator {
+            background: linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(var(--primary)) var(--usage-percent, 0%), hsl(var(--muted)) var(--usage-percent, 0%), hsl(var(--muted)) 100%);
+        }
+    </style>
+</head>
+<body class="font-inter antialiased">
+    <div class="dashboard-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="p-6">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3 mb-8">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                        <span class="text-white font-bold text-sm">S</span>
+                    </div>
+                    <div>
+                        <h1 class="font-semibold text-lg">StatsAI</h1>
+                        <p class="text-xs text-muted-foreground">Advanced Search</p>
+                    </div>
+                </div>
+                
+                <!-- Search Platforms -->
+                <nav class="space-y-2">
+                    <div class="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
+                        Social Platforms
+                    </div>
+                    
+                    <button class="platform-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left" data-platform="overview">
+                        <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+                        <span class="font-medium">Overview</span>
+                    </button>
+                    
+                    <button class="platform-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left active" data-platform="instagram">
+                        <i data-lucide="instagram" class="w-4 h-4"></i>
+                        <span class="font-medium">Instagram</span>
+                        <div class="ml-auto w-2 h-2 bg-green-500 rounded-full"></div>
+                    </button>
+                    
+                    <button class="platform-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left" data-platform="twitter">
+                        <i data-lucide="twitter" class="w-4 h-4"></i>
+                        <span class="font-medium">Twitter</span>
+                        <div class="ml-auto w-2 h-2 bg-green-500 rounded-full"></div>
+                    </button>
+                    
+                    <button class="platform-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left" data-platform="linkedin">
+                        <i data-lucide="linkedin" class="w-4 h-4"></i>
+                        <span class="font-medium">LinkedIn</span>
+                        <div class="ml-auto w-2 h-2 bg-green-500 rounded-full"></div>
+                    </button>
+                    
+                    <button class="platform-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left" data-platform="tiktok">
+                        <i data-lucide="music" class="w-4 h-4"></i>
+                        <span class="font-medium">TikTok</span>
+                        <div class="ml-auto w-2 h-2 bg-green-500 rounded-full"></div>
+                    </button>
+                    
+                    <button class="platform-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left" data-platform="reddit">
+                        <i data-lucide="message-circle" class="w-4 h-4"></i>
+                        <span class="font-medium">Reddit</span>
+                        <div class="ml-auto w-2 h-2 bg-green-500 rounded-full"></div>
+                    </button>
+                    
+                    <button class="platform-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left" data-platform="youtube">
+                        <i data-lucide="play" class="w-4 h-4"></i>
+                        <span class="font-medium">YouTube</span>
+                        <div class="ml-auto w-2 h-2 bg-green-500 rounded-full"></div>
+                    </button>
+                    
+                    <button class="platform-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left" data-platform="facebook">
+                        <i data-lucide="facebook" class="w-4 h-4"></i>
+                        <span class="font-medium">Facebook</span>
+                        <div class="ml-auto w-2 h-2 bg-green-500 rounded-full"></div>
+                    </button>
+                    
+                    <button class="platform-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left" data-platform="pinterest">
+                        <i data-lucide="image" class="w-4 h-4"></i>
+                        <span class="font-medium">Pinterest</span>
+                        <div class="ml-auto w-2 h-2 bg-green-500 rounded-full"></div>
+                    </button>
+                    
+                    <button class="platform-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left" data-platform="quora">
+                        <i data-lucide="help-circle" class="w-4 h-4"></i>
+                        <span class="font-medium">Quora</span>
+                        <div class="ml-auto w-2 h-2 bg-green-500 rounded-full"></div>
+                    </button>
+                    
+                    <button class="platform-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left" data-platform="vimeo">
+                        <i data-lucide="video" class="w-4 h-4"></i>
+                        <span class="font-medium">Vimeo</span>
+                        <div class="ml-auto w-2 h-2 bg-green-500 rounded-full"></div>
+                    </button>
+                </nav>
+                
+                <!-- Usage Indicator -->
+                <div class="mt-8 p-4 bg-muted rounded-lg">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium">Monthly Usage</span>
+                        <span class="text-xs text-muted-foreground" id="usageCount">1,247 / 5,000</span>
+                    </div>
+                    <div class="w-full bg-muted-foreground/20 rounded-full h-2">
+                        <div class="usage-indicator h-2 rounded-full" style="--usage-percent: 25%"></div>
+                    </div>
+                    <p class="text-xs text-muted-foreground mt-2">Free tier • <a href="#upgrade" class="text-primary hover:underline">Upgrade</a></p>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Top Header -->
+        <header class="header flex items-center justify-between px-6">
+            <div class="flex items-center space-x-4">
+                <h2 class="text-xl font-semibold" id="pageTitle">Instagram Search</h2>
+                <div class="flex items-center space-x-2 text-sm text-muted-foreground">
+                    <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span>BrightData Connected</span>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <!-- Search Settings -->
+                <button class="p-2 hover:bg-muted rounded-lg" id="searchSettings">
+                    <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
+                </button>
+                
+                <!-- Home Link -->
+                <button class="px-3 py-1.5 text-sm hover:bg-muted rounded-lg" onclick="window.location.href='functional-search.html'">
+                    <i data-lucide="home" class="w-4 h-4 inline mr-1"></i>
+                    Home
+                </button>
+                
+                <!-- Support -->
+                <div class="relative" id="supportDropdown">
+                    <button class="px-3 py-1.5 text-sm hover:bg-muted rounded-lg">
+                        <i data-lucide="help-circle" class="w-4 h-4 inline mr-1"></i>
+                        Support
+                        <i data-lucide="chevron-down" class="w-3 h-3 inline ml-1"></i>
+                    </button>
+                </div>
+                
+                <!-- Profile -->
+                <div class="relative" id="profileDropdown">
+                    <button class="flex items-center space-x-2 px-3 py-1.5 hover:bg-muted rounded-lg">
+                        <div class="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                            <span class="text-white text-xs font-medium">JD</span>
+                        </div>
+                        <span class="text-sm font-medium">John Doe</span>
+                        <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <div class="p-6">
+                <!-- Search Section -->
+                <div class="mb-8">
+                    <div class="search-card rounded-xl p-6">
+                        <div class="flex items-center space-x-4 mb-4">
+                            <div class="w-10 h-10 bg-gradient-to-br from-pink-500 to-rose-500 rounded-xl flex items-center justify-center" id="platformIcon">
+                                <i data-lucide="instagram" class="w-5 h-5 text-white"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold" id="platformName">Instagram Search</h3>
+                                <p class="text-sm text-muted-foreground">Search posts, stories, profiles, and hashtags</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex space-x-3">
+                            <div class="flex-1 relative">
+                                <i data-lucide="search" class="absolute left-3 top-3 w-4 h-4 text-muted-foreground"></i>
+                                <input 
+                                    type="text" 
+                                    id="searchInput"
+                                    placeholder="Enter hashtags, usernames, or keywords..."
+                                    class="w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                                />
+                            </div>
+                            <button 
+                                id="searchBtn"
+                                class="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
+                            >
+                                Search
+                            </button>
+                        </div>
+                        
+                        <!-- Search Filters -->
+                        <div class="flex space-x-2 mt-4" id="searchFilters">
+                            <button class="px-3 py-1.5 text-xs bg-muted hover:bg-muted/80 rounded-lg filter-btn active" data-filter="all">
+                                All Content
+                            </button>
+                            <button class="px-3 py-1.5 text-xs bg-muted hover:bg-muted/80 rounded-lg filter-btn" data-filter="posts">
+                                Posts Only
+                            </button>
+                            <button class="px-3 py-1.5 text-xs bg-muted hover:bg-muted/80 rounded-lg filter-btn" data-filter="profiles">
+                                Profiles
+                            </button>
+                            <button class="px-3 py-1.5 text-xs bg-muted hover:bg-muted/80 rounded-lg filter-btn" data-filter="hashtags">
+                                Hashtags
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Results Section -->
+                <div id="resultsContainer">
+                    <!-- Loading State -->
+                    <div id="loadingState" class="hidden">
+                        <div class="text-center py-12">
+                            <div class="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                            <p class="text-muted-foreground">Searching through BrightData proxy...</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Empty State -->
+                    <div id="emptyState" class="text-center py-12">
+                        <div class="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i data-lucide="search" class="w-8 h-8 text-muted-foreground"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-2">Start Your Search</h3>
+                        <p class="text-muted-foreground mb-4">Enter keywords, hashtags, or usernames to search across social platforms</p>
+                        <div class="text-xs text-muted-foreground">
+                            Powered by <span class="font-medium">BrightData Proxy Network</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Search Results -->
+                    <div id="searchResults" class="hidden">
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <h3 class="text-lg font-semibold">Search Results</h3>
+                                <p class="text-sm text-muted-foreground" id="resultsCount">Found 0 results</p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="px-3 py-1.5 text-sm border rounded-lg hover:bg-muted">
+                                    <i data-lucide="download" class="w-4 h-4 inline mr-1"></i>
+                                    Export
+                                </button>
+                                <button class="px-3 py-1.5 text-sm border rounded-lg hover:bg-muted">
+                                    <i data-lucide="filter" class="w-4 h-4 inline mr-1"></i>
+                                    Filter
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Results Grid -->
+                        <div id="resultsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <!-- Result cards will be populated here -->
+                        </div>
+                        
+                        <!-- Load More -->
+                        <div class="text-center mt-8">
+                            <button id="loadMoreBtn" class="px-6 py-2 border rounded-lg hover:bg-muted">
+                                Load More Results
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Search Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="bg-background rounded-xl p-6 w-full max-w-md mx-4">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold">Search Settings</h3>
+                <button id="closeSettings" class="p-1 hover:bg-muted rounded">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Proxy Location</label>
+                    <select class="w-full p-2 border rounded-lg">
+                        <option>Auto-detect</option>
+                        <option>United States</option>
+                        <option>United Kingdom</option>
+                        <option>Canada</option>
+                        <option>Australia</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">Results per page</label>
+                    <select class="w-full p-2 border rounded-lg">
+                        <option>20</option>
+                        <option>50</option>
+                        <option>100</option>
+                    </select>
+                </div>
+                
+                <div class="flex items-center space-x-2">
+                    <input type="checkbox" id="safeSearch" checked>
+                    <label for="safeSearch" class="text-sm">Enable safe search</label>
+                </div>
+                
+                <div class="flex items-center space-x-2">
+                    <input type="checkbox" id="realtimeUpdates">
+                    <label for="realtimeUpdates" class="text-sm">Real-time updates</label>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-3 mt-6">
+                <button id="cancelSettings" class="px-4 py-2 text-sm border rounded-lg hover:bg-muted">
+                    Cancel
+                </button>
+                <button id="saveSettings" class="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-lg hover:bg-primary/90">
+                    Save Settings
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="advanced-search-dashboard.js"></script>
+</body>
+</html>
